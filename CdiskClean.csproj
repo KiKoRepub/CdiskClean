@@ -11,8 +11,13 @@
   <ItemGroup>
     <Compile Remove="docs\**" />
     <EmbeddedResource Remove="docs\**" />
-    <None Remove="docs\**" />
   </ItemGroup>
+
+ <ItemGroup>
+    <Compile Remove="claude-prompt.txt" />
+    <EmbeddedResource Remove="claude-prompt.txt" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">

@@ -63,6 +63,16 @@ namespace CdiskClean.Properties {
         /// <summary>
         ///   查找 System.Drawing.Bitmap 类型的本地化资源。
         /// </summary>
+        internal static System.Drawing.Bitmap 清理工具图标 {
+            get {
+                object obj = ResourceManager.GetObject("清理工具图标", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
+        /// </summary>
         internal static System.Drawing.Bitmap 通知 {
             get {
                 object obj = ResourceManager.GetObject("通知", resourceCulture);
