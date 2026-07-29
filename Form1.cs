@@ -6,6 +6,7 @@ namespace CdiskClean
 {
     public partial class Form1 : Form
     {
+        private readonly IDatabaseService _databaseService;
         private readonly DiskMonitorService _monitorService;
         private readonly DiskSpaceService _diskSpaceService;
         private readonly FolderSizeAnalyzer _folderAnalyzer;
@@ -13,11 +14,24 @@ namespace CdiskClean
 
         private readonly object _recordsLock = new();
         private const int MaxRecords = 5000;
-        
+
         public Form1()
         {
             InitializeComponent();
+
+            // 初始化数据库
+            var dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CdiskClean.db");
+            _databaseService = new DatabaseService(dbPath);
+            _databaseService.Initialize();
+
+            // 从数据库加载监视目录（空则用默认列表）
+            var savedDirs = _databaseService.GetWatchDirectories();
             _monitorService = new DiskMonitorService();
+            if (savedDirs.Count > 0)
+                _monitorService.LoadDirectories(savedDirs);
+            else
+                _monitorService.LoadDefaults();
+
             _diskSpaceService = new DiskSpaceService();
             _folderAnalyzer = new FolderSizeAnalyzer();
             _records = new BindingList<FileChangeRecord>();
@@ -27,6 +41,11 @@ namespace CdiskClean
 
             _monitorService.FileChanged += OnFileChanged;
             _monitorService.MonitorError += OnMonitorError;
+
+            // 初始化目录列表视图
+            SetupDirListView();
+            PopulateDirListView();
+            SetupDirContextMenu();
         }
 
         // ==================== 窗体加载 ====================
@@ -36,6 +55,112 @@ namespace CdiskClean
             timer1.Start();
             diskRefreshTimer.Start();
             RefreshDiskInfo();
+        }
+
+        // ==================== 监视目录列表 ====================
+
+        private void SetupDirListView()
+        {
+            watcherDirListView.View = View.Details;
+            watcherDirListView.FullRowSelect = true;
+            watcherDirListView.MultiSelect = false;
+            watcherDirListView.HeaderStyle = ColumnHeaderStyle.Nonclickable;
+            watcherDirListView.Columns.Add("目录路径", 130);
+            watcherDirListView.Columns.Add("状态", 50);
+            watcherDirListView.Columns.Add("子目录", 50);
+        }
+
+        private void PopulateDirListView()
+        {
+            watcherDirListView.Items.Clear();
+
+            foreach (var dir in _monitorService.WatchDirectories)
+            {
+                var item = new ListViewItem(dir.Path);
+                item.SubItems.Add(FormatStatus(dir.Status));
+                item.SubItems.Add(dir.IncludeSubdirs ? "是" : "否");
+                item.Tag = dir;
+
+                ApplyDirItemStyle(item, dir.Status);
+                watcherDirListView.Items.Add(item);
+            }
+        }
+
+        private static string FormatStatus(DirectoryStatusEnum status)
+        {
+            return status switch
+            {
+                DirectoryStatusEnum.USING => "启用",
+                DirectoryStatusEnum.FORBIDDEN => "已禁用",
+                DirectoryStatusEnum.DELETED => "已删除",
+                _ => "未知"
+            };
+        }
+
+        private void ApplyDirItemStyle(ListViewItem item, DirectoryStatusEnum status)
+        {
+            switch (status)
+            {
+                case DirectoryStatusEnum.USING:
+                    item.ForeColor = Color.Black;
+                    item.BackColor = Color.FromArgb(230, 255, 230); // 浅绿底
+                    break;
+                case DirectoryStatusEnum.FORBIDDEN:
+                    item.ForeColor = Color.Gray;
+                    item.BackColor = Color.FromArgb(255, 255, 230); // 浅黄底
+                    break;
+                case DirectoryStatusEnum.DELETED:
+                    item.ForeColor = Color.LightGray;
+                    item.BackColor = Color.White;
+                    break;
+            }
+        }
+
+        private void SetupDirContextMenu()
+        {
+            watcherDirListView.MouseClick += watcherDirListView_MouseClick;
+        }
+
+        private void watcherDirListView_MouseClick(object? sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Right) return;
+
+            var item = watcherDirListView.GetItemAt(e.X, e.Y);
+            if (item?.Tag is not WatchingDirectory dir) return;
+
+            if (dir.Status == DirectoryStatusEnum.DELETED) return;
+
+            var menu = new ContextMenuStrip();
+
+            if (dir.Status == DirectoryStatusEnum.USING)
+            {
+                var disableItem = menu.Items.Add("禁用监测");
+                disableItem.Click += (s, ev) => ChangeDirStatus(dir, DirectoryStatusEnum.FORBIDDEN);
+            }
+            else if (dir.Status == DirectoryStatusEnum.FORBIDDEN)
+            {
+                var enableItem = menu.Items.Add("启用监测");
+                enableItem.Click += (s, ev) => ChangeDirStatus(dir, DirectoryStatusEnum.USING);
+            }
+
+            var deleteItem = menu.Items.Add("从列表删除");
+            deleteItem.Click += (s, ev) => ChangeDirStatus(dir, DirectoryStatusEnum.DELETED);
+
+            menu.Show(watcherDirListView, e.Location);
+        }
+
+        private void ChangeDirStatus(WatchingDirectory dir, DirectoryStatusEnum newStatus)
+        {
+            dir.Status = newStatus;
+            _monitorService.SetDirectoryStatus(dir.Path, newStatus);
+
+            // 同步数据库
+            if (newStatus == DirectoryStatusEnum.DELETED)
+                _databaseService.DeleteWatchDirectory(dir.Path);
+            else
+                _databaseService.SaveWatchDirectory(dir);
+
+            PopulateDirListView();
         }
 
         // ==================== 磁盘概览 ====================
@@ -93,8 +218,7 @@ namespace CdiskClean
                 pauseBtn.Text = "暂停";
                 watchStatusLabel.Text = "监测中";
                 watchStatusLabel.ForeColor = Color.Green;
-                // 修改托盘状态
-                notifyIcon1.Text += "\r\n监测中..."; 
+                notifyIcon1.Text += "\r\n监测中...";
             }
             else
             {
@@ -200,7 +324,6 @@ namespace CdiskClean
 
                 UpdateRecordCount();
 
-                // 如果筛选是"全部"，直接绑定；否则重新应用筛选
                 if (typeFilterCombo.SelectedIndex <= 0)
                 {
                     changesDataGrid.DataSource = _records;
@@ -267,10 +390,7 @@ namespace CdiskClean
 
             try
             {
-                var progress = new Progress<int>(_ =>
-                {
-                    // 进度更新（当前只做脉冲效果）
-                });
+                var progress = new Progress<int>(_ => { });
 
                 var cts = new CancellationTokenSource();
                 stopBtn.Tag = cts;
@@ -324,7 +444,6 @@ namespace CdiskClean
             var displayText = $"{info.Name}  [{FormatBytes(info.SizeBytes)}, {info.FileCount} 个文件]";
             var node = new TreeNode(displayText);
 
-            // 按大小降序排列子节点
             foreach (var sub in info.SubFolders.OrderByDescending(s => s.SizeBytes))
             {
                 node.Nodes.Add(CreateTreeNode(sub));
@@ -355,6 +474,7 @@ namespace CdiskClean
         }
 
         // ==================== 右上角 ====================
+
         private void BiggerButton_Click(object sender, EventArgs e)
         {
             if (this.WindowState == FormWindowState.Normal)
@@ -365,8 +485,8 @@ namespace CdiskClean
             {
                 this.WindowState = FormWindowState.Normal;
             }
-
         }
+
         private void closeButton_Click(object? sender, EventArgs e)
         {
             this.Hide();
@@ -391,7 +511,6 @@ namespace CdiskClean
         private Point mouseDownPoint;
         private void splitContainer1_MouseDown(object sender, MouseEventArgs e)
         {
-            // 尝试拖动窗口
             if (e.Button == MouseButtons.Left)
             {
                 mouseDownPoint = new Point(e.X, e.Y);
@@ -411,15 +530,13 @@ namespace CdiskClean
         private void notifyIcon1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             this.Show();
-            this.WindowState = FormWindowState.Normal; // 恢复窗口状态为正常
-
+            this.WindowState = FormWindowState.Normal;
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             closeApplication();
         }
-
 
         public void closeApplication()
         {
@@ -431,11 +548,8 @@ namespace CdiskClean
 
         private void button1_Click(object sender, EventArgs e)
         {
-            // 
             this.WindowState = FormWindowState.Minimized;
         }
-
-
 
         protected override void WndProc(ref Message m)
         {
@@ -451,40 +565,30 @@ namespace CdiskClean
             const int HTCAPTION = 2;
             const int HTCLIENT = 1;
 
-            // 1. 处理鼠标命中测试消息
             if (m.Msg == WM_NCHITTEST)
             {
-                // 获取鼠标在屏幕上的位置，并转换为窗体客户区坐标
                 Point screenPoint = new Point(m.LParam.ToInt32());
                 Point clientPoint = this.PointToClient(screenPoint);
 
-                // 定义边缘响应区域的宽度（像素）
                 int resizeBorderWidth = 10;
 
-                // 2. 判断鼠标是否在窗体的边缘区域
-                // 右下角
                 if (clientPoint.X >= this.ClientSize.Width - resizeBorderWidth &&
                     clientPoint.Y >= this.ClientSize.Height - resizeBorderWidth)
                 {
                     m.Result = (IntPtr)HTBOTTOMRIGHT;
                     return;
                 }
-                // 底部
                 else if (clientPoint.Y >= this.ClientSize.Height - resizeBorderWidth)
                 {
                     m.Result = (IntPtr)HTBOTTOM;
                     return;
                 }
-                // 右侧
                 else if (clientPoint.X >= this.ClientSize.Width - resizeBorderWidth)
                 {
                     m.Result = (IntPtr)HTRIGHT;
                     return;
                 }
-                // ... 可以类似地添加左上、顶部、左侧等判断
 
-                // 3. 判断鼠标是否在自定义的拖动区域（例如panelTitle）
-                // 这里假设panelTitle是之前定义的拖动Panel
                 if (panelTitle.RectangleToScreen(panelTitle.ClientRectangle).Contains(screenPoint))
                 {
                     m.Result = (IntPtr)HTCAPTION;
@@ -492,7 +596,6 @@ namespace CdiskClean
                 }
             }
 
-            // 调用基类方法，继续处理其他消息
             base.WndProc(ref m);
         }
     }

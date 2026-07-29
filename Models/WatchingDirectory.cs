@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace CdiskClean.Models
 {
-    internal enum DirectoryStatusEnum
+    public enum DirectoryStatusEnum
     {
         USING,
         FORBIDDEN,
         DELETED,
     }
-    internal class WatchingDirectory
+    public class WatchingDirectory
     {
         public string Path { get; set; }
         public bool IncludeSubdirs {  get; set; }
