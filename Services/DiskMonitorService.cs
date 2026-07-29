@@ -11,17 +11,19 @@ public class DiskMonitorService : IDisposable
 
     public event Action<FileChangeRecord>? FileChanged;
     public event Action<string>? MonitorError;
-
-    private static readonly (string Path, bool IncludeSubdirs)[] DefaultWatchDirs =
+     
+    private static readonly List<WatchingDirectory> DefaultWatchDirs = new ()
     {
-        (Environment.GetFolderPath(Environment.SpecialFolder.Desktop), true),
-        (Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), true),
-        (GetDownloadsPath(), true),
-        (Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Temp"), true),
-        (@"C:\Windows\Temp", true),
-        (@"C:\Program Files", false),
-        (@"C:\Program Files (x86)", false)
+        new WatchingDirectory(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), true),
+        new WatchingDirectory(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), true),
+        new WatchingDirectory(GetDownloadsPath(), true),
+        new WatchingDirectory(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Temp"), true),
+        new WatchingDirectory(@"C:\Windows\Temp", true),
+        new WatchingDirectory(@"C:\Program Files", false),
+        new WatchingDirectory(@"C:\Program Files (x86)", false)
     };
+
+    private static readonly ConcurrentDictionary<string, FileSystemWatcher> _watcherMap = new ();
 
     public bool IsRunning => _watchers.Any(w => w.EnableRaisingEvents);
 
@@ -29,8 +31,10 @@ public class DiskMonitorService : IDisposable
     {
         lock (_lock)
         {
-            foreach (var (dir, includeSubdirs) in DefaultWatchDirs)
+            foreach (var item in DefaultWatchDirs)
             {
+                string dir = item.Path;
+                bool includeSubdirs = item.IncludeSubdirs;
                 if (!System.IO.Directory.Exists(dir))
                     continue;
 
@@ -53,6 +57,8 @@ public class DiskMonitorService : IDisposable
                     watcher.Error += OnError;
 
                     _watchers.Add(watcher);
+                    // 同时记录到 dictionary 中
+                    _watcherMap.GetOrAdd(dir, watcher);
                 }
                 catch (Exception ex)
                 {
