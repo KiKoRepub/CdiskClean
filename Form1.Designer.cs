@@ -86,7 +86,7 @@ namespace CdiskClean
             TabPageControl1.Location = new Point(0, 53);
             TabPageControl1.Name = "TabPageControl1";
             TabPageControl1.SelectedIndex = 0;
-            TabPageControl1.Size = new Size(999, 453);
+            TabPageControl1.Size = new Size(1433, 453);
             TabPageControl1.TabIndex = 0;
             // 
             // totalReviewPage
@@ -100,7 +100,7 @@ namespace CdiskClean
             totalReviewPage.Location = new Point(4, 33);
             totalReviewPage.Name = "totalReviewPage";
             totalReviewPage.Padding = new Padding(3);
-            totalReviewPage.Size = new Size(991, 416);
+            totalReviewPage.Size = new Size(1425, 416);
             totalReviewPage.TabIndex = 0;
             totalReviewPage.Text = "概览";
             totalReviewPage.UseVisualStyleBackColor = true;
@@ -176,34 +176,35 @@ namespace CdiskClean
             watcherPage.Location = new Point(4, 33);
             watcherPage.Name = "watcherPage";
             watcherPage.Padding = new Padding(3);
-            watcherPage.Size = new Size(991, 416);
+            watcherPage.Size = new Size(1425, 416);
             watcherPage.TabIndex = 1;
             watcherPage.Text = "实时监测";
             watcherPage.UseVisualStyleBackColor = true;
             // 
             // WatcherDirectoryBox
             // 
-            WatcherDirectoryBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
+            WatcherDirectoryBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             WatcherDirectoryBox.Controls.Add(watcherDirListView);
-            WatcherDirectoryBox.Location = new Point(749, 48);
+            WatcherDirectoryBox.Location = new Point(856, 48);
             WatcherDirectoryBox.Name = "WatcherDirectoryBox";
-            WatcherDirectoryBox.Size = new Size(216, 286);
+            WatcherDirectoryBox.Size = new Size(547, 286);
             WatcherDirectoryBox.TabIndex = 7;
             WatcherDirectoryBox.TabStop = false;
             WatcherDirectoryBox.Text = "监测目录列表";
             // 
             // watcherDirListView
             // 
-            watcherDirListView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
+            watcherDirListView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             watcherDirListView.Location = new Point(34, 28);
             watcherDirListView.Name = "watcherDirListView";
-            watcherDirListView.Size = new Size(164, 238);
+            watcherDirListView.Size = new Size(495, 238);
             watcherDirListView.TabIndex = 6;
             watcherDirListView.UseCompatibleStateImageBehavior = false;
+            watcherDirListView.View = View.Tile;
             // 
             // exportBtn
             // 
-            exportBtn.Location = new Point(180, 8);
+            exportBtn.Location = new Point(219, 8);
             exportBtn.Name = "exportBtn";
             exportBtn.Size = new Size(80, 30);
             exportBtn.TabIndex = 2;
@@ -216,7 +217,7 @@ namespace CdiskClean
             typeFilterCombo.DropDownStyle = ComboBoxStyle.DropDownList;
             typeFilterCombo.FormattingEnabled = true;
             typeFilterCombo.Items.AddRange(new object[] { "全部", "创建", "修改", "删除", "重命名" });
-            typeFilterCombo.Location = new Point(563, 8);
+            typeFilterCombo.Location = new Point(567, 8);
             typeFilterCombo.Name = "typeFilterCombo";
             typeFilterCombo.Size = new Size(121, 32);
             typeFilterCombo.TabIndex = 4;
@@ -225,7 +226,7 @@ namespace CdiskClean
             // typeFilterLabel
             // 
             typeFilterLabel.AutoSize = true;
-            typeFilterLabel.Location = new Point(471, 10);
+            typeFilterLabel.Location = new Point(475, 10);
             typeFilterLabel.Name = "typeFilterLabel";
             typeFilterLabel.Size = new Size(86, 24);
             typeFilterLabel.TabIndex = 3;
@@ -234,7 +235,7 @@ namespace CdiskClean
             // 
             // clearBtn
             // 
-            clearBtn.Location = new Point(94, 9);
+            clearBtn.Location = new Point(133, 8);
             clearBtn.Name = "clearBtn";
             clearBtn.Size = new Size(80, 30);
             clearBtn.TabIndex = 1;
@@ -244,9 +245,9 @@ namespace CdiskClean
             // 
             // pauseBtn
             // 
-            pauseBtn.Location = new Point(3, 10);
+            pauseBtn.Location = new Point(12, 7);
             pauseBtn.Name = "pauseBtn";
-            pauseBtn.Size = new Size(89, 30);
+            pauseBtn.Size = new Size(115, 30);
             pauseBtn.TabIndex = 0;
             pauseBtn.Text = "开始监测";
             pauseBtn.UseVisualStyleBackColor = true;
@@ -257,18 +258,18 @@ namespace CdiskClean
             changesDataGrid.AllowUserToAddRows = false;
             changesDataGrid.AllowUserToDeleteRows = false;
             changesDataGrid.AllowUserToResizeRows = false;
-            changesDataGrid.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            changesDataGrid.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
             changesDataGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             changesDataGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             changesDataGrid.Columns.AddRange(new DataGridViewColumn[] { TimeColumn, TypeColumn, FileNameColumn, PathColumn, SizeColumn });
-            changesDataGrid.Location = new Point(8, 48);
+            changesDataGrid.Location = new Point(12, 48);
             changesDataGrid.Name = "changesDataGrid";
             changesDataGrid.ReadOnly = true;
             changesDataGrid.RowHeadersVisible = false;
             changesDataGrid.RowHeadersWidth = 62;
             changesDataGrid.RowTemplate.Height = 25;
             changesDataGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            changesDataGrid.Size = new Size(678, 286);
+            changesDataGrid.Size = new Size(676, 286);
             changesDataGrid.TabIndex = 5;
             // 
             // TimeColumn
@@ -326,7 +327,7 @@ namespace CdiskClean
             folderAnalyzerPage.Controls.Add(selectedPathTextBox);
             folderAnalyzerPage.Location = new Point(4, 33);
             folderAnalyzerPage.Name = "folderAnalyzerPage";
-            folderAnalyzerPage.Size = new Size(991, 416);
+            folderAnalyzerPage.Size = new Size(1425, 416);
             folderAnalyzerPage.TabIndex = 2;
             folderAnalyzerPage.Text = "文件夹分析";
             folderAnalyzerPage.UseVisualStyleBackColor = true;
@@ -396,7 +397,7 @@ namespace CdiskClean
             statusStrip1.Items.AddRange(new ToolStripItem[] { watchStatusLabel, writedRecordStatusLabel, timeStatusLabel, NoticeIcon });
             statusStrip1.Location = new Point(0, 509);
             statusStrip1.Name = "statusStrip1";
-            statusStrip1.Size = new Size(995, 30);
+            statusStrip1.Size = new Size(1433, 30);
             statusStrip1.TabIndex = 4;
             statusStrip1.Text = "statusStrip1";
             // 
@@ -415,7 +416,7 @@ namespace CdiskClean
             writedRecordStatusLabel.Margin = new Padding(80, 4, 0, 3);
             writedRecordStatusLabel.Name = "writedRecordStatusLabel";
             writedRecordStatusLabel.Padding = new Padding(100, 0, 0, 0);
-            writedRecordStatusLabel.Size = new Size(323, 23);
+            writedRecordStatusLabel.Size = new Size(542, 23);
             writedRecordStatusLabel.Spring = true;
             writedRecordStatusLabel.Text = "已记录 0 条";
             writedRecordStatusLabel.Click += WritedRecordStatusLabel_Click;
@@ -425,7 +426,7 @@ namespace CdiskClean
             timeStatusLabel.Margin = new Padding(50, 4, 0, 3);
             timeStatusLabel.Name = "timeStatusLabel";
             timeStatusLabel.Overflow = ToolStripItemOverflow.Never;
-            timeStatusLabel.Size = new Size(353, 23);
+            timeStatusLabel.Size = new Size(572, 23);
             timeStatusLabel.Spring = true;
             timeStatusLabel.Text = "2005-02-05 03:14:15";
             timeStatusLabel.TextAlign = ContentAlignment.MiddleLeft;
@@ -445,7 +446,7 @@ namespace CdiskClean
             // closeButton
             // 
             closeButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            closeButton.Location = new Point(359, 6);
+            closeButton.Location = new Point(538, 6);
             closeButton.Name = "closeButton";
             closeButton.Size = new Size(40, 33);
             closeButton.TabIndex = 1;
@@ -456,7 +457,7 @@ namespace CdiskClean
             // BiggerButton
             // 
             BiggerButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            BiggerButton.Location = new Point(313, 6);
+            BiggerButton.Location = new Point(492, 6);
             BiggerButton.Name = "BiggerButton";
             BiggerButton.Size = new Size(40, 33);
             BiggerButton.TabIndex = 2;
@@ -467,7 +468,7 @@ namespace CdiskClean
             // button1
             // 
             button1.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            button1.Location = new Point(267, 6);
+            button1.Location = new Point(446, 6);
             button1.Name = "button1";
             button1.Size = new Size(40, 33);
             button1.TabIndex = 3;
@@ -526,8 +527,8 @@ namespace CdiskClean
             panelTitle.Panel2.Controls.Add(button1);
             panelTitle.Panel2.Controls.Add(BiggerButton);
             panelTitle.Panel2.Controls.Add(closeButton);
-            panelTitle.Size = new Size(998, 47);
-            panelTitle.SplitterDistance = 592;
+            panelTitle.Size = new Size(1436, 47);
+            panelTitle.SplitterDistance = 851;
             panelTitle.TabIndex = 5;
             // 
             // label1
@@ -548,7 +549,7 @@ namespace CdiskClean
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.Control;
             BackgroundImageLayout = ImageLayout.Zoom;
-            ClientSize = new Size(998, 540);
+            ClientSize = new Size(1436, 540);
             Controls.Add(panelTitle);
             Controls.Add(statusStrip1);
             Controls.Add(TabPageControl1);
@@ -595,14 +596,6 @@ namespace CdiskClean
         private Label freeSpaceLabel;
         private Label warningLabel;
 
-        // 实时监测 tab
-        private Button pauseBtn;
-        private Button clearBtn;
-        private Button exportBtn;
-        private Label typeFilterLabel;
-        private ComboBox typeFilterCombo;
-        private DataGridView changesDataGrid;
-
         // 文件夹分析 tab
         private TextBox selectedPathTextBox;
         private Button selectDirBtn;
@@ -627,12 +620,18 @@ namespace CdiskClean
         private Label label1;
         private ContextMenuStrip notifyMenuStrip;
         private ToolStripMenuItem exitToolStripMenuItem;
+        private GroupBox WatcherDirectoryBox;
+        private ListView watcherDirListView;
+        private Button exportBtn;
+        private ComboBox typeFilterCombo;
+        private Label typeFilterLabel;
+        private Button clearBtn;
+        private Button pauseBtn;
+        private DataGridView changesDataGrid;
         private DataGridViewTextBoxColumn TimeColumn;
         private DataGridViewTextBoxColumn TypeColumn;
         private DataGridViewTextBoxColumn FileNameColumn;
         private DataGridViewTextBoxColumn PathColumn;
         private DataGridViewTextBoxColumn SizeColumn;
-        private GroupBox WatcherDirectoryBox;
-        private ListView watcherDirListView;
     }
 }

@@ -65,7 +65,7 @@ namespace CdiskClean
             watcherDirListView.FullRowSelect = true;
             watcherDirListView.MultiSelect = false;
             watcherDirListView.HeaderStyle = ColumnHeaderStyle.Nonclickable;
-            watcherDirListView.Columns.Add("目录路径", 130);
+            watcherDirListView.Columns.Add("目录路径", 250);
             watcherDirListView.Columns.Add("状态", 50);
             watcherDirListView.Columns.Add("子目录", 50);
         }
@@ -597,6 +597,11 @@ namespace CdiskClean
             }
 
             base.WndProc(ref m);
+        }
+
+        private void splitContainer1_Panel1_Paint(object sender, PaintEventArgs e)
+        {
+
         }
     }
 }
