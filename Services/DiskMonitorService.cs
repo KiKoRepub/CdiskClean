@@ -133,15 +133,20 @@ public class DiskMonitorService : IDisposable
     }
 
     /// <summary>添加新目录到监视列表</summary>
-    public void AddDirectory(string path, bool includeSubdirs)
+    public WatchingDirectory AddDirectory(string path, bool includeSubdirs)
     {
-        if (WatchDirectories.Any(d => d.Path == path)) return;
 
         var dir = new WatchingDirectory(path, includeSubdirs);
+
+        // 如果已经存在，则不重复添加
+        if (WatchDirectories.Any(d => d.Path == path)) return dir;
+        
         WatchDirectories.Add(dir);
 
         if (_watchers.Any(w => w.EnableRaisingEvents))
             StartDirectory(path, includeSubdirs);
+
+        return dir;
     }
 
     private void StartWatchingInternal(string dir, bool includeSubdirs)

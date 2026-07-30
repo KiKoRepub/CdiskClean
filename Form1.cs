@@ -1,6 +1,8 @@
-using System.ComponentModel;
 using CdiskClean.Models;
 using CdiskClean.Services;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Windows.Forms;
 
 namespace CdiskClean
 {
@@ -32,13 +34,16 @@ namespace CdiskClean
             else
                 _monitorService.LoadDefaults();
 
+            // 初始化磁盘空间服务和文件夹分析器
             _diskSpaceService = new DiskSpaceService();
             _folderAnalyzer = new FolderSizeAnalyzer();
-            _records = new BindingList<FileChangeRecord>();
 
+            // 设置数据绑定
+            _records = new BindingList<FileChangeRecord>();
             changesDataGrid.DataSource = _records;
             typeFilterCombo.SelectedIndex = 0;
 
+            // 订阅监视服务事件
             _monitorService.FileChanged += OnFileChanged;
             _monitorService.MonitorError += OnMonitorError;
 
@@ -61,13 +66,22 @@ namespace CdiskClean
 
         private void SetupDirListView()
         {
+            int totalWidth = watcherDirListView.Width;
+
             watcherDirListView.View = View.Details;
             watcherDirListView.FullRowSelect = true;
             watcherDirListView.MultiSelect = false;
             watcherDirListView.HeaderStyle = ColumnHeaderStyle.Nonclickable;
-            watcherDirListView.Columns.Add("目录路径", 250);
-            watcherDirListView.Columns.Add("状态", 50);
-            watcherDirListView.Columns.Add("子目录", 50);
+
+            // 设置内部列宽度为总宽度的比例
+            watcherDirListView.Columns.Add("目录路径", (int)(totalWidth * 0.70));
+            watcherDirListView.Columns.Add("状态", (int)(totalWidth * 0.15));
+            watcherDirListView.Columns.Add("子目录", (int)(totalWidth * 0.15));
+
+            // 开启双缓冲，减少闪烁
+            typeof(ListView).InvokeMember("DoubleBuffered",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.SetProperty,
+                null, watcherDirListView, new object[] { true });
         }
 
         private void PopulateDirListView()
@@ -76,14 +90,25 @@ namespace CdiskClean
 
             foreach (var dir in _monitorService.WatchDirectories)
             {
-                var item = new ListViewItem(dir.Path);
-                item.SubItems.Add(FormatStatus(dir.Status));
-                item.SubItems.Add(dir.IncludeSubdirs ? "是" : "否");
-                item.Tag = dir;
-
-                ApplyDirItemStyle(item, dir.Status);
-                watcherDirListView.Items.Add(item);
+                addWatchingToListView(dir);
             }
+        }
+
+        private void addWatchingToListView(WatchingDirectory dir)
+        {
+            // 根据路径 判重
+            if (watcherDirListView.Items.Cast<ListViewItem>()
+                .Any(item => item.Text == dir.Path))
+                return;
+
+            var item = new ListViewItem(dir.Path);
+            item.SubItems.Add(FormatStatus(dir.Status));
+            item.SubItems.Add(dir.IncludeSubdirs ? "是" : "否");
+            item.Tag = dir;
+
+
+            ApplyDirItemStyle(item, dir.Status);
+            watcherDirListView.Items.Add(item);
         }
 
         private static string FormatStatus(DirectoryStatusEnum status)
@@ -599,9 +624,40 @@ namespace CdiskClean
             base.WndProc(ref m);
         }
 
-        private void splitContainer1_Panel1_Paint(object sender, PaintEventArgs e)
+
+        private void dirAddButton_Click(object sender, EventArgs e)
         {
 
+            DialogResult result = ImportFolderDialog.ShowDialog();
+
+            if (result == DialogResult.OK)
+            {
+                string selectedPath = ImportFolderDialog.SelectedPath;
+                //MessageBox.Show(selectedPath);
+                // 将选中的目录添加到监视列表
+                // 存储到数据库
+                WatchingDirectory dir = _monitorService.AddDirectory(selectedPath, true);
+                // 显示在列表
+                addWatchingToListView(dir);
+            }
+        }
+
+        private void watcherDirListView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        {
+            if (watcherDirListView.SelectedItems.Count > 0)
+            {
+                ListViewItem item = watcherDirListView.SelectedItems[0];
+                //MessageBox.Show(item.Text);
+                dirSelectedTextBox.Text = item.Text;
+            }
+        }
+
+        private void watcherDirListView_Resize(object sender, EventArgs e)
+        {
+            int totalWidth = watcherDirListView.Width;
+            watcherDirListView.Columns[0].Width = (int)(totalWidth *0.70);
+            watcherDirListView.Columns[1].Width = (int)(totalWidth *0.15);
+            watcherDirListView.Columns[2].Width = (int)(totalWidth *0.15);
         }
     }
 }

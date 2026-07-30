@@ -28,6 +28,10 @@ namespace CdiskClean
             usageProgressBar = new ProgressBar();
             dashboardTitleLabel = new Label();
             watcherPage = new TabPage();
+            statisticButton = new Button();
+            dirAddButton = new Button();
+            dirSelectedTextBox = new TextBox();
+            label2 = new Label();
             WatcherDirectoryBox = new GroupBox();
             watcherDirListView = new ListView();
             exportBtn = new Button();
@@ -63,6 +67,7 @@ namespace CdiskClean
             exitToolStripMenuItem = new ToolStripMenuItem();
             panelTitle = new SplitContainer();
             label1 = new Label();
+            ImportFolderDialog = new FolderBrowserDialog();
             TabPageControl1.SuspendLayout();
             totalReviewPage.SuspendLayout();
             watcherPage.SuspendLayout();
@@ -86,7 +91,7 @@ namespace CdiskClean
             TabPageControl1.Location = new Point(0, 53);
             TabPageControl1.Name = "TabPageControl1";
             TabPageControl1.SelectedIndex = 0;
-            TabPageControl1.Size = new Size(1433, 453);
+            TabPageControl1.Size = new Size(1437, 563);
             TabPageControl1.TabIndex = 0;
             // 
             // totalReviewPage
@@ -100,7 +105,7 @@ namespace CdiskClean
             totalReviewPage.Location = new Point(4, 33);
             totalReviewPage.Name = "totalReviewPage";
             totalReviewPage.Padding = new Padding(3);
-            totalReviewPage.Size = new Size(1425, 416);
+            totalReviewPage.Size = new Size(1429, 526);
             totalReviewPage.TabIndex = 0;
             totalReviewPage.Text = "概览";
             totalReviewPage.UseVisualStyleBackColor = true;
@@ -166,6 +171,10 @@ namespace CdiskClean
             // 
             // watcherPage
             // 
+            watcherPage.Controls.Add(statisticButton);
+            watcherPage.Controls.Add(dirAddButton);
+            watcherPage.Controls.Add(dirSelectedTextBox);
+            watcherPage.Controls.Add(label2);
             watcherPage.Controls.Add(WatcherDirectoryBox);
             watcherPage.Controls.Add(exportBtn);
             watcherPage.Controls.Add(typeFilterCombo);
@@ -176,10 +185,49 @@ namespace CdiskClean
             watcherPage.Location = new Point(4, 33);
             watcherPage.Name = "watcherPage";
             watcherPage.Padding = new Padding(3);
-            watcherPage.Size = new Size(1425, 416);
+            watcherPage.Size = new Size(1429, 526);
             watcherPage.TabIndex = 1;
             watcherPage.Text = "实时监测";
             watcherPage.UseVisualStyleBackColor = true;
+            // 
+            // statisticButton
+            // 
+            statisticButton.Location = new Point(12, 460);
+            statisticButton.Name = "statisticButton";
+            statisticButton.Size = new Size(139, 47);
+            statisticButton.TabIndex = 11;
+            statisticButton.Text = "获取统计";
+            statisticButton.UseVisualStyleBackColor = true;
+            // 
+            // dirAddButton
+            // 
+            dirAddButton.Location = new Point(875, 8);
+            dirAddButton.Name = "dirAddButton";
+            dirAddButton.Size = new Size(112, 34);
+            dirAddButton.TabIndex = 10;
+            dirAddButton.Text = "添加目录";
+            dirAddButton.UseVisualStyleBackColor = true;
+            dirAddButton.Click += dirAddButton_Click;
+            // 
+            // dirSelectedTextBox
+            // 
+            dirSelectedTextBox.Location = new Point(1029, 462);
+            dirSelectedTextBox.Multiline = true;
+            dirSelectedTextBox.Name = "dirSelectedTextBox";
+            dirSelectedTextBox.ReadOnly = true;
+            dirSelectedTextBox.Size = new Size(355, 45);
+            dirSelectedTextBox.TabIndex = 9;
+            dirSelectedTextBox.Text = "XXXXXXXXXXXXXXXXXXXX";
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Font = new Font("Microsoft YaHei UI", 15F);
+            label2.Location = new Point(856, 462);
+            label2.Name = "label2";
+            label2.Size = new Size(167, 39);
+            label2.TabIndex = 8;
+            label2.Text = "选中目录为";
             // 
             // WatcherDirectoryBox
             // 
@@ -187,7 +235,7 @@ namespace CdiskClean
             WatcherDirectoryBox.Controls.Add(watcherDirListView);
             WatcherDirectoryBox.Location = new Point(856, 48);
             WatcherDirectoryBox.Name = "WatcherDirectoryBox";
-            WatcherDirectoryBox.Size = new Size(547, 286);
+            WatcherDirectoryBox.Size = new Size(551, 396);
             WatcherDirectoryBox.TabIndex = 7;
             WatcherDirectoryBox.TabStop = false;
             WatcherDirectoryBox.Text = "监测目录列表";
@@ -197,10 +245,12 @@ namespace CdiskClean
             watcherDirListView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             watcherDirListView.Location = new Point(34, 28);
             watcherDirListView.Name = "watcherDirListView";
-            watcherDirListView.Size = new Size(495, 238);
+            watcherDirListView.Size = new Size(499, 348);
             watcherDirListView.TabIndex = 6;
             watcherDirListView.UseCompatibleStateImageBehavior = false;
             watcherDirListView.View = View.Tile;
+            watcherDirListView.ItemSelectionChanged += watcherDirListView_ItemSelectionChanged;
+            watcherDirListView.Resize += watcherDirListView_Resize;
             // 
             // exportBtn
             // 
@@ -269,7 +319,7 @@ namespace CdiskClean
             changesDataGrid.RowHeadersWidth = 62;
             changesDataGrid.RowTemplate.Height = 25;
             changesDataGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            changesDataGrid.Size = new Size(676, 286);
+            changesDataGrid.Size = new Size(676, 396);
             changesDataGrid.TabIndex = 5;
             // 
             // TimeColumn
@@ -327,7 +377,7 @@ namespace CdiskClean
             folderAnalyzerPage.Controls.Add(selectedPathTextBox);
             folderAnalyzerPage.Location = new Point(4, 33);
             folderAnalyzerPage.Name = "folderAnalyzerPage";
-            folderAnalyzerPage.Size = new Size(1425, 416);
+            folderAnalyzerPage.Size = new Size(1429, 526);
             folderAnalyzerPage.TabIndex = 2;
             folderAnalyzerPage.Text = "文件夹分析";
             folderAnalyzerPage.UseVisualStyleBackColor = true;
@@ -395,9 +445,9 @@ namespace CdiskClean
             statusStrip1.Dock = DockStyle.None;
             statusStrip1.ImageScalingSize = new Size(24, 24);
             statusStrip1.Items.AddRange(new ToolStripItem[] { watchStatusLabel, writedRecordStatusLabel, timeStatusLabel, NoticeIcon });
-            statusStrip1.Location = new Point(0, 509);
+            statusStrip1.Location = new Point(0, 619);
             statusStrip1.Name = "statusStrip1";
-            statusStrip1.Size = new Size(1433, 30);
+            statusStrip1.Size = new Size(1437, 30);
             statusStrip1.TabIndex = 4;
             statusStrip1.Text = "statusStrip1";
             // 
@@ -416,7 +466,7 @@ namespace CdiskClean
             writedRecordStatusLabel.Margin = new Padding(80, 4, 0, 3);
             writedRecordStatusLabel.Name = "writedRecordStatusLabel";
             writedRecordStatusLabel.Padding = new Padding(100, 0, 0, 0);
-            writedRecordStatusLabel.Size = new Size(542, 23);
+            writedRecordStatusLabel.Size = new Size(544, 23);
             writedRecordStatusLabel.Spring = true;
             writedRecordStatusLabel.Text = "已记录 0 条";
             writedRecordStatusLabel.Click += WritedRecordStatusLabel_Click;
@@ -426,7 +476,7 @@ namespace CdiskClean
             timeStatusLabel.Margin = new Padding(50, 4, 0, 3);
             timeStatusLabel.Name = "timeStatusLabel";
             timeStatusLabel.Overflow = ToolStripItemOverflow.Never;
-            timeStatusLabel.Size = new Size(572, 23);
+            timeStatusLabel.Size = new Size(574, 23);
             timeStatusLabel.Spring = true;
             timeStatusLabel.Text = "2005-02-05 03:14:15";
             timeStatusLabel.TextAlign = ContentAlignment.MiddleLeft;
@@ -446,7 +496,7 @@ namespace CdiskClean
             // closeButton
             // 
             closeButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            closeButton.Location = new Point(538, 6);
+            closeButton.Location = new Point(540, 6);
             closeButton.Name = "closeButton";
             closeButton.Size = new Size(40, 33);
             closeButton.TabIndex = 1;
@@ -457,7 +507,7 @@ namespace CdiskClean
             // BiggerButton
             // 
             BiggerButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            BiggerButton.Location = new Point(492, 6);
+            BiggerButton.Location = new Point(494, 6);
             BiggerButton.Name = "BiggerButton";
             BiggerButton.Size = new Size(40, 33);
             BiggerButton.TabIndex = 2;
@@ -468,7 +518,7 @@ namespace CdiskClean
             // button1
             // 
             button1.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            button1.Location = new Point(446, 6);
+            button1.Location = new Point(448, 6);
             button1.Name = "button1";
             button1.Size = new Size(40, 33);
             button1.TabIndex = 3;
@@ -527,8 +577,8 @@ namespace CdiskClean
             panelTitle.Panel2.Controls.Add(button1);
             panelTitle.Panel2.Controls.Add(BiggerButton);
             panelTitle.Panel2.Controls.Add(closeButton);
-            panelTitle.Size = new Size(1436, 47);
-            panelTitle.SplitterDistance = 851;
+            panelTitle.Size = new Size(1440, 47);
+            panelTitle.SplitterDistance = 853;
             panelTitle.TabIndex = 5;
             // 
             // label1
@@ -549,13 +599,13 @@ namespace CdiskClean
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.Control;
             BackgroundImageLayout = ImageLayout.Zoom;
-            ClientSize = new Size(1436, 540);
+            ClientSize = new Size(1440, 650);
             Controls.Add(panelTitle);
             Controls.Add(statusStrip1);
             Controls.Add(TabPageControl1);
             FormBorderStyle = FormBorderStyle.None;
             Icon = (Icon)resources.GetObject("$this.Icon");
-            MinimumSize = new Size(940, 540);
+            MinimumSize = new Size(1440, 650);
             Name = "Form1";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "C盘监测工具";
@@ -608,20 +658,28 @@ namespace CdiskClean
         private Button closeButton;
         private Button BiggerButton;
         private Button button1;
+
+        // 状态栏
         private StatusStrip statusStrip1;
         private ToolStripStatusLabel watchStatusLabel;
         private ToolStripStatusLabel writedRecordStatusLabel;
         private ToolStripStatusLabel timeStatusLabel;
+        private ToolStripStatusLabel NoticeIcon;
+
+        // 不可见的 组件
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.Timer diskRefreshTimer;
-        private ToolStripStatusLabel NoticeIcon;
         private NotifyIcon notifyIcon1;
         private SplitContainer panelTitle;
         private Label label1;
         private ContextMenuStrip notifyMenuStrip;
         private ToolStripMenuItem exitToolStripMenuItem;
         private GroupBox WatcherDirectoryBox;
-        private ListView watcherDirListView;
+        /// <summary>
+        ///  <para>Text 存储 目录名</para>
+        ///  Tag 存储 WatchingDirectory 对象
+        /// </summary>
+        private ListView watcherDirListView; 
         private Button exportBtn;
         private ComboBox typeFilterCombo;
         private Label typeFilterLabel;
@@ -633,5 +691,10 @@ namespace CdiskClean
         private DataGridViewTextBoxColumn FileNameColumn;
         private DataGridViewTextBoxColumn PathColumn;
         private DataGridViewTextBoxColumn SizeColumn;
+        private TextBox dirSelectedTextBox;
+        private Label label2;
+        private Button dirAddButton;
+        private FolderBrowserDialog ImportFolderDialog;
+        private Button statisticButton;
     }
 }
