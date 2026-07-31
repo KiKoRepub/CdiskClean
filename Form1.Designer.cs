@@ -30,10 +30,10 @@ namespace CdiskClean
             watcherPage = new TabPage();
             statisticButton = new Button();
             dirAddButton = new Button();
-            dirSelectedTextBox = new TextBox();
-            label2 = new Label();
             WatcherDirectoryBox = new GroupBox();
+            dirSelectedTextBox = new TextBox();
             watcherDirListView = new ListView();
+            label2 = new Label();
             exportBtn = new Button();
             typeFilterCombo = new ComboBox();
             typeFilterLabel = new Label();
@@ -173,8 +173,6 @@ namespace CdiskClean
             // 
             watcherPage.Controls.Add(statisticButton);
             watcherPage.Controls.Add(dirAddButton);
-            watcherPage.Controls.Add(dirSelectedTextBox);
-            watcherPage.Controls.Add(label2);
             watcherPage.Controls.Add(WatcherDirectoryBox);
             watcherPage.Controls.Add(exportBtn);
             watcherPage.Controls.Add(typeFilterCombo);
@@ -192,12 +190,14 @@ namespace CdiskClean
             // 
             // statisticButton
             // 
+            statisticButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             statisticButton.Location = new Point(12, 460);
             statisticButton.Name = "statisticButton";
             statisticButton.Size = new Size(139, 47);
             statisticButton.TabIndex = 11;
             statisticButton.Text = "获取统计";
             statisticButton.UseVisualStyleBackColor = true;
+            statisticButton.Click += statisticButton_Click;
             // 
             // dirAddButton
             // 
@@ -209,48 +209,50 @@ namespace CdiskClean
             dirAddButton.UseVisualStyleBackColor = true;
             dirAddButton.Click += dirAddButton_Click;
             // 
-            // dirSelectedTextBox
-            // 
-            dirSelectedTextBox.Location = new Point(1029, 462);
-            dirSelectedTextBox.Multiline = true;
-            dirSelectedTextBox.Name = "dirSelectedTextBox";
-            dirSelectedTextBox.ReadOnly = true;
-            dirSelectedTextBox.Size = new Size(355, 45);
-            dirSelectedTextBox.TabIndex = 9;
-            dirSelectedTextBox.Text = "XXXXXXXXXXXXXXXXXXXX";
-            // 
-            // label2
-            // 
-            label2.AutoSize = true;
-            label2.Font = new Font("Microsoft YaHei UI", 15F);
-            label2.Location = new Point(856, 462);
-            label2.Name = "label2";
-            label2.Size = new Size(167, 39);
-            label2.TabIndex = 8;
-            label2.Text = "选中目录为";
-            // 
             // WatcherDirectoryBox
             // 
-            WatcherDirectoryBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            WatcherDirectoryBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            WatcherDirectoryBox.Controls.Add(dirSelectedTextBox);
             WatcherDirectoryBox.Controls.Add(watcherDirListView);
-            WatcherDirectoryBox.Location = new Point(856, 48);
+            WatcherDirectoryBox.Controls.Add(label2);
+            WatcherDirectoryBox.Location = new Point(848, 48);
             WatcherDirectoryBox.Name = "WatcherDirectoryBox";
-            WatcherDirectoryBox.Size = new Size(551, 396);
+            WatcherDirectoryBox.Size = new Size(559, 459);
             WatcherDirectoryBox.TabIndex = 7;
             WatcherDirectoryBox.TabStop = false;
             WatcherDirectoryBox.Text = "监测目录列表";
+            // 
+            // dirSelectedTextBox
+            // 
+            dirSelectedTextBox.Location = new Point(181, 401);
+            dirSelectedTextBox.Multiline = true;
+            dirSelectedTextBox.Name = "dirSelectedTextBox";
+            dirSelectedTextBox.ReadOnly = true;
+            dirSelectedTextBox.Size = new Size(358, 52);
+            dirSelectedTextBox.TabIndex = 9;
             // 
             // watcherDirListView
             // 
             watcherDirListView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             watcherDirListView.Location = new Point(34, 28);
             watcherDirListView.Name = "watcherDirListView";
-            watcherDirListView.Size = new Size(499, 348);
+            watcherDirListView.Size = new Size(505, 355);
             watcherDirListView.TabIndex = 6;
             watcherDirListView.UseCompatibleStateImageBehavior = false;
             watcherDirListView.View = View.Tile;
             watcherDirListView.ItemSelectionChanged += watcherDirListView_ItemSelectionChanged;
             watcherDirListView.Resize += watcherDirListView_Resize;
+            // 
+            // label2
+            // 
+            label2.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            label2.AutoSize = true;
+            label2.Font = new Font("Microsoft YaHei UI", 15F);
+            label2.Location = new Point(8, 401);
+            label2.Name = "label2";
+            label2.Size = new Size(167, 39);
+            label2.TabIndex = 8;
+            label2.Text = "选中目录为";
             // 
             // exportBtn
             // 
@@ -616,6 +618,7 @@ namespace CdiskClean
             watcherPage.ResumeLayout(false);
             watcherPage.PerformLayout();
             WatcherDirectoryBox.ResumeLayout(false);
+            WatcherDirectoryBox.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)changesDataGrid).EndInit();
             folderAnalyzerPage.ResumeLayout(false);
             folderAnalyzerPage.PerformLayout();

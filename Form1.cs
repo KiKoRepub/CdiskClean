@@ -83,7 +83,9 @@ namespace CdiskClean
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.SetProperty,
                 null, watcherDirListView, new object[] { true });
         }
-
+        /// <summary>
+        ///  填充监视目录列表
+        /// </summary>
         private void PopulateDirListView()
         {
             watcherDirListView.Items.Clear();
@@ -655,9 +657,16 @@ namespace CdiskClean
         private void watcherDirListView_Resize(object sender, EventArgs e)
         {
             int totalWidth = watcherDirListView.Width;
-            watcherDirListView.Columns[0].Width = (int)(totalWidth *0.70);
-            watcherDirListView.Columns[1].Width = (int)(totalWidth *0.15);
-            watcherDirListView.Columns[2].Width = (int)(totalWidth *0.15);
+            watcherDirListView.Columns[0].Width = (int)(totalWidth * 0.70);
+            watcherDirListView.Columns[1].Width = (int)(totalWidth * 0.15);
+            watcherDirListView.Columns[2].Width = (int)(totalWidth * 0.15);
+        }
+
+        private void statisticButton_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("还没完成呢，等等吧");
+            //System.Diagnostics.Tracing.EventSource 
+               
         }
     }
 }
