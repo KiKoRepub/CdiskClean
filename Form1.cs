@@ -9,6 +9,7 @@ namespace CdiskClean
     public partial class Form1 : Form
     {
         private readonly IDatabaseService _databaseService;
+        private readonly EtwMonitorService _etwService;
         private readonly DiskMonitorService _monitorService;
         private readonly DiskSpaceService _diskSpaceService;
         private readonly FolderSizeAnalyzer _folderAnalyzer;
@@ -21,6 +22,9 @@ namespace CdiskClean
         {
             InitializeComponent();
 
+            // 初始化 ETW 监控
+            _etwService = new EtwMonitorService();
+
             // 初始化数据库
             var dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CdiskClean.db");
             _databaseService = new DatabaseService(dbPath);
@@ -28,7 +32,7 @@ namespace CdiskClean
 
             // 从数据库加载监视目录（空则用默认列表）
             var savedDirs = _databaseService.GetWatchDirectories();
-            _monitorService = new DiskMonitorService();
+            _monitorService = new DiskMonitorService(_etwService);
             if (savedDirs.Count > 0)
                 _monitorService.LoadDirectories(savedDirs);
             else
@@ -241,6 +245,7 @@ namespace CdiskClean
         {
             if (!_monitorService.IsRunning)
             {
+                _etwService.Start();
                 _monitorService.Start();
                 pauseBtn.Text = "暂停";
                 watchStatusLabel.Text = "监测中";
@@ -250,6 +255,7 @@ namespace CdiskClean
             else
             {
                 _monitorService.Stop();
+                _etwService.Stop();
                 pauseBtn.Text = "开始监测";
                 watchStatusLabel.Text = "已暂停";
                 watchStatusLabel.ForeColor = Color.Gray;
@@ -287,11 +293,12 @@ namespace CdiskClean
                     }
 
                     using var writer = new StreamWriter(dialog.FileName, false, System.Text.Encoding.UTF8);
-                    writer.WriteLine("时间,类型,文件名,路径,大小");
+                    writer.WriteLine("时间,类型,文件名,路径,大小,来源进程");
                     foreach (var r in snapshot)
                     {
                         var size = r.SizeBytes.HasValue ? r.SizeBytes.ToString() : "";
-                        writer.WriteLine($"{r.Timestamp:yyyy-MM-dd HH:mm:ss},{r.ChangeType},\"{r.FileName}\",\"{r.FullPath}\",{size}");
+                        var proc = r.SourceProcess ?? "";
+                        writer.WriteLine($"{r.Timestamp:yyyy-MM-dd HH:mm:ss},{r.ChangeType},\"{r.FileName}\",\"{r.FullPath}\",{size},\"{proc}\"");
                     }
 
                     BeginInvoke(() =>
@@ -568,6 +575,7 @@ namespace CdiskClean
         public void closeApplication()
         {
             _monitorService.Dispose();
+            _etwService.Dispose();
             diskRefreshTimer.Stop();
             timer1.Stop();
             Application.Exit();

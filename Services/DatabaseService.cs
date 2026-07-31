@@ -120,7 +120,7 @@ public class DatabaseService : IDatabaseService
         cmd.Parameters.AddWithValue("@FileName", record.FileName);
         cmd.Parameters.AddWithValue("@Dir", record.Directory);
         cmd.Parameters.AddWithValue("@Size", record.SizeBytes.HasValue ? (object)record.SizeBytes.Value : DBNull.Value);
-        cmd.Parameters.AddWithValue("@Source", DBNull.Value); // 后续实现来源识别
+        cmd.Parameters.AddWithValue("@Source", record.SourceProcess ?? (object)DBNull.Value);
         cmd.Parameters.AddWithValue("@Now", DateTime.Now.ToString("O"));
         cmd.ExecuteNonQuery();
     }
@@ -133,7 +133,7 @@ public class DatabaseService : IDatabaseService
         connection.Open();
 
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT Timestamp, ChangeType, FullPath, FileName, Directory, SizeBytes FROM ChangeRecords ORDER BY Id DESC LIMIT @Limit;";
+        cmd.CommandText = "SELECT Timestamp, ChangeType, FullPath, FileName, Directory, SizeBytes, SourceProcess FROM ChangeRecords ORDER BY Id DESC LIMIT @Limit;";
         cmd.Parameters.AddWithValue("@Limit", limit);
 
         using var reader = cmd.ExecuteReader();
@@ -146,7 +146,8 @@ public class DatabaseService : IDatabaseService
                 FullPath = reader.GetString(2),
                 FileName = reader.GetString(3),
                 Directory = reader.GetString(4),
-                SizeBytes = reader.IsDBNull(5) ? null : reader.GetInt64(5)
+                SizeBytes = reader.IsDBNull(5) ? null : reader.GetInt64(5),
+                SourceProcess = reader.IsDBNull(6) ? null : reader.GetString(6)
             });
         }
 

@@ -313,7 +313,7 @@ namespace CdiskClean
             changesDataGrid.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
             changesDataGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             changesDataGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            changesDataGrid.Columns.AddRange(new DataGridViewColumn[] { TimeColumn, TypeColumn, FileNameColumn, PathColumn, SizeColumn });
+            changesDataGrid.Columns.AddRange(new DataGridViewColumn[] { TimeColumn, TypeColumn, FileNameColumn, PathColumn, SizeColumn, SourceColumn });
             changesDataGrid.Location = new Point(12, 48);
             changesDataGrid.Name = "changesDataGrid";
             changesDataGrid.ReadOnly = true;
@@ -368,6 +368,16 @@ namespace CdiskClean
             SizeColumn.MinimumWidth = 8;
             SizeColumn.Name = "SizeColumn";
             SizeColumn.ReadOnly = true;
+            //
+            // SourceColumn
+            //
+            SourceColumn = new DataGridViewTextBoxColumn();
+            SourceColumn.DataPropertyName = "SourceProcess";
+            SourceColumn.FillWeight = 60F;
+            SourceColumn.HeaderText = "来源进程";
+            SourceColumn.MinimumWidth = 8;
+            SourceColumn.Name = "SourceColumn";
+            SourceColumn.ReadOnly = true;
             // 
             // folderAnalyzerPage
             // 
@@ -694,6 +704,7 @@ namespace CdiskClean
         private DataGridViewTextBoxColumn FileNameColumn;
         private DataGridViewTextBoxColumn PathColumn;
         private DataGridViewTextBoxColumn SizeColumn;
+        private DataGridViewTextBoxColumn SourceColumn;
         private TextBox dirSelectedTextBox;
         private Label label2;
         private Button dirAddButton;

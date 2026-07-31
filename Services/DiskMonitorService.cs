@@ -6,6 +6,7 @@ namespace CdiskClean.Services;
 public class DiskMonitorService : IDisposable
 {
     private readonly List<FileSystemWatcher> _watchers = new();
+    private readonly EtwMonitorService _etwService;
     private readonly object _lock = new();
     private volatile bool _paused;
 
@@ -17,6 +18,11 @@ public class DiskMonitorService : IDisposable
     private readonly ConcurrentDictionary<string, FileSystemWatcher> _watcherMap = new();
 
     public bool IsRunning => _watchers.Any(w => w.EnableRaisingEvents);
+
+    public DiskMonitorService(EtwMonitorService etwService)
+    {
+        _etwService = etwService;
+    }
 
     public bool HasDirectory(string path) =>
         _watcherMap.ContainsKey(path);
@@ -199,7 +205,8 @@ public class DiskMonitorService : IDisposable
             FullPath = e.FullPath,
             FileName = Path.GetFileName(e.FullPath),
             Directory = Path.GetDirectoryName(e.FullPath) ?? "",
-            SizeBytes = GetFileSizeSafe(e.FullPath)
+            SizeBytes = GetFileSizeSafe(e.FullPath),
+            SourceProcess = _etwService.TryGetProcess(e.FullPath)
         };
 
         FileChanged?.Invoke(record);
@@ -216,7 +223,8 @@ public class DiskMonitorService : IDisposable
             FullPath = e.FullPath,
             FileName = Path.GetFileName(e.FullPath),
             Directory = Path.GetDirectoryName(e.FullPath) ?? "",
-            SizeBytes = GetFileSizeSafe(e.FullPath)
+            SizeBytes = GetFileSizeSafe(e.FullPath),
+            SourceProcess = _etwService.TryGetProcess(e.FullPath)
         };
 
         FileChanged?.Invoke(record);

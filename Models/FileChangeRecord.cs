@@ -16,4 +16,5 @@ public class FileChangeRecord
     public string FileName { get; set; } = string.Empty;
     public string Directory { get; set; } = string.Empty;
     public long? SizeBytes { get; set; }
+    public string? SourceProcess { get; set; }
 }
