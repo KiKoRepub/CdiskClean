@@ -13,6 +13,7 @@ namespace CdiskClean
         private readonly DiskMonitorService _monitorService;
         private readonly DiskSpaceService _diskSpaceService;
         private readonly FolderSizeAnalyzer _folderAnalyzer;
+        private readonly StatisticsService _statisticsService;
         private readonly BindingList<FileChangeRecord> _records;
 
         private readonly object _recordsLock = new();
@@ -42,9 +43,15 @@ namespace CdiskClean
             _diskSpaceService = new DiskSpaceService();
             _folderAnalyzer = new FolderSizeAnalyzer();
 
+            // 初始化统计服务
+            _statisticsService = new StatisticsService();
+            _statisticsService.CountdownChanged += OnCountdownChanged;
+            _statisticsService.StatsReady += OnStatsReady;
+
             // 设置数据绑定
             _records = new BindingList<FileChangeRecord>();
             changesDataGrid.DataSource = _records;
+            
 
             typeFilterCombo.SelectedIndex = 0;
 
@@ -129,7 +136,11 @@ namespace CdiskClean
                 _ => "未知"
             };
         }
-
+        /// <summary>
+        /// 调整 ListViewItem 的前景色和背景色，以便根据状态显示不同的颜色
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="status"></param>
         private void ApplyDirItemStyle(ListViewItem item, DirectoryStatusEnum status)
         {
             switch (status)
@@ -255,6 +266,7 @@ namespace CdiskClean
             {
                 _etwService.Start();
                 _monitorService.Start();
+                _statisticsService.Start();
                 pauseBtn.Text = "暂停";
                 watchStatusLabel.Text = "监测中";
                 watchStatusLabel.ForeColor = Color.Green;
@@ -264,6 +276,7 @@ namespace CdiskClean
             {
                 _monitorService.Stop();
                 _etwService.Stop();
+                _statisticsService.Stop();
                 pauseBtn.Text = "开始监测";
                 watchStatusLabel.Text = "已暂停";
                 watchStatusLabel.ForeColor = Color.Gray;
@@ -326,7 +339,9 @@ namespace CdiskClean
         {
             ApplyFilter();
         }
-
+        /// <summary>
+        /// 添加类型过滤器的逻辑，根据选择的类型过滤显示的记录
+        /// </summary>
         private void ApplyFilter()
         {
             var filterIndex = typeFilterCombo.SelectedIndex;
@@ -354,6 +369,9 @@ namespace CdiskClean
 
         private void OnFileChanged(FileChangeRecord record)
         {
+            // 喂入统计服务
+            _statisticsService.RecordChange(record);
+
             BeginInvoke(() =>
             {
                 lock (_recordsLock)
@@ -592,6 +610,7 @@ namespace CdiskClean
         {
             _monitorService.Dispose();
             _etwService.Dispose();
+            _statisticsService.Dispose();
             diskRefreshTimer.Stop();
             timer1.Stop();
             Application.Exit();
@@ -687,9 +706,69 @@ namespace CdiskClean
 
         private void statisticButton_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("还没完成呢，等等吧");
-            //System.Diagnostics.Tracing.EventSource 
-               
+            List<FileChangeRecord> snapshot;
+            lock (_recordsLock)
+            {
+                snapshot = _records.ToList();
+            }
+
+            if (snapshot.Count == 0)
+            {
+                MessageBox.Show("暂无变更记录。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var form3 = new Form3(snapshot);
+            form3.ShowDialog();
+        }
+
+        private void OnCountdownChanged(int remaining)
+        {
+            BeginInvoke(() =>
+            {
+                if (remaining > 0)
+                {
+                    statsCountdownLabel.Text = $"倒计时: {remaining}s";
+                    statsCountdownLabel.ForeColor = Color.SteelBlue;
+                }
+                else
+                {
+                    statsCountdownLabel.Text = "统计就绪";
+                    statsCountdownLabel.ForeColor = Color.Green;
+                }
+            });
+        }
+
+        private void OnStatsReady(List<Models.AppChangeStats> stats)
+        {
+            BeginInvoke(() =>
+            {
+                if (stats.Count == 0)
+                {
+                    statsSummaryLabel.Text = "暂无统计数据";
+                    return;
+                }
+
+                var lines = new List<string>();
+                foreach (var s in stats.Take(5))
+                {
+                    var timeStr = s.LastChangeTime.ToString("HH:mm:ss");
+                    lines.Add($"{s.AppName}: {s.ChangeCount}次 (最后: {timeStr})");
+                }
+
+                if (stats.Count > 5)
+                    lines.Add($"...及其他 {stats.Count - 5} 个应用");
+
+                statsSummaryLabel.Text = string.Join("  |  ", lines);
+            });
+        }
+
+        private void statsResetBtn_Click(object? sender, EventArgs e)
+        {
+            _statisticsService.Reset();
+            statsCountdownLabel.Text = "倒计时: --s";
+            statsCountdownLabel.ForeColor = Color.SteelBlue;
+            statsSummaryLabel.Text = "等待数据收集中...";
         }
     }
 }

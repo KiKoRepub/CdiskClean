@@ -44,7 +44,7 @@ public class FileChangeRecord : INotifyPropertyChanged
         get => _fileName;
         set { _fileName = value; OnPropertyChanged(); }
     }
-
+    [Browsable(false)]
     public string Directory
     {
         get => _directory;
@@ -63,6 +63,7 @@ public class FileChangeRecord : INotifyPropertyChanged
         set { _sourceProcess = value; OnPropertyChanged(); }
     }
 
+    // Î¯ÍÐ 
     public event PropertyChangedEventHandler? PropertyChanged;
 
     protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)

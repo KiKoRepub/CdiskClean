@@ -29,7 +29,7 @@ namespace CdiskClean
 
         private void StartEtwMonitoring(string targetFileName)
         {
-            
+
             Task.Run(() =>
             {
                 // 1. 创建 ETW 会话 (需要管理员权限)
@@ -75,6 +75,13 @@ namespace CdiskClean
             _cts?.Cancel();
         }
 
+        private void button1_Click(object sender, EventArgs e)
+        {
+            notifyIcon1.Visible = true;
+            notifyIcon1.ShowBalloonTip(1000,
+                "当前时间：", DateTime.Now.ToLocalTime().ToString(), 
+                ToolTipIcon.Info);
+        }
     }
 
     // 定义一个后台任务来运行 ETW 监控

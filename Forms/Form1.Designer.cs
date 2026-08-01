@@ -19,6 +19,10 @@ namespace CdiskClean
         {
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
+            statsPanel = new GroupBox();
+            statsCountdownLabel = new Label();
+            statsSummaryLabel = new Label();
+            statsResetBtn = new Button();
             TabPageControl1 = new TabControl();
             totalReviewPage = new TabPage();
             warningLabel = new Label();
@@ -172,6 +176,7 @@ namespace CdiskClean
             // watcherPage
             // 
             watcherPage.Controls.Add(statisticButton);
+            watcherPage.Controls.Add(statsPanel);
             watcherPage.Controls.Add(dirAddButton);
             watcherPage.Controls.Add(WatcherDirectoryBox);
             watcherPage.Controls.Add(exportBtn);
@@ -187,17 +192,61 @@ namespace CdiskClean
             watcherPage.TabIndex = 1;
             watcherPage.Text = "实时监测";
             watcherPage.UseVisualStyleBackColor = true;
-            // 
+            //
             // statisticButton
-            // 
+            //
             statisticButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             statisticButton.Location = new Point(12, 460);
             statisticButton.Name = "statisticButton";
             statisticButton.Size = new Size(139, 47);
             statisticButton.TabIndex = 11;
-            statisticButton.Text = "获取统计";
+            statisticButton.Text = "查看详情记录";
             statisticButton.UseVisualStyleBackColor = true;
             statisticButton.Click += statisticButton_Click;
+            //
+            // statsPanel
+            //
+            statsPanel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            statsPanel.Controls.Add(statsCountdownLabel);
+            statsPanel.Controls.Add(statsSummaryLabel);
+            statsPanel.Controls.Add(statsResetBtn);
+            statsPanel.Location = new Point(160, 444);
+            statsPanel.Name = "statsPanel";
+            statsPanel.Size = new Size(528, 78);
+            statsPanel.TabIndex = 12;
+            statsPanel.TabStop = false;
+            statsPanel.Text = "统计面板";
+            //
+            // statsCountdownLabel
+            //
+            statsCountdownLabel.AutoSize = true;
+            statsCountdownLabel.Font = new Font("Microsoft YaHei UI", 10F, FontStyle.Bold, GraphicsUnit.Point, 134);
+            statsCountdownLabel.ForeColor = Color.SteelBlue;
+            statsCountdownLabel.Location = new Point(6, 22);
+            statsCountdownLabel.Name = "statsCountdownLabel";
+            statsCountdownLabel.Size = new Size(130, 27);
+            statsCountdownLabel.TabIndex = 0;
+            statsCountdownLabel.Text = "倒计时: --s";
+            //
+            // statsSummaryLabel
+            //
+            statsSummaryLabel.AutoSize = true;
+            statsSummaryLabel.Location = new Point(6, 49);
+            statsSummaryLabel.Name = "statsSummaryLabel";
+            statsSummaryLabel.Size = new Size(200, 24);
+            statsSummaryLabel.TabIndex = 1;
+            statsSummaryLabel.Text = "等待数据收集中...";
+            //
+            // statsResetBtn
+            //
+            statsResetBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            statsResetBtn.Location = new Point(448, 16);
+            statsResetBtn.Name = "statsResetBtn";
+            statsResetBtn.Size = new Size(74, 34);
+            statsResetBtn.TabIndex = 2;
+            statsResetBtn.Text = "重置";
+            statsResetBtn.UseVisualStyleBackColor = true;
+            statsResetBtn.Click += statsResetBtn_Click;
             // 
             // dirAddButton
             // 
@@ -714,5 +763,9 @@ namespace CdiskClean
         private Button dirAddButton;
         private FolderBrowserDialog ImportFolderDialog;
         private Button statisticButton;
+        private GroupBox statsPanel;
+        private Label statsCountdownLabel;
+        private Label statsSummaryLabel;
+        private Button statsResetBtn;
     }
 }
