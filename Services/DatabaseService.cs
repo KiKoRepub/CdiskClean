@@ -43,6 +43,15 @@ public class DatabaseService : IDatabaseService
                 SizeBytes INTEGER,
                 SourceProcess TEXT,
                 CreatedAt TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS ProcessNotifications (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ProcessName TEXT NOT NULL,
+                OperationCount INTEGER NOT NULL,
+                DurationSeconds INTEGER NOT NULL,
+                TriggerTime TEXT NOT NULL,
+                CreatedAt TEXT NOT NULL
             );";
 
         cmd.ExecuteNonQuery();
@@ -162,5 +171,48 @@ public class DatabaseService : IDatabaseService
         using var cmd = connection.CreateCommand();
         cmd.CommandText = "DELETE FROM ChangeRecords;";
         cmd.ExecuteNonQuery();
+    }
+
+    public void SaveProcessNotification(ProcessNotificationRecord record)
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"INSERT INTO ProcessNotifications (ProcessName, OperationCount, DurationSeconds, TriggerTime, CreatedAt)
+                            VALUES (@Name, @Count, @Duration, @TriggerTime, @Now);";
+
+        cmd.Parameters.AddWithValue("@Name", record.ProcessName);
+        cmd.Parameters.AddWithValue("@Count", record.OperationCount);
+        cmd.Parameters.AddWithValue("@Duration", record.DurationSeconds);
+        cmd.Parameters.AddWithValue("@TriggerTime", record.TriggerTime.ToString("O"));
+        cmd.Parameters.AddWithValue("@Now", DateTime.Now.ToString("O"));
+        cmd.ExecuteNonQuery();
+    }
+
+    public List<ProcessNotificationRecord> GetProcessNotifications(int limit = 200)
+    {
+        var list = new List<ProcessNotificationRecord>();
+
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT ProcessName, OperationCount, DurationSeconds, TriggerTime FROM ProcessNotifications ORDER BY Id DESC LIMIT @Limit;";
+        cmd.Parameters.AddWithValue("@Limit", limit);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            list.Add(new ProcessNotificationRecord
+            {
+                ProcessName = reader.GetString(0),
+                OperationCount = reader.GetInt32(1),
+                DurationSeconds = reader.GetInt32(2),
+                TriggerTime = DateTime.Parse(reader.GetString(3))
+            });
+        }
+
+        return list;
     }
 }

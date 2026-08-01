@@ -11,4 +11,6 @@ public interface IDatabaseService
     void SaveChangeRecord(FileChangeRecord record);
     List<FileChangeRecord> GetChangeRecords(int limit = 1000);
     void ClearChangeRecords();
+    void SaveProcessNotification(ProcessNotificationRecord record);
+    List<ProcessNotificationRecord> GetProcessNotifications(int limit = 200);
 }

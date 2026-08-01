@@ -14,6 +14,7 @@ namespace CdiskClean
         private readonly DiskSpaceService _diskSpaceService;
         private readonly FolderSizeAnalyzer _folderAnalyzer;
         private readonly StatisticsService _statisticsService;
+        private readonly NotificationService _notificationService;
         private readonly BindingList<FileChangeRecord> _records;
 
         private readonly object _recordsLock = new();
@@ -47,6 +48,10 @@ namespace CdiskClean
             _statisticsService = new StatisticsService();
             _statisticsService.CountdownChanged += OnCountdownChanged;
             _statisticsService.StatsReady += OnStatsReady;
+
+            // 初始化右下角提醒服务（与统计按钮相互独立）
+            _notificationService = new NotificationService();
+            _notificationService.NotificationTriggered += OnNotificationTriggered;
 
             // 设置数据绑定
             _records = new BindingList<FileChangeRecord>();
@@ -267,6 +272,7 @@ namespace CdiskClean
                 _etwService.Start();
                 _monitorService.Start();
                 _statisticsService.Start();
+                _notificationService.Start();
                 pauseBtn.Text = "暂停";
                 watchStatusLabel.Text = "监测中";
                 watchStatusLabel.ForeColor = Color.Green;
@@ -277,6 +283,7 @@ namespace CdiskClean
                 _monitorService.Stop();
                 _etwService.Stop();
                 _statisticsService.Stop();
+                _notificationService.Stop();
                 pauseBtn.Text = "开始监测";
                 watchStatusLabel.Text = "已暂停";
                 watchStatusLabel.ForeColor = Color.Gray;
@@ -372,6 +379,10 @@ namespace CdiskClean
             // 喂入统计服务
             _statisticsService.RecordChange(record);
 
+            // 进程已知时直接喂入提醒服务；未知的等待 ETW 延迟解析后在 OnFileRecordUpdated 补入
+            if (record.SourceProcess != null)
+                _notificationService.RecordChange(record);
+
             BeginInvoke(() =>
             {
                 lock (_recordsLock)
@@ -406,9 +417,36 @@ namespace CdiskClean
 
         private void OnFileRecordUpdated(FileChangeRecord record)
         {
+            // ETW 延迟解析到来源进程后，补喂提醒服务（避免归入"未知进程"）
+            if (record.SourceProcess != null)
+                _notificationService.RecordChange(record);
+
             BeginInvoke(() =>
             {
                 changesDataGrid.Refresh();
+            });
+        }
+
+        private void OnNotificationTriggered(ProcessNotificationRecord record)
+        {
+            try
+            {
+                _databaseService.SaveProcessNotification(record);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"保存提醒记录失败: {ex.Message}");
+            }
+
+            if (!IsHandleCreated) return;
+
+            BeginInvoke(() =>
+            {
+                notifyIcon1.Visible = true;
+                notifyIcon1.ShowBalloonTip(3000,
+                    "进程操作提醒",
+                    $"进程 {record.ProcessName} 在 {record.DurationSeconds} 秒 内 对监控目录 执行了 {record.OperationCount} 次操作。",
+                    ToolTipIcon.Info);
             });
         }
 
@@ -611,6 +649,7 @@ namespace CdiskClean
             _monitorService.Dispose();
             _etwService.Dispose();
             _statisticsService.Dispose();
+            _notificationService.Dispose();
             diskRefreshTimer.Stop();
             timer1.Stop();
             Application.Exit();
@@ -718,8 +757,10 @@ namespace CdiskClean
                 return;
             }
 
-            var form3 = new Form3(snapshot);
-            form3.ShowDialog();
+            // 提醒记录来自数据库，与右下角提示展示逻辑相互独立
+            var notifications = _databaseService.GetProcessNotifications();
+            var form4 = new Form4(snapshot, notifications);
+            form4.ShowDialog();
         }
 
         private void OnCountdownChanged(int remaining)
