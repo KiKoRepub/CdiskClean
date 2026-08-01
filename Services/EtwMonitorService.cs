@@ -113,49 +113,83 @@ public class EtwMonitorService : IDisposable
         }
     }
     /// <summary>
-    /// 尝试获取指定文件路径关联的进程名，如果存在且未过期。
+    /// 快速单次查找，不重试，不移除缓冲。用于 FSW 事件触发时的即时查询。
     /// </summary>
-    /// <param name="filePath">需要获取关联进程名的文件路径</param>
-    /// <returns>The process name if found and valid; otherwise, null.</returns>
-    public string? TryGetProcess(string filePath)
+    public string? TryGetProcessOnce(string filePath)
     {
-
-
-        // 前置判断
         if (!IsRunning || string.IsNullOrEmpty(filePath)) return null;
 
-
-        string processNameResult = "未知进程";
-
-        // === 核心逻辑：重试机制 ===
-        // 因为 ETW 可能比 FSW 慢几毫秒，我们尝试在短时间内查找几次
-        int retryCount = 0;
-        const int maxRetries = 10; // 最多尝试 10 次
-        const int retryDelay = 20; // 每次等待 20 毫秒 (总共最多等待 200ms)
-        while (retryCount < maxRetries)
+        var normalized = NormalizePath(filePath);
+        if (_eventBuffer.TryGetValue(normalized, out var entry))
         {
-            // 正式 逻辑
-            var normalized = NormalizePath(filePath);
+            if (DateTime.Now - entry.Timestamp <= _bufferTtl)
+                return entry.ProcessName;
+        }
+        return null;
+    }
 
+    /// <summary>
+    /// 异步重试查询进程名。ETW 事件可能比 FSW 晚到，在后台延迟重试。
+    /// </summary>
+    /// <param name="filePath">文件路径</param>
+    /// <param name="maxDelayMs">最大等待毫秒数（默认 1500ms）</param>
+    /// <param name="ct">取消令牌</param>
+    /// <returns>进程名，超时则返回 null</returns>
+    public async Task<string?> TryGetProcessAsync(string filePath, int maxDelayMs = 1500, CancellationToken ct = default)
+    {
+        if (!IsRunning || string.IsNullOrEmpty(filePath)) return null;
+
+        var normalized = NormalizePath(filePath);
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+
+        while (sw.ElapsedMilliseconds < maxDelayMs && !ct.IsCancellationRequested)
+        {
             if (_eventBuffer.TryGetValue(normalized, out var entry))
             {
-
                 if (DateTime.Now - entry.Timestamp <= _bufferTtl)
-                    processNameResult = entry.ProcessName;
-
-                // 获取到了记得移除，避免脏读（下次误判）
-                _eventBuffer.TryRemove(filePath, out _);
-                  
+                {
+                    _eventBuffer.TryRemove(normalized, out _);
+                    return entry.ProcessName;
+                }
             }
 
-            // 如果没找到，睡一小会儿再试
-            Thread.Sleep(retryDelay);
-            retryCount++;
+            try
+            {
+                await Task.Delay(50, ct);
+            }
+            catch (OperationCanceledException)
+            {
+                return null;
+            }
         }
 
-       
+        return null;
+    }
 
-        return processNameResult;
+    /// <summary>
+    /// 同步重试查询进程名（保留原方法签名，内部委托给异步版本）。
+    /// </summary>
+    public string? TryGetProcess(string filePath)
+    {
+        if (!IsRunning || string.IsNullOrEmpty(filePath)) return null;
+
+        var normalized = NormalizePath(filePath);
+
+        for (int i = 0; i < 10; i++)
+        {
+            if (_eventBuffer.TryGetValue(normalized, out var entry))
+            {
+                if (DateTime.Now - entry.Timestamp <= _bufferTtl)
+                {
+                    _eventBuffer.TryRemove(normalized, out _);
+                    return entry.ProcessName;
+                }
+            }
+
+            Thread.Sleep(20);
+        }
+
+        return "未知进程";
     }
 
     private void CleanupBuffer()

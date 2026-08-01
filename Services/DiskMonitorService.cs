@@ -1,6 +1,5 @@
 using System.Collections.Concurrent;
 using CdiskClean.Models;
-using Microsoft.Diagnostics.Tracing.Parsers.MicrosoftWindowsTCPIP;
 
 namespace CdiskClean.Services;
 
@@ -12,11 +11,19 @@ public class DiskMonitorService : IDisposable
     private volatile bool _paused;
 
     public event Action<FileChangeRecord>? FileChanged;
+    public event Action<FileChangeRecord>? FileRecordUpdated;
     public event Action<string>? MonitorError;
 
     public List<WatchingDirectory> WatchDirectories { get; } = new();
 
     private readonly ConcurrentDictionary<string, FileSystemWatcher> _watcherMap = new();
+
+    // 延迟查询机制：FSW 先触发，ETW 可能还没捕捉到进程信息
+    private readonly ConcurrentQueue<PendingQuery> _pendingQueries = new();
+    private CancellationTokenSource? _deferredCts;
+    private Task? _deferredTask;
+
+    private record struct PendingQuery(FileChangeRecord Record, string FilePath);
 
     public bool IsRunning => _watchers.Any(w => w.EnableRaisingEvents);
 
@@ -68,10 +75,17 @@ public class DiskMonitorService : IDisposable
                 StartWatchingInternal(item.Path, item.IncludeSubdirs);
             }
         }
+
+        // 启动延迟查询后台处理器
+        _deferredCts = new CancellationTokenSource();
+        _deferredTask = Task.Run(() => ProcessPendingQueriesAsync(_deferredCts.Token));
     }
 
     public void Stop()
     {
+        _deferredCts?.Cancel();
+        _deferredTask = null;
+
         lock (_lock)
         {
             foreach (var w in _watchers)
@@ -207,6 +221,9 @@ public class DiskMonitorService : IDisposable
             _ => ChangeType.Changed
         };
 
+        // 先用快速非阻塞方式查询 ETW 缓冲区
+        var processName = _etwService.TryGetProcessOnce(e.FullPath);
+
         var record = new FileChangeRecord
         {
             Timestamp = DateTime.Now,
@@ -215,15 +232,21 @@ public class DiskMonitorService : IDisposable
             FileName = Path.GetFileName(e.FullPath),
             Directory = Path.GetDirectoryName(e.FullPath) ?? "",
             SizeBytes = GetFileSizeSafe(e.FullPath),
-            SourceProcess = _etwService.TryGetProcess(e.FullPath)
+            SourceProcess = processName
         };
 
         FileChanged?.Invoke(record);
+
+        // 如果未命中 ETW 缓冲，放入延迟查询队列
+        if (processName == null)
+            _pendingQueries.Enqueue(new PendingQuery(record, e.FullPath));
     }
 
     private void OnRenamed(object sender, RenamedEventArgs e)
     {
         if (_paused) return;
+
+        var processName = _etwService.TryGetProcessOnce(e.FullPath);
 
         var record = new FileChangeRecord
         {
@@ -233,10 +256,13 @@ public class DiskMonitorService : IDisposable
             FileName = Path.GetFileName(e.FullPath),
             Directory = Path.GetDirectoryName(e.FullPath) ?? "",
             SizeBytes = GetFileSizeSafe(e.FullPath),
-            SourceProcess = _etwService.TryGetProcess(e.FullPath)
+            SourceProcess = processName
         };
 
         FileChanged?.Invoke(record);
+
+        if (processName == null)
+            _pendingQueries.Enqueue(new PendingQuery(record, e.FullPath));
     }
 
     private void OnError(object sender, ErrorEventArgs e)
@@ -267,8 +293,44 @@ public class DiskMonitorService : IDisposable
             : Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
     }
 
+    /// <summary>
+    /// 后台处理延迟查询队列。FSW 比 ETW 先触发时，在此异步重试获取进程名。
+    /// </summary>
+    private async Task ProcessPendingQueriesAsync(CancellationToken ct)
+    {
+        while (!ct.IsCancellationRequested)
+        {
+            while (_pendingQueries.TryDequeue(out var query))
+            {
+                try
+                {
+                    var processName = await _etwService.TryGetProcessAsync(query.FilePath, 1500, ct);
+                    if (processName != null)
+                    {
+                        query.Record.SourceProcess = processName;
+                        FileRecordUpdated?.Invoke(query.Record);
+                    }
+                }
+                catch
+                {
+                    // 单条查询失败不影响后续处理
+                }
+            }
+
+            try
+            {
+                await Task.Delay(100, ct);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+        }
+    }
+
     public void Dispose()
     {
         Stop();
+        _deferredCts?.Dispose();
     }
 }

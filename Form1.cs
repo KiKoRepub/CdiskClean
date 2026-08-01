@@ -50,6 +50,7 @@ namespace CdiskClean
 
             // 订阅监视服务事件
             _monitorService.FileChanged += OnFileChanged;
+            _monitorService.FileRecordUpdated += OnFileRecordUpdated;
             _monitorService.MonitorError += OnMonitorError;
 
             // 初始化目录列表视图
@@ -382,6 +383,14 @@ namespace CdiskClean
             BeginInvoke(() =>
             {
                 writedRecordStatusLabel.Text = message;
+            });
+        }
+
+        private void OnFileRecordUpdated(FileChangeRecord record)
+        {
+            BeginInvoke(() =>
+            {
+                changesDataGrid.Refresh();
             });
         }
 
