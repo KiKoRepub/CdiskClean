@@ -45,6 +45,7 @@ namespace CdiskClean
             // 设置数据绑定
             _records = new BindingList<FileChangeRecord>();
             changesDataGrid.DataSource = _records;
+
             typeFilterCombo.SelectedIndex = 0;
 
             // 订阅监视服务事件
@@ -151,9 +152,15 @@ namespace CdiskClean
         {
             watcherDirListView.MouseClick += watcherDirListView_MouseClick;
         }
-
+        /// <summary>
+        /// 点击之后 根据目标显示不同的菜单
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void watcherDirListView_MouseClick(object? sender, MouseEventArgs e)
         {
+
+            // 前置判断
             if (e.Button != MouseButtons.Right) return;
 
             var item = watcherDirListView.GetItemAt(e.X, e.Y);
@@ -645,7 +652,6 @@ namespace CdiskClean
                 string selectedPath = ImportFolderDialog.SelectedPath;
                 //MessageBox.Show(selectedPath);
                 // 将选中的目录添加到监视列表
-                // 存储到数据库
                 WatchingDirectory dir = _monitorService.AddDirectory(selectedPath, true);
                 // 显示在列表
                 addWatchingToListView(dir);

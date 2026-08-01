@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using CdiskClean.Models;
+using Microsoft.Diagnostics.Tracing.Parsers.MicrosoftWindowsTCPIP;
 
 namespace CdiskClean.Services;
 
@@ -31,7 +32,14 @@ public class DiskMonitorService : IDisposable
     public void LoadDirectories(List<WatchingDirectory> dirs)
     {
         WatchDirectories.Clear();
-        WatchDirectories.AddRange(dirs.Where(d => d.Status != DirectoryStatusEnum.DELETED));
+        // 先去重 再筛选
+        var usingFolderList = dirs
+            .Where(d => d.Status != DirectoryStatusEnum.DELETED);
+
+        // 存进 监视列表，ETW 白名单
+        WatchDirectories.AddRange(usingFolderList);
+        // 原子操作
+        _etwService.OperateWriteFolderArr(usingFolderList.Select(f => f.Path).ToArray());
     }
 
     /// <summary>初始化默认监视目录（数据库为空时使用）</summary>
@@ -148,6 +156,7 @@ public class DiskMonitorService : IDisposable
         if (WatchDirectories.Any(d => d.Path == path)) return dir;
         
         WatchDirectories.Add(dir);
+        _etwService.OperateWriteFolderArr(dir.Path, 1);
 
         if (_watchers.Any(w => w.EnableRaisingEvents))
             StartDirectory(path, includeSubdirs);

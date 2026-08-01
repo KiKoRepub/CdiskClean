@@ -304,25 +304,7 @@ namespace CdiskClean
             pauseBtn.Text = "开始监测";
             pauseBtn.UseVisualStyleBackColor = true;
             pauseBtn.Click += pauseBtn_Click;
-            // 
-            // changesDataGrid
-            // 
-            changesDataGrid.AllowUserToAddRows = false;
-            changesDataGrid.AllowUserToDeleteRows = false;
-            changesDataGrid.AllowUserToResizeRows = false;
-            changesDataGrid.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
-            changesDataGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            changesDataGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            changesDataGrid.Columns.AddRange(new DataGridViewColumn[] { TimeColumn, TypeColumn, FileNameColumn, PathColumn, SizeColumn, SourceColumn });
-            changesDataGrid.Location = new Point(12, 48);
-            changesDataGrid.Name = "changesDataGrid";
-            changesDataGrid.ReadOnly = true;
-            changesDataGrid.RowHeadersVisible = false;
-            changesDataGrid.RowHeadersWidth = 62;
-            changesDataGrid.RowTemplate.Height = 25;
-            changesDataGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            changesDataGrid.Size = new Size(676, 396);
-            changesDataGrid.TabIndex = 5;
+
             // 
             // TimeColumn
             // 
@@ -378,6 +360,28 @@ namespace CdiskClean
             SourceColumn.MinimumWidth = 8;
             SourceColumn.Name = "SourceColumn";
             SourceColumn.ReadOnly = true;
+
+
+            // 
+            // changesDataGrid
+            // 
+            changesDataGrid.AllowUserToAddRows = false;
+            changesDataGrid.AllowUserToDeleteRows = false;
+            changesDataGrid.AllowUserToResizeRows = false;
+            changesDataGrid.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
+            changesDataGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            changesDataGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            changesDataGrid.Columns.AddRange(new DataGridViewColumn[] { TimeColumn, TypeColumn, FileNameColumn, PathColumn, SizeColumn, SourceColumn });
+            changesDataGrid.Location = new Point(12, 48);
+            changesDataGrid.Name = "changesDataGrid";
+            changesDataGrid.ReadOnly = true;
+            changesDataGrid.RowHeadersVisible = false;
+            changesDataGrid.RowHeadersWidth = 62;
+            changesDataGrid.RowTemplate.Height = 25;
+            changesDataGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            changesDataGrid.Size = new Size(676, 396);
+            changesDataGrid.TabIndex = 5;
+
             // 
             // folderAnalyzerPage
             // 
