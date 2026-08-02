@@ -206,12 +206,24 @@ public class DatabaseService : IDatabaseService
     {
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
-        using var cmd = connection.CreateCommand();
-        cmd.CommandText = @"INSERT INTO IgnoreProcessRecord (ProcessName, CreatedAt)
-                            VALUES (@Name, @Now);";
-        cmd.Parameters.AddWithValue("@Name", record.ProcessName);
-        cmd.Parameters.AddWithValue("@Now", DateTime.Now.ToString("O"));
-        cmd.ExecuteNonQuery();
+
+        // 先更新，不存在再插入（兼容旧库无 UNIQUE 约束的表结构）
+        using (var updateCmd = connection.CreateCommand())
+        {
+            updateCmd.CommandText = @"UPDATE IgnoreProcessRecord SET Status = @Status
+                                      WHERE ProcessName = @Name;";
+            updateCmd.Parameters.AddWithValue("@Name", record.ProcessName);
+            updateCmd.Parameters.AddWithValue("@Status", record.Status.ToString());
+            if (updateCmd.ExecuteNonQuery() > 0) return;
+        }
+
+        using var insertCmd = connection.CreateCommand();
+        insertCmd.CommandText = @"INSERT INTO IgnoreProcessRecord (ProcessName, Status, CreatedAt)
+                                  VALUES (@Name, @Status, @Now);";
+        insertCmd.Parameters.AddWithValue("@Name", record.ProcessName);
+        insertCmd.Parameters.AddWithValue("@Status", record.Status.ToString());
+        insertCmd.Parameters.AddWithValue("@Now", DateTime.Now.ToString("O"));
+        insertCmd.ExecuteNonQuery();
     }
 
     public List<IgnoreProcessRecord> GetIgnoreProcessRecords(int limit = 200)
@@ -220,12 +232,16 @@ public class DatabaseService : IDatabaseService
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT ProcessName FROM IgnoreProcessRecord ORDER BY Id DESC LIMIT @Limit;";
+        cmd.CommandText = "SELECT ProcessName, Status FROM IgnoreProcessRecord ORDER BY Id DESC LIMIT @Limit;";
         cmd.Parameters.AddWithValue("@Limit", limit);
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
-            list.Add(new IgnoreProcessRecord(reader.GetString(0)));
+            list.Add(new IgnoreProcessRecord(reader.GetString(0))
+            {
+                Status = Enum.TryParse<RecordStatusEnum>(reader.GetString(1), out var s)
+                    ? s : RecordStatusEnum.USING
+            });
         }
         return list;
     }

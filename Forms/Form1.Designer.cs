@@ -1,4 +1,4 @@
-namespace CdiskClean
+    namespace CdiskClean
 {
     partial class Form1
     {
@@ -34,7 +34,7 @@ namespace CdiskClean
             watcherPage = new TabPage();
             ignoreProcessBox = new GroupBox();
             ProcessAddButton = new Button();
-            textBox1 = new TextBox();
+            procSelectedTextBox = new TextBox();
             label3 = new Label();
             ignoreProcessView = new ListView();
             statisticButton = new Button();
@@ -248,7 +248,7 @@ namespace CdiskClean
             // ignoreProcessBox
             // 
             ignoreProcessBox.Controls.Add(ProcessAddButton);
-            ignoreProcessBox.Controls.Add(textBox1);
+            ignoreProcessBox.Controls.Add(procSelectedTextBox);
             ignoreProcessBox.Controls.Add(label3);
             ignoreProcessBox.Controls.Add(ignoreProcessView);
             ignoreProcessBox.Location = new Point(848, 318);
@@ -269,15 +269,15 @@ namespace CdiskClean
             ProcessAddButton.UseVisualStyleBackColor = true;
             ProcessAddButton.Click += ProcessAddButton_Click;
             // 
-            // textBox1
+            // procSelectedTextBox
             // 
-            textBox1.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            textBox1.Location = new Point(191, 250);
-            textBox1.Multiline = true;
-            textBox1.Name = "textBox1";
-            textBox1.ReadOnly = true;
-            textBox1.Size = new Size(357, 49);
-            textBox1.TabIndex = 2;
+            procSelectedTextBox.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            procSelectedTextBox.Location = new Point(191, 250);
+            procSelectedTextBox.Multiline = true;
+            procSelectedTextBox.Name = "procSelectedTextBox";
+            procSelectedTextBox.ReadOnly = true;
+            procSelectedTextBox.Size = new Size(357, 49);
+            procSelectedTextBox.TabIndex = 2;
             // 
             // label3
             // 
@@ -299,7 +299,10 @@ namespace CdiskClean
             ignoreProcessView.Size = new Size(521, 159);
             ignoreProcessView.TabIndex = 0;
             ignoreProcessView.UseCompatibleStateImageBehavior = false;
+            ignoreProcessView.ItemSelectionChanged += ignoreProcessView_ItemSelectionChanged;
             ignoreProcessView.DragEnter += ignoreProcessView_DragEnter;
+            ignoreProcessView.DragDrop += ignoreProcessView_DragDrop;
+            ignoreProcessView.Resize += ignoreProcessView_Resize;
             // 
             // statisticButton
             // 
@@ -439,6 +442,9 @@ namespace CdiskClean
             changesDataGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             changesDataGrid.Size = new Size(676, 520);
             changesDataGrid.TabIndex = 5;
+            changesDataGrid.MouseDown += changesDataGrid_MouseDown;
+            changesDataGrid.MouseMove += changesDataGrid_MouseMove;
+            changesDataGrid.MouseUp += changesDataGrid_MouseUp;
             // 
             // TimeColumn
             // 
@@ -836,7 +842,7 @@ namespace CdiskClean
         private GroupBox ignoreProcessBox;
         private ListView ignoreProcessView;
         private Label label3;
-        private TextBox textBox1;
+        private TextBox procSelectedTextBox;
         private Button ProcessAddButton;
     }
 }

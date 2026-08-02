@@ -16,11 +16,13 @@ public class DiskMonitorService : IDisposable
 
     public List<WatchingDirectory> WatchDirectories { get; } = new();
 
+    public List<IgnoreProcessRecord> IgnoreProcessRecords { get; } = new();
+
     private readonly ConcurrentDictionary<string, FileSystemWatcher> _watcherMap = new();
 
     // 延迟查询机制：FSW 先触发，ETW 可能还没捕捉到进程信息
     private readonly ConcurrentQueue<PendingQuery> _pendingQueries = new();
-    private CancellationTokenSource? _deferredCts;
+    private CancellationTokenSource? _deferredCts; // 用于取消延迟查询任务
     private Task? _deferredTask;
 
     private record struct PendingQuery(FileChangeRecord Record, string FilePath);
@@ -53,16 +55,7 @@ public class DiskMonitorService : IDisposable
     public void LoadDefaults()
     {
         WatchDirectories.Clear();
-        WatchDirectories.AddRange(new List<WatchingDirectory>
-        {
-            new(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), true),
-            new(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), true),
-            new(GetDownloadsPath(), true),
-            new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Temp"), true),
-            new(@"C:\Windows\Temp", true),
-            new(@"C:\Program Files", false),
-            new(@"C:\Program Files (x86)", false)
-        });
+        WatchDirectories.AddRange(WatchingDirectory.getDefaultDirectories());
     }
 
     public void Start()
@@ -178,11 +171,41 @@ public class DiskMonitorService : IDisposable
         return dir;
     }
 
-    public IgnoreProcessRecord AddIgnoreProcessToEtwArr(string processName)
+    /// <summary>用外部忽略进程列表（如数据库）初始化，并同步 ETW 黑名单</summary>
+    public void LoadIgnoreProcesses(List<IgnoreProcessRecord> records)
     {
+        IgnoreProcessRecords.Clear();
+        IgnoreProcessRecords.AddRange(records);
+
+        // 只有 USING 状态的进程才进 ETW 黑名单
+        _etwService.OperateIgnoreProcessArr(
+            records.Where(r => r.Status == RecordStatusEnum.USING)
+                   .Select(r => r.ProcessName).ToArray());
+    }
+
+    /// <summary>添加忽略进程并同步 ETW 黑名单（已存在则返回现有记录）</summary>
+    public IgnoreProcessRecord AddIgnoreProcess(string processName)
+    {
+        var existing = IgnoreProcessRecords.FirstOrDefault(r =>
+            string.Equals(r.ProcessName, processName, StringComparison.OrdinalIgnoreCase));
+        if (existing != null) return existing;
+
         var record = new IgnoreProcessRecord(processName);
+        IgnoreProcessRecords.Add(record);
         _etwService.OperateIgnoreProcessArr(record.ProcessName, 1);
         return record;
+    }
+
+    /// <summary>更新忽略进程状态：USING 加入 ETW 黑名单，其他状态移出黑名单</summary>
+    public void SetIgnoreProcessStatus(string processName, RecordStatusEnum status)
+    {
+        var item = IgnoreProcessRecords.FirstOrDefault(r =>
+            string.Equals(r.ProcessName, processName, StringComparison.OrdinalIgnoreCase));
+        if (item != null)
+            item.Status = status;
+
+        _etwService.OperateIgnoreProcessArr(processName,
+            status == RecordStatusEnum.USING ? 1 : 2);
     }
 
     private void StartWatchingInternal(string dir, bool includeSubdirs)

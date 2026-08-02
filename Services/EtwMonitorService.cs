@@ -126,12 +126,12 @@ public class EtwMonitorService : IDisposable
 
             var dirs = _watchDirectoryArray;
 
-            // 对于 黑名单中的 进程名进行过滤
+            // 对于 黑名单中的 进程名进行过滤（大小写不敏感）
             var ignoreProcesses = _ignoreProcessArray;
 
-           if ( ignoreProcesses.Any(ignoreProcessName => ignoreProcessName == processName))
+            if (ignoreProcesses.Any(p => string.Equals(p, processName, StringComparison.OrdinalIgnoreCase)))
             {
-                   return;
+                return;
             }
 
 

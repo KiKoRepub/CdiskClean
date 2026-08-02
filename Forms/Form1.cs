@@ -1,3 +1,4 @@
+using CdiskClean.Helpers;
 using CdiskClean.Models;
 using CdiskClean.Services;
 using System.ComponentModel;
@@ -40,6 +41,13 @@ namespace CdiskClean
             else
                 _monitorService.LoadDefaults();
 
+            // 从数据库加载忽略进程（空则用默认列表），并同步进 ETW 黑名单
+            var savedProcs = _databaseService.GetIgnoreProcessRecords();
+            if (savedProcs.Count > 0)
+                _monitorService.LoadIgnoreProcesses(savedProcs);
+            else
+                _monitorService.LoadIgnoreProcesses(IgnoreProcessRecord.getDefaultRecords());
+
             // 初始化磁盘空间服务和文件夹分析器
             _diskSpaceService = new DiskSpaceService();
             _folderAnalyzer = new FolderSizeAnalyzer();
@@ -65,11 +73,19 @@ namespace CdiskClean
             _monitorService.FileRecordUpdated += OnFileRecordUpdated;
             _monitorService.MonitorError += OnMonitorError;
 
-            // 初始化目录列表视图
+            // 初始化监视目录列表视图
             SetupDirListView();
             PopulateDirListView();
             SetupDirContextMenu();
+
+            // 初始化忽略进程列表视图
+            SetupProcessListView();
+            PopulateProcessListView();
+            SetupProcessContextMenu();
+
         }
+
+
 
         // ==================== 窗体加载 ====================
 
@@ -108,12 +124,9 @@ namespace CdiskClean
         {
             watcherDirListView.Items.Clear();
 
-            foreach (var dir in _monitorService.WatchDirectories)
-            {
-                addWatchingToListView(dir);
-            }
-        }
+            _monitorService.WatchDirectories.ForEach(addWatchingToListView);
 
+        }
         private void addWatchingToListView(WatchingDirectory dir)
         {
             // 根据路径 判重
@@ -122,48 +135,94 @@ namespace CdiskClean
                 return;
 
             var item = new ListViewItem(dir.Path);
-            item.SubItems.Add(FormatStatus(dir.Status));
+            item.SubItems.Add(EnumHelper.FormatStatus(dir.Status));
             item.SubItems.Add(dir.IncludeSubdirs ? "是" : "否");
             item.Tag = dir;
 
 
-            ApplyDirItemStyle(item, dir.Status);
+            StyleHelper.ApplyRecordStatusStyle(item, dir.Status);
             watcherDirListView.Items.Add(item);
         }
 
-        private static string FormatStatus(RecordStatusEnum status)
+        private void watcherDirListView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
-            return status switch
+            if (watcherDirListView.SelectedItems.Count > 0)
             {
-                RecordStatusEnum.USING => "启用",
-                RecordStatusEnum.FORBIDDEN => "已禁用",
-                RecordStatusEnum.DELETED => "已删除",
-                _ => "未知"
-            };
+                ListViewItem item = watcherDirListView.SelectedItems[0];
+                //MessageBox.Show(item.Text);
+                dirSelectedTextBox.Text = item.Text;
+            }
         }
+
+        private void watcherDirListView_Resize(object sender, EventArgs e)
+        {
+            int totalWidth = watcherDirListView.Width;
+            watcherDirListView.Columns[0].Width = (int)(totalWidth * 0.70);
+            watcherDirListView.Columns[1].Width = (int)(totalWidth * 0.15);
+            watcherDirListView.Columns[2].Width = (int)(totalWidth * 0.15);
+        }
+
+        // ==================== 忽略进程列表 ====================
+
+        private void SetupProcessListView()
+        {
+            int totalWidth = ignoreProcessView.Width;
+
+            ignoreProcessView.View = View.Details;
+            ignoreProcessView.FullRowSelect = true;
+            ignoreProcessView.MultiSelect = false;
+            ignoreProcessView.HeaderStyle = ColumnHeaderStyle.Nonclickable;
+
+            // 设置内部列宽度为总宽度的比例
+            ignoreProcessView.Columns.Add("进程名称", (int)(totalWidth * 0.80));
+            ignoreProcessView.Columns.Add("状态", (int)(totalWidth * 0.20));
+
+
+            // 开启双缓冲，减少闪烁
+            typeof(ListView).InvokeMember("DoubleBuffered",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.SetProperty,
+                null, ignoreProcessView, new object[] { true });
+        }
+
+
+        private void PopulateProcessListView()
+        {
+            ignoreProcessView.Items.Clear();
+            foreach (var proc in _monitorService.IgnoreProcessRecords)
+            {
+                var item = new ListViewItem(proc.ProcessName);
+                item.SubItems.Add(EnumHelper.FormatStatus(proc.Status));
+                item.Tag = proc;
+
+                StyleHelper.ApplyRecordStatusStyle(item, proc.Status);
+                ignoreProcessView.Items.Add(item);
+            }
+        }
+
+        private void ignoreProcessView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        {
+            if (ignoreProcessView.SelectedItems.Count > 0)
+            {
+                ListViewItem item = ignoreProcessView.SelectedItems[0];
+
+                procSelectedTextBox.Text = item.Text;
+            }
+        }
+
+        
+        private void ignoreProcessView_Resize(object sender, EventArgs e)
+        {
+            int totalWidth = ignoreProcessView.Width;
+            ignoreProcessView.Columns[0].Width = (int)(totalWidth * 0.80);
+            ignoreProcessView.Columns[1].Width = (int)(totalWidth * 0.20);
+        }
+
         /// <summary>
         /// 调整 ListViewItem 的前景色和背景色，以便根据状态显示不同的颜色
         /// </summary>
         /// <param name="item"></param>
         /// <param name="status"></param>
-        private void ApplyDirItemStyle(ListViewItem item, RecordStatusEnum status)
-        {
-            switch (status)
-            {
-                case RecordStatusEnum.USING:
-                    item.ForeColor = Color.Black;
-                    item.BackColor = Color.FromArgb(230, 255, 230); // 浅绿底
-                    break;
-                case RecordStatusEnum.FORBIDDEN:
-                    item.ForeColor = Color.Gray;
-                    item.BackColor = Color.FromArgb(255, 255, 230); // 浅黄底
-                    break;
-                case RecordStatusEnum.DELETED:
-                    item.ForeColor = Color.LightGray;
-                    item.BackColor = Color.White;
-                    break;
-            }
-        }
+
 
         private void SetupDirContextMenu()
         {
@@ -216,6 +275,55 @@ namespace CdiskClean
                 _databaseService.SaveWatchDirectory(dir);
 
             PopulateDirListView();
+        }
+
+        // ==================== 忽略进程右键菜单 ====================
+
+        private void SetupProcessContextMenu()
+        {
+            ignoreProcessView.MouseClick += ignoreProcessView_MouseClick;
+        }
+
+        private void ignoreProcessView_MouseClick(object? sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Right) return;
+
+            var item = ignoreProcessView.GetItemAt(e.X, e.Y);
+            if (item?.Tag is not IgnoreProcessRecord proc) return;
+
+            if (proc.Status == RecordStatusEnum.DELETED) return;
+
+            var menu = new ContextMenuStrip();
+
+            if (proc.Status == RecordStatusEnum.USING)
+            {
+                var disableItem = menu.Items.Add("禁用监测");
+                disableItem.Click += (s, ev) => ChangeProcessStatus(proc, RecordStatusEnum.FORBIDDEN);
+            }
+            else if (proc.Status == RecordStatusEnum.FORBIDDEN)
+            {
+                var enableItem = menu.Items.Add("启用监测");
+                enableItem.Click += (s, ev) => ChangeProcessStatus(proc, RecordStatusEnum.USING);
+            }
+
+            var deleteItem = menu.Items.Add("从列表删除");
+            deleteItem.Click += (s, ev) => ChangeProcessStatus(proc, RecordStatusEnum.DELETED);
+
+            menu.Show(ignoreProcessView, e.Location);
+        }
+
+        private void ChangeProcessStatus(IgnoreProcessRecord proc, RecordStatusEnum newStatus)
+        {
+            // 同步 ETW 黑名单（USING 加入、FORBIDDEN/DELETED 移出）
+            _monitorService.SetIgnoreProcessStatus(proc.ProcessName, newStatus);
+
+            // 同步数据库：DELETED 物理删除，其余更新状态
+            if (newStatus == RecordStatusEnum.DELETED)
+                _databaseService.DeleteIgnoreProcessRecord(proc.ProcessName);
+            else
+                _databaseService.SaveIgnoreProcessRecord(proc);
+
+            PopulateProcessListView();
         }
 
         // ==================== 磁盘概览 ====================
@@ -745,23 +853,8 @@ namespace CdiskClean
             form4.ShowDialog();
         }
 
-        private void watcherDirListView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
-        {
-            if (watcherDirListView.SelectedItems.Count > 0)
-            {
-                ListViewItem item = watcherDirListView.SelectedItems[0];
-                //MessageBox.Show(item.Text);
-                dirSelectedTextBox.Text = item.Text;
-            }
-        }
 
-        private void watcherDirListView_Resize(object sender, EventArgs e)
-        {
-            int totalWidth = watcherDirListView.Width;
-            watcherDirListView.Columns[0].Width = (int)(totalWidth * 0.70);
-            watcherDirListView.Columns[1].Width = (int)(totalWidth * 0.15);
-            watcherDirListView.Columns[2].Width = (int)(totalWidth * 0.15);
-        }
+
 
 
         private void OnCountdownChanged(int remaining)
@@ -815,18 +908,122 @@ namespace CdiskClean
 
         private void ProcessAddButton_Click(object sender, EventArgs e)
         {
-            // 弹出输入框让用户输入进程名
-            var input = Microsoft.VisualBasic.Interaction.InputBox("请输入进程名:", "添加进程", "");
-            if (!string.IsNullOrEmpty(input))
+            var input = Microsoft.VisualBasic.Interaction.InputBox("请输入进程名:", "添加忽略进程", "");
+            var name = input?.Trim();
+            if (string.IsNullOrEmpty(name)) return;
+
+            AddIgnoreProcessInternal(name);
+        }
+
+        // ==================== 拖拽：监视记录 → 忽略进程列表 ====================
+
+        private bool _isGridDragging;
+        private Point _gridMouseStartPos;
+
+        // 鼠标按下：记录起点
+        private void changesDataGrid_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
             {
-                // 处理添加进程的逻辑
-                MessageBox.Show($"已添加进程: {input}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                _gridMouseStartPos = e.Location;
+                _isGridDragging = false;
             }
         }
-        // 处理拖拽事件
+
+        // 鼠标移动：达到拖拽阈值后启动拖拽，携带整条变更记录
+        private void changesDataGrid_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left || _isGridDragging) return;
+
+            int moveRange = SystemInformation.DragSize.Width;
+            var offset = Math.Abs(e.X - _gridMouseStartPos.X) + Math.Abs(e.Y - _gridMouseStartPos.Y);
+            if (offset < moveRange) return;
+
+            var hit = changesDataGrid.HitTest(e.X, e.Y);
+            if (hit.RowIndex < 0) return;
+
+            if (changesDataGrid.Rows[hit.RowIndex].DataBoundItem is not FileChangeRecord record) return;
+            // 未解析出进程名的记录无法用于忽略进程
+            if (string.IsNullOrEmpty(record.SourceProcess) || record.SourceProcess == "未知进程") return;
+
+            _isGridDragging = true;
+            changesDataGrid.DoDragDrop(record, DragDropEffects.Copy);
+        }
+
+        // 鼠标松开：重置标记
+        private void changesDataGrid_MouseUp(object sender, MouseEventArgs e)
+        {
+            _isGridDragging = false;
+        }
+
         private void ignoreProcessView_DragEnter(object sender, DragEventArgs e)
         {
-           
+            if (e.Data.GetDataPresent(typeof(FileChangeRecord)) &&
+                (e.Data.GetData(typeof(FileChangeRecord)) as FileChangeRecord)?.SourceProcess != null)
+            {
+                e.Effect = DragDropEffects.Copy;
+            }
+            else
+            {
+                e.Effect = DragDropEffects.None;
+            }
         }
+
+        private void ignoreProcessView_DragDrop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetData(typeof(FileChangeRecord)) is not FileChangeRecord record ||
+                string.IsNullOrEmpty(record.SourceProcess))
+                return;
+
+            // 监视进行中不允许接收拖拽记录，给出提示
+            if (_monitorService.IsRunning)
+            {
+                MessageBox.Show("监视进行中不能接收拖拽记录，请先点击「暂停」后再拖拽。",
+                    "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            AddIgnoreProcessInternal(record.SourceProcess);
+        }
+
+        /// <summary>
+        /// 添加忽略进程：去重 → 同步 ETW 黑名单 → 入库 → 刷新列表
+        /// </summary>
+        private void AddIgnoreProcessInternal(string processName)
+        {
+            if (_monitorService.IgnoreProcessRecords.Any(r =>
+                    string.Equals(r.ProcessName, processName, StringComparison.OrdinalIgnoreCase)))
+            {
+                MessageBox.Show($"进程「{processName}」已在忽略列表中。", "提示",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var record = _monitorService.AddIgnoreProcess(processName);
+
+            try
+            {
+                _databaseService.SaveIgnoreProcessRecord(record);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"保存忽略进程失败: {ex.Message}");
+            }
+
+            PopulateProcessListView();
+
+            // 选中刚添加的项
+            foreach (ListViewItem item in ignoreProcessView.Items)
+            {
+                if (string.Equals(item.Text, processName, StringComparison.OrdinalIgnoreCase))
+                {
+                    item.Selected = true;
+                    ignoreProcessView.EnsureVisible(item.Index);
+                    break;
+                }
+            }
+        }
+
+
     }
 }
