@@ -70,4 +70,19 @@ public class FileChangeRecord : INotifyPropertyChanged
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
+
+    public static string getCreateSQL()
+    {
+        return @"CREATE TABLE IF NOT EXISTS ChangeRecords (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Timestamp TEXT NOT NULL,
+                ChangeType TEXT NOT NULL,
+                FullPath TEXT NOT NULL,
+                FileName TEXT NOT NULL,
+                Directory TEXT NOT NULL,
+                SizeBytes INTEGER,
+                SourceProcess TEXT,
+                CreatedAt TEXT NOT NULL
+            );";
+    }
 }

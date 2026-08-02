@@ -22,37 +22,16 @@ public class DatabaseService : IDatabaseService
         connection.Open();
 
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = @"PRAGMA journal_mode=WAL;
+        // Id , CreatedAt 可以 使用 AUTOINCREMENT 和 DEFAULT CURRENT_TIMESTAMP 来自动生成和设置时间戳
+        cmd.CommandText =(@"PRAGMA journal_mode=WAL; " +
 
-            CREATE TABLE IF NOT EXISTS WatchDirectories (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Path TEXT NOT NULL UNIQUE,
-                IncludeSubdirs INTEGER NOT NULL DEFAULT 1,
-                Status TEXT NOT NULL DEFAULT 'USING',
-                CreatedAt TEXT NOT NULL,
-                UpdatedAt TEXT NOT NULL
-            );
+            WatchingDirectory.getCreateSQL() +
 
-            CREATE TABLE IF NOT EXISTS ChangeRecords (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Timestamp TEXT NOT NULL,
-                ChangeType TEXT NOT NULL,
-                FullPath TEXT NOT NULL,
-                FileName TEXT NOT NULL,
-                Directory TEXT NOT NULL,
-                SizeBytes INTEGER,
-                SourceProcess TEXT,
-                CreatedAt TEXT NOT NULL
-            );
+            FileChangeRecord.getCreateSQL() +
 
-            CREATE TABLE IF NOT EXISTS ProcessNotifications (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                ProcessName TEXT NOT NULL,
-                OperationCount INTEGER NOT NULL,
-                DurationSeconds INTEGER NOT NULL,
-                TriggerTime TEXT NOT NULL,
-                CreatedAt TEXT NOT NULL
-            );";
+            ProcessNotificationRecord.getCreateSQL() +
+
+            IgnoreProcessRecord.getCreateSQL());
 
         cmd.ExecuteNonQuery();
     }
@@ -74,15 +53,15 @@ public class DatabaseService : IDatabaseService
                 reader.GetString(0),
                 reader.GetInt32(1) != 0)
             {
-                Status = Enum.TryParse<DirectoryStatusEnum>(reader.GetString(2), out var s)
-                    ? s : DirectoryStatusEnum.USING
+                Status = Enum.TryParse<RecordStatusEnum>(reader.GetString(2), out var s)
+                    ? s : RecordStatusEnum.USING
             };
             list.Add(dir);
         }
 
         return list;
     }
-
+    #region WatchingDirectory 表操作
     public void SaveWatchDirectory(WatchingDirectory dir)
     {
         using var connection = new SqliteConnection(_connectionString);
@@ -114,6 +93,8 @@ public class DatabaseService : IDatabaseService
         cmd.ExecuteNonQuery();
     }
 
+    #endregion
+    #region ChangeRecords 表操作
     public void SaveChangeRecord(FileChangeRecord record)
     {
         using var connection = new SqliteConnection(_connectionString);
@@ -172,6 +153,8 @@ public class DatabaseService : IDatabaseService
         cmd.CommandText = "DELETE FROM ChangeRecords;";
         cmd.ExecuteNonQuery();
     }
+    #endregion
+    #region ProcessNotifications 表的操作
 
     public void SaveProcessNotification(ProcessNotificationRecord record)
     {
@@ -215,4 +198,49 @@ public class DatabaseService : IDatabaseService
 
         return list;
     }
+
+    #endregion
+
+    #region IgnoreProcessRecord 表操作
+    public void SaveIgnoreProcessRecord(IgnoreProcessRecord record)
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"INSERT INTO IgnoreProcessRecord (ProcessName, CreatedAt)
+                            VALUES (@Name, @Now);";
+        cmd.Parameters.AddWithValue("@Name", record.ProcessName);
+        cmd.Parameters.AddWithValue("@Now", DateTime.Now.ToString("O"));
+        cmd.ExecuteNonQuery();
+    }
+
+    public List<IgnoreProcessRecord> GetIgnoreProcessRecords(int limit = 200)
+    {
+        var list = new List<IgnoreProcessRecord>();
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT ProcessName FROM IgnoreProcessRecord ORDER BY Id DESC LIMIT @Limit;";
+        cmd.Parameters.AddWithValue("@Limit", limit);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            list.Add(new IgnoreProcessRecord(reader.GetString(0)));
+        }
+        return list;
+    }
+
+    public void DeleteIgnoreProcessRecord(string processName)
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"DELETE FROM IgnoreProcessRecord WHERE ProcessName = @Name;";
+        cmd.Parameters.AddWithValue("@Name", processName);
+        cmd.ExecuteNonQuery();
+    }
+
+    #endregion
+
+
 }

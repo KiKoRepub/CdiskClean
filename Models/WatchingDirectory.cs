@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CdiskClean.Models
 {
-    public enum DirectoryStatusEnum
+    public enum RecordStatusEnum
     {
         USING,
         FORBIDDEN,
@@ -17,13 +17,25 @@ namespace CdiskClean.Models
         public string Path { get; set; }
         public bool IncludeSubdirs {  get; set; }
 
-        public DirectoryStatusEnum Status { get; set; }
+        public RecordStatusEnum Status { get; set; }
 
         public WatchingDirectory(string path, bool includeSubdirs)
         {
             Path = path;
             IncludeSubdirs = includeSubdirs;
-            Status = DirectoryStatusEnum.USING;
+            Status = RecordStatusEnum.USING;
+        }
+
+        public static string getCreateSQL()
+        {
+            return @"CREATE TABLE IF NOT EXISTS WatchDirectories (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Path TEXT NOT NULL UNIQUE,
+                IncludeSubdirs INTEGER NOT NULL DEFAULT 1,
+                Status TEXT NOT NULL DEFAULT 'USING',
+                CreatedAt TEXT NOT NULL,
+                UpdatedAt TEXT NOT NULL
+            );";
         }
     }
 }

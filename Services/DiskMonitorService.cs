@@ -41,7 +41,7 @@ public class DiskMonitorService : IDisposable
         WatchDirectories.Clear();
         // 先去重 再筛选
         var usingFolderList = dirs
-            .Where(d => d.Status != DirectoryStatusEnum.DELETED);
+            .Where(d => d.Status != RecordStatusEnum.DELETED);
 
         // 存进 监视列表，ETW 白名单
         WatchDirectories.AddRange(usingFolderList);
@@ -71,7 +71,7 @@ public class DiskMonitorService : IDisposable
         {
             foreach (var item in WatchDirectories)
             {
-                if (item.Status != DirectoryStatusEnum.USING) continue;
+                if (item.Status != RecordStatusEnum.USING) continue;
                 StartWatchingInternal(item.Path, item.IncludeSubdirs);
             }
         }
@@ -117,7 +117,7 @@ public class DiskMonitorService : IDisposable
             {
                 var dir = w.Path;
                 var item = WatchDirectories.FirstOrDefault(d => d.Path == dir);
-                if (item?.Status == DirectoryStatusEnum.USING)
+                if (item?.Status == RecordStatusEnum.USING)
                     w.EnableRaisingEvents = true;
             }
         }
@@ -148,20 +148,20 @@ public class DiskMonitorService : IDisposable
     }
 
     /// <summary>更新单个目录的状态</summary>
-    public void SetDirectoryStatus(string path, DirectoryStatusEnum status)
+    public void SetDirectoryStatus(string path, RecordStatusEnum status)
     {
         var item = WatchDirectories.FirstOrDefault(d => d.Path == path);
         if (item != null)
             item.Status = status;
 
-        if (status == DirectoryStatusEnum.USING)
+        if (status == RecordStatusEnum.USING)
             StartDirectory(path, item?.IncludeSubdirs ?? true);
         else
             StopDirectory(path);
     }
 
     /// <summary>添加新目录到监视列表</summary>
-    public WatchingDirectory AddDirectory(string path, bool includeSubdirs)
+    public WatchingDirectory AddDirectoryToEtwArr(string path, bool includeSubdirs)
     {
 
         var dir = new WatchingDirectory(path, includeSubdirs);
@@ -176,6 +176,13 @@ public class DiskMonitorService : IDisposable
             StartDirectory(path, includeSubdirs);
 
         return dir;
+    }
+
+    public IgnoreProcessRecord AddIgnoreProcessToEtwArr(string processName)
+    {
+        var record = new IgnoreProcessRecord(processName);
+        _etwService.OperateIgnoreProcessArr(record.ProcessName, 1);
+        return record;
     }
 
     private void StartWatchingInternal(string dir, bool includeSubdirs)

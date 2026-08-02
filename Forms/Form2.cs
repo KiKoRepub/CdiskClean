@@ -1,4 +1,5 @@
-﻿using Microsoft.Diagnostics.Tracing.Parsers;
+﻿using CdiskClean.Models;
+using Microsoft.Diagnostics.Tracing.Parsers;
 using Microsoft.Diagnostics.Tracing.Session;
 using System;
 using System.Collections.Generic;
@@ -18,12 +19,26 @@ namespace CdiskClean
         {
             InitializeComponent();
             _cts = new CancellationTokenSource();
+
+
+            initDataGrid();
+        }
+
+        private void initDataGrid()
+        {
+            // 初始化 DataGridView 的数据源
+            dataGridView1.DataSource = new BindingList<Person>(Person.GetSampleData());
+
+            dataGridView1.AutoGenerateColumns = false;
+
+
+
         }
 
         private void Form2_Load(object sender, EventArgs e)
         {
             // 在窗体加载时启动 ETW 监控
-            StartEtwMonitoring("D:\\university\\CSharp\\projects\\Day14\\files\\defaultRead.txt");
+            //StartEtwMonitoring("D:\\university\\CSharp\\projects\\Day14\\files\\defaultRead.txt");
         }
         private CancellationTokenSource _cts;
 
@@ -79,13 +94,74 @@ namespace CdiskClean
         {
             notifyIcon1.Visible = true;
             notifyIcon1.ShowBalloonTip(1000,
-                "当前时间：", DateTime.Now.ToLocalTime().ToString(), 
+                "当前时间：", DateTime.Now.ToLocalTime().ToString(),
                 ToolTipIcon.Info);
         }
+
+
+        // 拖拽测试
+
+        private bool _isDragging = false;
+        private Point _mouseStartPos;
+
+        // 鼠标按下：记录起点
+        private void dataGridView1_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                _mouseStartPos = e.Location;
+                _isDragging = false;
+            }
+        }
+
+        // 鼠标移动：启动拖拽
+        private void dataGridView1_MouseMove(object sender, MouseEventArgs e)
+        {
+            // 只处理左键、未开始拖拽、移动距离达到阈值（防止点击误触发拖拽）
+            if (e.Button != MouseButtons.Left || _isDragging) return;
+
+            int moveRange = SystemInformation.DragSize.Width;
+            var offset = Math.Abs(e.X - _mouseStartPos.X) + Math.Abs(e.Y - _mouseStartPos.Y);
+            if (offset < moveRange) return;
+
+            // 获取鼠标位置对应的行
+            var hit = dataGridView1.HitTest(e.X, e.Y);
+            if (hit.RowIndex < 0) return;
+
+            DataGridViewRow row = dataGridView1.Rows[hit.RowIndex];
+            if (row.DataBoundItem is not Person record) return;
+
+            _isDragging = true;
+            // 【重点】直接拖拽实体对象
+            dataGridView1.DoDragDrop(record, DragDropEffects.Copy | DragDropEffects.Move);
+        }
+
+        // 鼠标松开，重置标记
+        private void dataGridView1_MouseUp(object sender, MouseEventArgs e)
+        {
+            _isDragging = false;
+        }
+
+
+        private void panel1_DragEnter(object sender, DragEventArgs e)
+        {
+            // 判断是否存在我们传入的数据
+            if (e.Data.GetDataPresent(typeof(Person)))
+            {
+                e.Effect = DragDropEffects.Move;
+            }
+        }
+
+        private void panel1_DragDrop(object sender, DragEventArgs e)
+        {
+            Person person = e.Data.GetData(typeof(Person)) as Person;
+            if (person != null)
+            {
+                //处理对象
+                MessageBox.Show($"Test Person is {person.Name} + {person.Sex}");
+
+            }
+        }
     }
-
-    // 定义一个后台任务来运行 ETW 监控
-
-
 
 }

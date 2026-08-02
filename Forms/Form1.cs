@@ -56,7 +56,7 @@ namespace CdiskClean
             // 设置数据绑定
             _records = new BindingList<FileChangeRecord>();
             changesDataGrid.DataSource = _records;
-            
+
 
             typeFilterCombo.SelectedIndex = 0;
 
@@ -131,13 +131,13 @@ namespace CdiskClean
             watcherDirListView.Items.Add(item);
         }
 
-        private static string FormatStatus(DirectoryStatusEnum status)
+        private static string FormatStatus(RecordStatusEnum status)
         {
             return status switch
             {
-                DirectoryStatusEnum.USING => "启用",
-                DirectoryStatusEnum.FORBIDDEN => "已禁用",
-                DirectoryStatusEnum.DELETED => "已删除",
+                RecordStatusEnum.USING => "启用",
+                RecordStatusEnum.FORBIDDEN => "已禁用",
+                RecordStatusEnum.DELETED => "已删除",
                 _ => "未知"
             };
         }
@@ -146,19 +146,19 @@ namespace CdiskClean
         /// </summary>
         /// <param name="item"></param>
         /// <param name="status"></param>
-        private void ApplyDirItemStyle(ListViewItem item, DirectoryStatusEnum status)
+        private void ApplyDirItemStyle(ListViewItem item, RecordStatusEnum status)
         {
             switch (status)
             {
-                case DirectoryStatusEnum.USING:
+                case RecordStatusEnum.USING:
                     item.ForeColor = Color.Black;
                     item.BackColor = Color.FromArgb(230, 255, 230); // 浅绿底
                     break;
-                case DirectoryStatusEnum.FORBIDDEN:
+                case RecordStatusEnum.FORBIDDEN:
                     item.ForeColor = Color.Gray;
                     item.BackColor = Color.FromArgb(255, 255, 230); // 浅黄底
                     break;
-                case DirectoryStatusEnum.DELETED:
+                case RecordStatusEnum.DELETED:
                     item.ForeColor = Color.LightGray;
                     item.BackColor = Color.White;
                     break;
@@ -183,34 +183,34 @@ namespace CdiskClean
             var item = watcherDirListView.GetItemAt(e.X, e.Y);
             if (item?.Tag is not WatchingDirectory dir) return;
 
-            if (dir.Status == DirectoryStatusEnum.DELETED) return;
+            if (dir.Status == RecordStatusEnum.DELETED) return;
 
             var menu = new ContextMenuStrip();
 
-            if (dir.Status == DirectoryStatusEnum.USING)
+            if (dir.Status == RecordStatusEnum.USING)
             {
                 var disableItem = menu.Items.Add("禁用监测");
-                disableItem.Click += (s, ev) => ChangeDirStatus(dir, DirectoryStatusEnum.FORBIDDEN);
+                disableItem.Click += (s, ev) => ChangeDirStatus(dir, RecordStatusEnum.FORBIDDEN);
             }
-            else if (dir.Status == DirectoryStatusEnum.FORBIDDEN)
+            else if (dir.Status == RecordStatusEnum.FORBIDDEN)
             {
                 var enableItem = menu.Items.Add("启用监测");
-                enableItem.Click += (s, ev) => ChangeDirStatus(dir, DirectoryStatusEnum.USING);
+                enableItem.Click += (s, ev) => ChangeDirStatus(dir, RecordStatusEnum.USING);
             }
 
             var deleteItem = menu.Items.Add("从列表删除");
-            deleteItem.Click += (s, ev) => ChangeDirStatus(dir, DirectoryStatusEnum.DELETED);
+            deleteItem.Click += (s, ev) => ChangeDirStatus(dir, RecordStatusEnum.DELETED);
 
             menu.Show(watcherDirListView, e.Location);
         }
 
-        private void ChangeDirStatus(WatchingDirectory dir, DirectoryStatusEnum newStatus)
+        private void ChangeDirStatus(WatchingDirectory dir, RecordStatusEnum newStatus)
         {
             dir.Status = newStatus;
             _monitorService.SetDirectoryStatus(dir.Path, newStatus);
 
             // 同步数据库
-            if (newStatus == DirectoryStatusEnum.DELETED)
+            if (newStatus == RecordStatusEnum.DELETED)
                 _databaseService.DeleteWatchDirectory(dir.Path);
             else
                 _databaseService.SaveWatchDirectory(dir);
@@ -719,28 +719,10 @@ namespace CdiskClean
                 string selectedPath = ImportFolderDialog.SelectedPath;
                 //MessageBox.Show(selectedPath);
                 // 将选中的目录添加到监视列表
-                WatchingDirectory dir = _monitorService.AddDirectory(selectedPath, true);
+                WatchingDirectory dir = _monitorService.AddDirectoryToEtwArr(selectedPath, true);
                 // 显示在列表
                 addWatchingToListView(dir);
             }
-        }
-
-        private void watcherDirListView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
-        {
-            if (watcherDirListView.SelectedItems.Count > 0)
-            {
-                ListViewItem item = watcherDirListView.SelectedItems[0];
-                //MessageBox.Show(item.Text);
-                dirSelectedTextBox.Text = item.Text;
-            }
-        }
-
-        private void watcherDirListView_Resize(object sender, EventArgs e)
-        {
-            int totalWidth = watcherDirListView.Width;
-            watcherDirListView.Columns[0].Width = (int)(totalWidth * 0.70);
-            watcherDirListView.Columns[1].Width = (int)(totalWidth * 0.15);
-            watcherDirListView.Columns[2].Width = (int)(totalWidth * 0.15);
         }
 
         private void statisticButton_Click(object sender, EventArgs e)
@@ -762,6 +744,25 @@ namespace CdiskClean
             var form4 = new Form4(snapshot, notifications);
             form4.ShowDialog();
         }
+
+        private void watcherDirListView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        {
+            if (watcherDirListView.SelectedItems.Count > 0)
+            {
+                ListViewItem item = watcherDirListView.SelectedItems[0];
+                //MessageBox.Show(item.Text);
+                dirSelectedTextBox.Text = item.Text;
+            }
+        }
+
+        private void watcherDirListView_Resize(object sender, EventArgs e)
+        {
+            int totalWidth = watcherDirListView.Width;
+            watcherDirListView.Columns[0].Width = (int)(totalWidth * 0.70);
+            watcherDirListView.Columns[1].Width = (int)(totalWidth * 0.15);
+            watcherDirListView.Columns[2].Width = (int)(totalWidth * 0.15);
+        }
+
 
         private void OnCountdownChanged(int remaining)
         {
@@ -810,6 +811,22 @@ namespace CdiskClean
             statsCountdownLabel.Text = "倒计时: --s";
             statsCountdownLabel.ForeColor = Color.SteelBlue;
             statsSummaryLabel.Text = "等待数据收集中...";
+        }
+
+        private void ProcessAddButton_Click(object sender, EventArgs e)
+        {
+            // 弹出输入框让用户输入进程名
+            var input = Microsoft.VisualBasic.Interaction.InputBox("请输入进程名:", "添加进程", "");
+            if (!string.IsNullOrEmpty(input))
+            {
+                // 处理添加进程的逻辑
+                MessageBox.Show($"已添加进程: {input}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+        // 处理拖拽事件
+        private void ignoreProcessView_DragEnter(object sender, DragEventArgs e)
+        {
+           
         }
     }
 }

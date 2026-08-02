@@ -5,6 +5,15 @@ using Microsoft.Diagnostics.Tracing.Session;
 
 namespace CdiskClean.Services;
 
+/*
+ public enum EtwWatchType
+{
+    None = 0,
+    WATCH_DIRECTORY = 1,
+    IGNORE_PROCESS = 2
+
+}
+*/
 public class EtwMonitorService : IDisposable
 {
     private TraceEventSession? _session;
@@ -15,26 +24,10 @@ public class EtwMonitorService : IDisposable
     private readonly ConcurrentDictionary<string, (string ProcessName, DateTime Timestamp)> _eventBuffer = new(StringComparer.OrdinalIgnoreCase);
     private readonly TimeSpan _bufferTtl = TimeSpan.FromSeconds(3);
     // 定义一个原子引用（因为引用赋值是原子的，不需要锁）
-    private volatile string[] _watchDirectoryArray = new string[0];
+    private volatile string[] _watchDirectoryArray = new string[0]; // 白名单
+    private volatile string[] _ignoreProcessArray = new string[0]; // 黑名单
 
-    // TODO 用户添加目录时(需要添加订阅,目前直接在目标位置进行调用)
-    public void OperateWriteFolderArr(string path, int type)
-    {
-        // 生成新数组，替换旧数组
-        var list = _watchDirectoryArray.ToList();
-
-        if (type == 1)
-            list.Add(path);
-        if (type == 2)
-            list.Remove(path);
-            
-        _watchDirectoryArray = list.Distinct().ToArray();
-    }
-
-    public void OperateWriteFolderArr(string[] paths)
-    {
-        _watchDirectoryArray = paths.ToArray();
-    }
+    
     public bool IsRunning { get; private set; }
 
     public void Start()
@@ -80,6 +73,43 @@ public class EtwMonitorService : IDisposable
             }
         }, token);
     }
+
+    #region WatchDirectoryArray 相关操作
+    public void OperateWriteFolderArr(string path, int type)
+    {
+        // TODO 用户添加目录时(需要添加订阅,目前直接在目标位置进行调用)
+        // 生成新数组，替换旧数组
+        var list = _watchDirectoryArray.ToList();
+
+        if (type == 1)
+            list.Add(path);
+        if (type == 2)
+            list.Remove(path);
+
+        _watchDirectoryArray = list.Distinct().ToArray();
+    }
+    public void OperateWriteFolderArr(string[] paths)
+    {
+        _watchDirectoryArray = paths.ToArray();
+    }
+    #endregion
+
+    #region IgnoreProcessArray 相关操作
+    public void OperateIgnoreProcessArr(string processName, int type)
+    {
+        var list = _ignoreProcessArray.ToList();
+        if (type == 1)
+            list.Add(processName);
+        if (type == 2)
+            list.Remove(processName);
+        _ignoreProcessArray = list.Distinct().ToArray();
+    }
+    public void OperateIgnoreProcessArr(string[] processNames)
+    {
+        _ignoreProcessArray = processNames.ToArray();
+    }
+    #endregion
+
     /// <summary>
     /// 缓冲区 用来往字典里添加记录到的事件
     /// </summary>
@@ -95,6 +125,15 @@ public class EtwMonitorService : IDisposable
             // 对于 白名单中的 目录路径进行选取
 
             var dirs = _watchDirectoryArray;
+
+            // 对于 黑名单中的 进程名进行过滤
+            var ignoreProcesses = _ignoreProcessArray;
+
+           if ( ignoreProcesses.Any(ignoreProcessName => ignoreProcessName == processName))
+            {
+                   return;
+            }
+
 
             foreach (var dir in dirs)
             {
@@ -141,11 +180,18 @@ public class EtwMonitorService : IDisposable
 
         var normalized = NormalizePath(filePath);
         var sw = System.Diagnostics.Stopwatch.StartNew();
-
+/*
+        !ct.IsCancellationRequested 是必要的，它可以在程序结束后快速 结束循环，避免阻塞线程。
+         程序停止后 会调用 Stop()，它会取消 _cts，从而触发 ct.IsCancellationRequested。
+         如果没有这个检查，循环可能会继续等待，直到达到 maxDelayMs 才结束，导致程序退出延迟。
+         另外，Task.Delay 本身也会抛出 OperationCanceledException，如果 ct 被取消，它会立即抛出异常，从而跳出循环。
+         检查 ct.IsCancellationRequested 可以让我们在循环中及时响应取消请求，避免不必要的等待。
+*/
         while (sw.ElapsedMilliseconds < maxDelayMs && !ct.IsCancellationRequested)
         {
             if (_eventBuffer.TryGetValue(normalized, out var entry))
             {
+                // 如果事件在缓冲区中，并且没有过期，则返回进程名并移除缓冲区中的记录
                 if (DateTime.Now - entry.Timestamp <= _bufferTtl)
                 {
                     _eventBuffer.TryRemove(normalized, out _);

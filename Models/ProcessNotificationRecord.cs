@@ -9,4 +9,16 @@ public class ProcessNotificationRecord
     public int DurationSeconds { get; set; }
 
     public DateTime TriggerTime { get; set; }
+
+    public static string getCreateSQL()
+    {
+        return @"CREATE TABLE IF NOT EXISTS ProcessNotifications (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ProcessName TEXT NOT NULL,
+                OperationCount INTEGER NOT NULL,
+                DurationSeconds INTEGER NOT NULL,
+                TriggerTime TEXT NOT NULL,
+                CreatedAt TEXT NOT NULL
+            );";
+    }
 }

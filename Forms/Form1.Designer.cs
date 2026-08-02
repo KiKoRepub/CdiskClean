@@ -32,12 +32,17 @@ namespace CdiskClean
             usageProgressBar = new ProgressBar();
             dashboardTitleLabel = new Label();
             watcherPage = new TabPage();
+            ignoreProcessBox = new GroupBox();
+            ProcessAddButton = new Button();
+            textBox1 = new TextBox();
+            label3 = new Label();
+            ignoreProcessView = new ListView();
             statisticButton = new Button();
-            dirAddButton = new Button();
             WatcherDirectoryBox = new GroupBox();
             dirSelectedTextBox = new TextBox();
             watcherDirListView = new ListView();
             label2 = new Label();
+            dirAddButton = new Button();
             exportBtn = new Button();
             typeFilterCombo = new ComboBox();
             typeFilterLabel = new Label();
@@ -49,6 +54,7 @@ namespace CdiskClean
             FileNameColumn = new DataGridViewTextBoxColumn();
             PathColumn = new DataGridViewTextBoxColumn();
             SizeColumn = new DataGridViewTextBoxColumn();
+            SourceColumn = new DataGridViewTextBoxColumn();
             folderAnalyzerPage = new TabPage();
             folderTreeView = new TreeView();
             scanProgressBar = new ProgressBar();
@@ -72,9 +78,11 @@ namespace CdiskClean
             panelTitle = new SplitContainer();
             label1 = new Label();
             ImportFolderDialog = new FolderBrowserDialog();
+            statsPanel.SuspendLayout();
             TabPageControl1.SuspendLayout();
             totalReviewPage.SuspendLayout();
             watcherPage.SuspendLayout();
+            ignoreProcessBox.SuspendLayout();
             WatcherDirectoryBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)changesDataGrid).BeginInit();
             folderAnalyzerPage.SuspendLayout();
@@ -86,6 +94,50 @@ namespace CdiskClean
             panelTitle.SuspendLayout();
             SuspendLayout();
             // 
+            // statsPanel
+            // 
+            statsPanel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            statsPanel.Controls.Add(statsCountdownLabel);
+            statsPanel.Controls.Add(statsSummaryLabel);
+            statsPanel.Controls.Add(statsResetBtn);
+            statsPanel.Location = new Point(160, 568);
+            statsPanel.Name = "statsPanel";
+            statsPanel.Size = new Size(528, 78);
+            statsPanel.TabIndex = 12;
+            statsPanel.TabStop = false;
+            statsPanel.Text = "统计面板";
+            // 
+            // statsCountdownLabel
+            // 
+            statsCountdownLabel.AutoSize = true;
+            statsCountdownLabel.Font = new Font("Microsoft YaHei UI", 10F, FontStyle.Bold, GraphicsUnit.Point, 134);
+            statsCountdownLabel.ForeColor = Color.SteelBlue;
+            statsCountdownLabel.Location = new Point(6, 22);
+            statsCountdownLabel.Name = "statsCountdownLabel";
+            statsCountdownLabel.Size = new Size(112, 27);
+            statsCountdownLabel.TabIndex = 0;
+            statsCountdownLabel.Text = "倒计时: --s";
+            // 
+            // statsSummaryLabel
+            // 
+            statsSummaryLabel.AutoSize = true;
+            statsSummaryLabel.Location = new Point(6, 49);
+            statsSummaryLabel.Name = "statsSummaryLabel";
+            statsSummaryLabel.Size = new Size(148, 24);
+            statsSummaryLabel.TabIndex = 1;
+            statsSummaryLabel.Text = "等待数据收集中...";
+            // 
+            // statsResetBtn
+            // 
+            statsResetBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            statsResetBtn.Location = new Point(776, 16);
+            statsResetBtn.Name = "statsResetBtn";
+            statsResetBtn.Size = new Size(74, 34);
+            statsResetBtn.TabIndex = 2;
+            statsResetBtn.Text = "重置";
+            statsResetBtn.UseVisualStyleBackColor = true;
+            statsResetBtn.Click += statsResetBtn_Click;
+            // 
             // TabPageControl1
             // 
             TabPageControl1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
@@ -95,7 +147,7 @@ namespace CdiskClean
             TabPageControl1.Location = new Point(0, 53);
             TabPageControl1.Name = "TabPageControl1";
             TabPageControl1.SelectedIndex = 0;
-            TabPageControl1.Size = new Size(1437, 563);
+            TabPageControl1.Size = new Size(1437, 687);
             TabPageControl1.TabIndex = 0;
             // 
             // totalReviewPage
@@ -109,7 +161,7 @@ namespace CdiskClean
             totalReviewPage.Location = new Point(4, 33);
             totalReviewPage.Name = "totalReviewPage";
             totalReviewPage.Padding = new Padding(3);
-            totalReviewPage.Size = new Size(1429, 526);
+            totalReviewPage.Size = new Size(1429, 650);
             totalReviewPage.TabIndex = 0;
             totalReviewPage.Text = "概览";
             totalReviewPage.UseVisualStyleBackColor = true;
@@ -175,9 +227,9 @@ namespace CdiskClean
             // 
             // watcherPage
             // 
+            watcherPage.Controls.Add(ignoreProcessBox);
             watcherPage.Controls.Add(statisticButton);
             watcherPage.Controls.Add(statsPanel);
-            watcherPage.Controls.Add(dirAddButton);
             watcherPage.Controls.Add(WatcherDirectoryBox);
             watcherPage.Controls.Add(exportBtn);
             watcherPage.Controls.Add(typeFilterCombo);
@@ -188,75 +240,77 @@ namespace CdiskClean
             watcherPage.Location = new Point(4, 33);
             watcherPage.Name = "watcherPage";
             watcherPage.Padding = new Padding(3);
-            watcherPage.Size = new Size(1429, 526);
+            watcherPage.Size = new Size(1429, 650);
             watcherPage.TabIndex = 1;
             watcherPage.Text = "实时监测";
             watcherPage.UseVisualStyleBackColor = true;
-            //
+            // 
+            // ignoreProcessBox
+            // 
+            ignoreProcessBox.Controls.Add(ProcessAddButton);
+            ignoreProcessBox.Controls.Add(textBox1);
+            ignoreProcessBox.Controls.Add(label3);
+            ignoreProcessBox.Controls.Add(ignoreProcessView);
+            ignoreProcessBox.Location = new Point(848, 318);
+            ignoreProcessBox.Name = "ignoreProcessBox";
+            ignoreProcessBox.Size = new Size(559, 323);
+            ignoreProcessBox.TabIndex = 13;
+            ignoreProcessBox.TabStop = false;
+            ignoreProcessBox.Text = "忽略进程列表";
+            // 
+            // ProcessAddButton
+            // 
+            ProcessAddButton.Font = new Font("Microsoft YaHei UI", 11F);
+            ProcessAddButton.Location = new Point(380, 23);
+            ProcessAddButton.Name = "ProcessAddButton";
+            ProcessAddButton.Size = new Size(159, 43);
+            ProcessAddButton.TabIndex = 3;
+            ProcessAddButton.Text = "添加忽略进程";
+            ProcessAddButton.UseVisualStyleBackColor = true;
+            ProcessAddButton.Click += ProcessAddButton_Click;
+            // 
+            // textBox1
+            // 
+            textBox1.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            textBox1.Location = new Point(191, 250);
+            textBox1.Multiline = true;
+            textBox1.Name = "textBox1";
+            textBox1.ReadOnly = true;
+            textBox1.Size = new Size(357, 49);
+            textBox1.TabIndex = 2;
+            // 
+            // label3
+            // 
+            label3.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            label3.AutoSize = true;
+            label3.Font = new Font("Microsoft YaHei UI", 15F);
+            label3.Location = new Point(18, 252);
+            label3.Name = "label3";
+            label3.Size = new Size(167, 39);
+            label3.TabIndex = 1;
+            label3.Text = "选中线程为";
+            // 
+            // ignoreProcessView
+            // 
+            ignoreProcessView.AllowDrop = true;
+            ignoreProcessView.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            ignoreProcessView.Location = new Point(18, 72);
+            ignoreProcessView.Name = "ignoreProcessView";
+            ignoreProcessView.Size = new Size(521, 159);
+            ignoreProcessView.TabIndex = 0;
+            ignoreProcessView.UseCompatibleStateImageBehavior = false;
+            ignoreProcessView.DragEnter += ignoreProcessView_DragEnter;
+            // 
             // statisticButton
-            //
+            // 
             statisticButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            statisticButton.Location = new Point(12, 460);
+            statisticButton.Location = new Point(12, 584);
             statisticButton.Name = "statisticButton";
             statisticButton.Size = new Size(139, 47);
             statisticButton.TabIndex = 11;
             statisticButton.Text = "查看详情记录";
             statisticButton.UseVisualStyleBackColor = true;
             statisticButton.Click += statisticButton_Click;
-            //
-            // statsPanel
-            //
-            statsPanel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            statsPanel.Controls.Add(statsCountdownLabel);
-            statsPanel.Controls.Add(statsSummaryLabel);
-            statsPanel.Controls.Add(statsResetBtn);
-            statsPanel.Location = new Point(160, 444);
-            statsPanel.Name = "statsPanel";
-            statsPanel.Size = new Size(528, 78);
-            statsPanel.TabIndex = 12;
-            statsPanel.TabStop = false;
-            statsPanel.Text = "统计面板";
-            //
-            // statsCountdownLabel
-            //
-            statsCountdownLabel.AutoSize = true;
-            statsCountdownLabel.Font = new Font("Microsoft YaHei UI", 10F, FontStyle.Bold, GraphicsUnit.Point, 134);
-            statsCountdownLabel.ForeColor = Color.SteelBlue;
-            statsCountdownLabel.Location = new Point(6, 22);
-            statsCountdownLabel.Name = "statsCountdownLabel";
-            statsCountdownLabel.Size = new Size(130, 27);
-            statsCountdownLabel.TabIndex = 0;
-            statsCountdownLabel.Text = "倒计时: --s";
-            //
-            // statsSummaryLabel
-            //
-            statsSummaryLabel.AutoSize = true;
-            statsSummaryLabel.Location = new Point(6, 49);
-            statsSummaryLabel.Name = "statsSummaryLabel";
-            statsSummaryLabel.Size = new Size(200, 24);
-            statsSummaryLabel.TabIndex = 1;
-            statsSummaryLabel.Text = "等待数据收集中...";
-            //
-            // statsResetBtn
-            //
-            statsResetBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            statsResetBtn.Location = new Point(448, 16);
-            statsResetBtn.Name = "statsResetBtn";
-            statsResetBtn.Size = new Size(74, 34);
-            statsResetBtn.TabIndex = 2;
-            statsResetBtn.Text = "重置";
-            statsResetBtn.UseVisualStyleBackColor = true;
-            statsResetBtn.Click += statsResetBtn_Click;
-            // 
-            // dirAddButton
-            // 
-            dirAddButton.Location = new Point(875, 8);
-            dirAddButton.Name = "dirAddButton";
-            dirAddButton.Size = new Size(112, 34);
-            dirAddButton.TabIndex = 10;
-            dirAddButton.Text = "添加目录";
-            dirAddButton.UseVisualStyleBackColor = true;
-            dirAddButton.Click += dirAddButton_Click;
             // 
             // WatcherDirectoryBox
             // 
@@ -264,16 +318,18 @@ namespace CdiskClean
             WatcherDirectoryBox.Controls.Add(dirSelectedTextBox);
             WatcherDirectoryBox.Controls.Add(watcherDirListView);
             WatcherDirectoryBox.Controls.Add(label2);
-            WatcherDirectoryBox.Location = new Point(848, 48);
+            WatcherDirectoryBox.Controls.Add(dirAddButton);
+            WatcherDirectoryBox.Location = new Point(848, 10);
             WatcherDirectoryBox.Name = "WatcherDirectoryBox";
-            WatcherDirectoryBox.Size = new Size(559, 459);
+            WatcherDirectoryBox.Size = new Size(559, 288);
             WatcherDirectoryBox.TabIndex = 7;
             WatcherDirectoryBox.TabStop = false;
             WatcherDirectoryBox.Text = "监测目录列表";
             // 
             // dirSelectedTextBox
             // 
-            dirSelectedTextBox.Location = new Point(181, 401);
+            dirSelectedTextBox.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            dirSelectedTextBox.Location = new Point(181, 219);
             dirSelectedTextBox.Multiline = true;
             dirSelectedTextBox.Name = "dirSelectedTextBox";
             dirSelectedTextBox.ReadOnly = true;
@@ -282,10 +338,10 @@ namespace CdiskClean
             // 
             // watcherDirListView
             // 
-            watcherDirListView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            watcherDirListView.Location = new Point(34, 28);
+            watcherDirListView.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            watcherDirListView.Location = new Point(34, 75);
             watcherDirListView.Name = "watcherDirListView";
-            watcherDirListView.Size = new Size(505, 355);
+            watcherDirListView.Size = new Size(505, 138);
             watcherDirListView.TabIndex = 6;
             watcherDirListView.UseCompatibleStateImageBehavior = false;
             watcherDirListView.View = View.Tile;
@@ -294,14 +350,25 @@ namespace CdiskClean
             // 
             // label2
             // 
-            label2.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            label2.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             label2.AutoSize = true;
             label2.Font = new Font("Microsoft YaHei UI", 15F);
-            label2.Location = new Point(8, 401);
+            label2.Location = new Point(8, 219);
             label2.Name = "label2";
             label2.Size = new Size(167, 39);
             label2.TabIndex = 8;
             label2.Text = "选中目录为";
+            // 
+            // dirAddButton
+            // 
+            dirAddButton.Font = new Font("Microsoft YaHei UI", 11F);
+            dirAddButton.Location = new Point(427, 23);
+            dirAddButton.Name = "dirAddButton";
+            dirAddButton.Size = new Size(112, 46);
+            dirAddButton.TabIndex = 10;
+            dirAddButton.Text = "添加目录";
+            dirAddButton.UseVisualStyleBackColor = true;
+            dirAddButton.Click += dirAddButton_Click;
             // 
             // exportBtn
             // 
@@ -353,7 +420,25 @@ namespace CdiskClean
             pauseBtn.Text = "开始监测";
             pauseBtn.UseVisualStyleBackColor = true;
             pauseBtn.Click += pauseBtn_Click;
-
+            // 
+            // changesDataGrid
+            // 
+            changesDataGrid.AllowUserToAddRows = false;
+            changesDataGrid.AllowUserToDeleteRows = false;
+            changesDataGrid.AllowUserToResizeRows = false;
+            changesDataGrid.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
+            changesDataGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            changesDataGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            changesDataGrid.Columns.AddRange(new DataGridViewColumn[] { TimeColumn, TypeColumn, FileNameColumn, PathColumn, SizeColumn, SourceColumn });
+            changesDataGrid.Location = new Point(12, 48);
+            changesDataGrid.Name = "changesDataGrid";
+            changesDataGrid.ReadOnly = true;
+            changesDataGrid.RowHeadersVisible = false;
+            changesDataGrid.RowHeadersWidth = 62;
+            changesDataGrid.RowTemplate.Height = 25;
+            changesDataGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            changesDataGrid.Size = new Size(676, 520);
+            changesDataGrid.TabIndex = 5;
             // 
             // TimeColumn
             // 
@@ -399,38 +484,15 @@ namespace CdiskClean
             SizeColumn.MinimumWidth = 8;
             SizeColumn.Name = "SizeColumn";
             SizeColumn.ReadOnly = true;
-            //
+            // 
             // SourceColumn
-            //
-            SourceColumn = new DataGridViewTextBoxColumn();
+            // 
             SourceColumn.DataPropertyName = "SourceProcess";
             SourceColumn.FillWeight = 60F;
             SourceColumn.HeaderText = "来源进程";
             SourceColumn.MinimumWidth = 8;
             SourceColumn.Name = "SourceColumn";
             SourceColumn.ReadOnly = true;
-
-
-            // 
-            // changesDataGrid
-            // 
-            changesDataGrid.AllowUserToAddRows = false;
-            changesDataGrid.AllowUserToDeleteRows = false;
-            changesDataGrid.AllowUserToResizeRows = false;
-            changesDataGrid.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
-            changesDataGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            changesDataGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            changesDataGrid.Columns.AddRange(new DataGridViewColumn[] { TimeColumn, TypeColumn, FileNameColumn, PathColumn, SizeColumn, SourceColumn });
-            changesDataGrid.Location = new Point(12, 48);
-            changesDataGrid.Name = "changesDataGrid";
-            changesDataGrid.ReadOnly = true;
-            changesDataGrid.RowHeadersVisible = false;
-            changesDataGrid.RowHeadersWidth = 62;
-            changesDataGrid.RowTemplate.Height = 25;
-            changesDataGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            changesDataGrid.Size = new Size(676, 396);
-            changesDataGrid.TabIndex = 5;
-
             // 
             // folderAnalyzerPage
             // 
@@ -442,7 +504,7 @@ namespace CdiskClean
             folderAnalyzerPage.Controls.Add(selectedPathTextBox);
             folderAnalyzerPage.Location = new Point(4, 33);
             folderAnalyzerPage.Name = "folderAnalyzerPage";
-            folderAnalyzerPage.Size = new Size(1429, 526);
+            folderAnalyzerPage.Size = new Size(1429, 650);
             folderAnalyzerPage.TabIndex = 2;
             folderAnalyzerPage.Text = "文件夹分析";
             folderAnalyzerPage.UseVisualStyleBackColor = true;
@@ -510,7 +572,7 @@ namespace CdiskClean
             statusStrip1.Dock = DockStyle.None;
             statusStrip1.ImageScalingSize = new Size(24, 24);
             statusStrip1.Items.AddRange(new ToolStripItem[] { watchStatusLabel, writedRecordStatusLabel, timeStatusLabel, NoticeIcon });
-            statusStrip1.Location = new Point(0, 619);
+            statusStrip1.Location = new Point(0, 743);
             statusStrip1.Name = "statusStrip1";
             statusStrip1.Size = new Size(1437, 30);
             statusStrip1.TabIndex = 4;
@@ -664,7 +726,7 @@ namespace CdiskClean
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.Control;
             BackgroundImageLayout = ImageLayout.Zoom;
-            ClientSize = new Size(1440, 650);
+            ClientSize = new Size(1440, 774);
             Controls.Add(panelTitle);
             Controls.Add(statusStrip1);
             Controls.Add(TabPageControl1);
@@ -675,11 +737,15 @@ namespace CdiskClean
             StartPosition = FormStartPosition.CenterScreen;
             Text = "C盘监测工具";
             Load += Form1_Load;
+            statsPanel.ResumeLayout(false);
+            statsPanel.PerformLayout();
             TabPageControl1.ResumeLayout(false);
             totalReviewPage.ResumeLayout(false);
             totalReviewPage.PerformLayout();
             watcherPage.ResumeLayout(false);
             watcherPage.PerformLayout();
+            ignoreProcessBox.ResumeLayout(false);
+            ignoreProcessBox.PerformLayout();
             WatcherDirectoryBox.ResumeLayout(false);
             WatcherDirectoryBox.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)changesDataGrid).EndInit();
@@ -767,5 +833,10 @@ namespace CdiskClean
         private Label statsCountdownLabel;
         private Label statsSummaryLabel;
         private Button statsResetBtn;
+        private GroupBox ignoreProcessBox;
+        private ListView ignoreProcessView;
+        private Label label3;
+        private TextBox textBox1;
+        private Button ProcessAddButton;
     }
 }
