@@ -7,6 +7,7 @@ public class DiskMonitorService : IDisposable
 {
     private readonly List<FileSystemWatcher> _watchers = new();
     private readonly EtwMonitorService _etwService;
+    private readonly CleanupService? _cleanupService;
     private readonly object _lock = new();
     private volatile bool _paused;
 
@@ -29,9 +30,10 @@ public class DiskMonitorService : IDisposable
 
     public bool IsRunning => _watchers.Any(w => w.EnableRaisingEvents);
 
-    public DiskMonitorService(EtwMonitorService etwService)
+    public DiskMonitorService(EtwMonitorService etwService, CleanupService? cleanupService = null)
     {
         _etwService = etwService;
+        _cleanupService = cleanupService;
     }
 
     public bool HasDirectory(string path) =>
@@ -243,6 +245,9 @@ public class DiskMonitorService : IDisposable
     {
         if (_paused) return;
 
+        // 清理功能产生的文件操作不应被记录（避免自己监听到自己）
+        if (_cleanupService?.ShouldIgnoreEvent(e.FullPath) == true) return;
+
         var changeType = e.ChangeType switch
         {
             WatcherChangeTypes.Created => ChangeType.Created,
@@ -275,6 +280,13 @@ public class DiskMonitorService : IDisposable
     private void OnRenamed(object sender, RenamedEventArgs e)
     {
         if (_paused) return;
+
+        // 移动/软链接操作会产生 Renamed 事件：新路径可能落在目标目录，
+        // 旧路径一定位于清理的原路径集合内，两者都需过滤
+        if (_cleanupService != null &&
+            (_cleanupService.ShouldIgnoreEvent(e.FullPath) ||
+             _cleanupService.ShouldIgnoreEvent(e.OldFullPath)))
+            return;
 
         var processName = _etwService.TryGetProcessOnce(e.FullPath);
 

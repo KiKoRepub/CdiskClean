@@ -23,5 +23,10 @@ public interface IDatabaseService
      void SaveIgnoreProcessRecord(IgnoreProcessRecord record);
     List<IgnoreProcessRecord> GetIgnoreProcessRecords(int limit = 200);
     void DeleteIgnoreProcessRecord(string processName);
+    void UpdateIgnoreProcessRecordStatus(string processName, RecordStatusEnum status);
+    #endregion
+    #region CleanupRecord
+    void SaveCleanupRecord(CleanupRecord record);
+    List<CleanupRecord> GetCleanupRecords(int limit = 200);
     #endregion
 }

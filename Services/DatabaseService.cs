@@ -31,7 +31,9 @@ public class DatabaseService : IDatabaseService
 
             ProcessNotificationRecord.getCreateSQL() +
 
-            IgnoreProcessRecord.getCreateSQL());
+            IgnoreProcessRecord.getCreateSQL() +
+
+            CleanupRecord.getCreateSQL());
 
         cmd.ExecuteNonQuery();
     }
@@ -256,7 +258,69 @@ public class DatabaseService : IDatabaseService
         cmd.ExecuteNonQuery();
     }
 
+    public void UpdateIgnoreProcessRecordStatus(string processName, RecordStatusEnum status)
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"UPDATE IgnoreProcessRecord SET Status = @Status WHERE ProcessName = @Name;";
+        cmd.Parameters.AddWithValue("@Name", processName);
+        cmd.Parameters.AddWithValue("@Status", status.ToString());
+        cmd.ExecuteNonQuery();
+    }
     #endregion
 
+    #region CleanupRecord 表操作
+    public void SaveCleanupRecord(CleanupRecord record)
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"INSERT INTO CleanupRecords (CleanupTime, FullPath, FileName, SizeBytes, Method, Success, Message, CreatedAt)
+                            VALUES (@Time, @FullPath, @FileName, @Size, @Method, @Success, @Message, @Now);";
+
+        cmd.Parameters.AddWithValue("@Time", record.CleanupTime.ToString("O"));
+        cmd.Parameters.AddWithValue("@FullPath", record.FullPath);
+        cmd.Parameters.AddWithValue("@FileName", record.FileName);
+        cmd.Parameters.AddWithValue("@Size", record.SizeBytes.HasValue ? (object)record.SizeBytes.Value : DBNull.Value);
+        cmd.Parameters.AddWithValue("@Method", record.Method);
+        cmd.Parameters.AddWithValue("@Success", record.Success ? 1 : 0);
+        cmd.Parameters.AddWithValue("@Message", record.Message ?? (object)DBNull.Value);
+        cmd.Parameters.AddWithValue("@Now", DateTime.Now.ToString("O"));
+        cmd.ExecuteNonQuery();
+    }
+
+    public List<CleanupRecord> GetCleanupRecords(int limit = 200)
+    {
+        var list = new List<CleanupRecord>();
+
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"SELECT Id, CleanupTime, FullPath, FileName, SizeBytes, Method, Success, Message
+                            FROM CleanupRecords ORDER BY Id DESC LIMIT @Limit;";
+        cmd.Parameters.AddWithValue("@Limit", limit);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            list.Add(new CleanupRecord
+            {
+                Id = reader.GetInt64(0),
+                CleanupTime = DateTime.Parse(reader.GetString(1)),
+                FullPath = reader.GetString(2),
+                FileName = reader.GetString(3),
+                SizeBytes = reader.IsDBNull(4) ? null : reader.GetInt64(4),
+                Method = reader.GetString(5),
+                Success = reader.GetInt32(6) != 0,
+                Message = reader.IsDBNull(7) ? null : reader.GetString(7)
+            });
+        }
+
+        return list;
+    }
+    #endregion
 
 }
