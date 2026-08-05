@@ -887,12 +887,15 @@ namespace CdiskClean
             if (nodes.Count < 2) return;
 
             var list = nodes.Cast<TreeNode>().ToList();
+            // 目录在前，其余按大小降序排列
             list.Sort((a, b) =>
             {
+                // 目录在前
                 bool aDir = a.Tag is CleanupFileEntry ae && ae.IsDirectory;
                 bool bDir = b.Tag is CleanupFileEntry be && be.IsDirectory;
                 if (aDir != bDir) return aDir ? -1 : 1;
 
+                // 其余按大小降序排列
                 long aSize = a.Tag is CleanupFileEntry ae2 ? ae2.SizeBytes : 0;
                 long bSize = b.Tag is CleanupFileEntry be2 ? be2.SizeBytes : 0;
                 return bSize.CompareTo(aSize);

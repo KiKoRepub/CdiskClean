@@ -173,6 +173,7 @@ public class DiskMonitorService : IDisposable
         return dir;
     }
 
+    #region 忽略进程列表 
     /// <summary>用外部忽略进程列表（如数据库）初始化，并同步 ETW 黑名单</summary>
     public void LoadIgnoreProcesses(List<IgnoreProcessRecord> records)
     {
@@ -209,6 +210,7 @@ public class DiskMonitorService : IDisposable
         _etwService.OperateIgnoreProcessArr(processName,
             status == RecordStatusEnum.USING ? 1 : 2);
     }
+    #endregion
 
     private void StartWatchingInternal(string dir, bool includeSubdirs)
     {
@@ -326,14 +328,6 @@ public class DiskMonitorService : IDisposable
         }
     }
 
-    private static string GetDownloadsPath()
-    {
-        var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var downloads = Path.Combine(userProfile, "Downloads");
-        return System.IO.Directory.Exists(downloads)
-            ? downloads
-            : Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-    }
 
     /// <summary>
     /// 后台处理延迟查询队列。FSW 比 ETW 先触发时，在此异步重试获取进程名。
@@ -373,6 +367,6 @@ public class DiskMonitorService : IDisposable
     public void Dispose()
     {
         Stop();
-        _deferredCts?.Dispose();
+        _deferredCts?.Dispose(); 
     }
 }
