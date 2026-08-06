@@ -8,6 +8,8 @@ public class DiskMonitorService : IDisposable
     private readonly List<FileSystemWatcher> _watchers = new();
     private readonly EtwMonitorService _etwService;
     private readonly CleanupService? _cleanupService;
+    private readonly IDatabaseService _databaseService;
+
     private readonly object _lock = new();
     private volatile bool _paused;
 
@@ -30,10 +32,11 @@ public class DiskMonitorService : IDisposable
 
     public bool IsRunning => _watchers.Any(w => w.EnableRaisingEvents);
 
-    public DiskMonitorService(EtwMonitorService etwService, CleanupService? cleanupService = null)
+    public DiskMonitorService(EtwMonitorService etwService, CleanupService? cleanupService = null, IDatabaseService? databaseService = null)
     {
         _etwService = etwService;
         _cleanupService = cleanupService;
+        _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
     }
 
     public bool HasDirectory(string path) =>
@@ -277,6 +280,24 @@ public class DiskMonitorService : IDisposable
         // 如果未命中 ETW 缓冲，放入延迟查询队列
         if (processName == null)
             _pendingQueries.Enqueue(new PendingQuery(record, e.FullPath));
+        else
+        {
+            // 如果命中 ETW 缓冲，且进程在忽略列表中，则不记录
+            if (processName != null && needIgnoreProcess(processName))
+            {
+                // 忽略该事件
+                return;
+            }
+            // 直接记录到数据库
+            _databaseService.SaveChangeRecord(record);
+        }
+    }
+
+    private bool needIgnoreProcess(string processName)
+    {
+        return IgnoreProcessRecords.Any(r =>
+                        string.Equals(r.ProcessName, processName, StringComparison.OrdinalIgnoreCase)
+                        && r.Status == RecordStatusEnum.USING);
     }
 
     private void OnRenamed(object sender, RenamedEventArgs e)
