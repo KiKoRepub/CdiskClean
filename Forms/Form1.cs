@@ -2,6 +2,8 @@ using CdiskClean.Helpers;
 using CdiskClean.Models;
 using CdiskClean.Services;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Drawing.Drawing2D;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 
@@ -39,7 +41,7 @@ namespace CdiskClean
 
             // 从数据库加载监视目录（空则用默认列表）
             var savedDirs = _databaseService.GetWatchDirectories();
-            _monitorService = new DiskMonitorService(_etwService, _cleanupService);
+            _monitorService = new DiskMonitorService(_etwService, _cleanupService, _databaseService);
             if (savedDirs.Count > 0)
                 _monitorService.LoadDirectories(savedDirs);
             else
@@ -89,6 +91,10 @@ namespace CdiskClean
 
             // 初始化磁盘清理页
             SetupCleanPage();
+
+            // 低空间警告可点击跳转磁盘清理 Tab
+            warningLabel.Cursor = Cursors.Hand;
+            warningLabel.Click += warningLabel_Click;
         }
 
 
@@ -333,6 +339,12 @@ namespace CdiskClean
         }
 
         // ==================== 磁盘概览 ====================
+
+        /// <summary>低空间警告可点击跳转磁盘清理 Tab</summary>
+        private void warningLabel_Click(object? sender, EventArgs e)
+        {
+            TabPageControl1.SelectedIndex = 3; // diskCleanPage
+        }
 
         private void RefreshDiskInfo()
         {
@@ -675,14 +687,74 @@ namespace CdiskClean
         // ==================== 磁盘清理 ====================
 
         private CancellationTokenSource? _cleanScanCts;
+        private CancellationTokenSource? _cleanExecCts;
         private bool _treeUpdating;
+        private Label? _cleanHistoryEmptyLabel;
+
+        /// <summary>树节点数量上限，超过则仅显示目录节点（文件通过勾选目录整体清理）</summary>
+        private const int MaxCleanTreeNodes = 50000;
+
+        // 树勾选状态图标索引（StateImageList）：0=未选 1=全选 2=部分
+        private const int StateUnchecked = 0;
+        private const int StateChecked = 1;
+        private const int StatePartial = 2;
 
         private void SetupCleanPage()
         {
             SetupFrequentListView();
+            SetupTreeStateImages();
+            SetupCleanHistoryGrid();
             UpdateTargetBoxState();
             RefreshFrequentPaths();
             RefreshCleanHistory();
+        }
+
+        /// <summary>设置树勾选三态图标（0=未选 1=全选 2=部分），替换默认复选框</summary>
+        private void SetupTreeStateImages()
+        {
+            var images = new ImageList
+            {
+                ImageSize = new Size(16, 16),
+                ColorDepth = ColorDepth.Depth32Bit,
+                TransparentColor = Color.Transparent
+            };
+            images.Images.Add(CreateCheckStateImage(false, false));
+            images.Images.Add(CreateCheckStateImage(true, false));
+            images.Images.Add(CreateCheckStateImage(false, true));
+            cleanTreeView.StateImageList = images;
+        }
+
+        private static Image CreateCheckStateImage(bool checkedState, bool indeterminate)
+        {
+            var bmp = new Bitmap(16, 16);
+            using var g = Graphics.FromImage(bmp);
+            g.Clear(Color.Transparent);
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            var rect = new Rectangle(1, 1, 13, 13);
+            if (indeterminate)
+            {
+                g.FillRectangle(new SolidBrush(Color.FromArgb(225, 238, 255)), rect);
+                g.DrawRectangle(new Pen(Color.DodgerBlue), rect);
+                g.FillRectangle(new SolidBrush(Color.DodgerBlue), new Rectangle(4, 7, 7, 2));
+            }
+            else
+            {
+                g.DrawRectangle(new Pen(Color.FromArgb(120, 120, 120)), rect);
+                if (checkedState)
+                {
+                    using var pen = new Pen(Color.DodgerBlue, 2f)
+                    {
+                        StartCap = LineCap.Round,
+                        EndCap = LineCap.Round
+                    };
+                    g.DrawLines(pen, new[]
+                    {
+                        new PointF(3, 8), new PointF(6.5f, 11f), new PointF(12.5f, 4f)
+                    });
+                }
+            }
+            return bmp;
         }
 
         private void SetupFrequentListView()
@@ -718,7 +790,7 @@ namespace CdiskClean
             var paths = CleanupService.GetFrequentPaths(snapshot, 30);
             if (paths.Count == 0)
             {
-                frequentPathListView.Items.Add(new ListViewItem("暂无变更记录，开始监测后刷新"));
+                frequentPathListView.Items.Add(new ListViewItem("暂无变更记录"));
             }
             else
             {
@@ -808,10 +880,21 @@ namespace CdiskClean
                 var entries = await _cleanupService.ScanDirectoryAsync(path, progress, cts.Token);
                 if (cts.IsCancellationRequested) return;
 
-                var totalSize = entries.Sum(e => e.SizeBytes);
+                // 根目录条目（首个目录）已递归汇总全部子项大小，直接取它避免重复累加
+                var totalSize = entries.FirstOrDefault(e => e.IsDirectory)?.SizeBytes ?? 0;
                 var fileCount = entries.Count(e => !e.IsDirectory);
-                BuildCleanTree(entries, path, totalSize);
-                cleanStatusLabel.Text = $"扫描完成：{fileCount} 个文件，共 {FormatBytes(totalSize)}";
+
+                // 节点过多时仅构建目录树，避免数十万节点卡死 UI
+                var dirOnly = entries.Count > MaxCleanTreeNodes;
+                cleanStatusLabel.Text = dirOnly
+                    ? $"正在构建目录树（文件过多：{fileCount} 个文件，仅显示目录以保持流畅）..."
+                    : "正在构建目录树...";
+
+                await BuildCleanTreeAsync(entries, path, totalSize, dirOnly, cts.Token);
+
+                cleanStatusLabel.Text = dirOnly
+                    ? $"扫描完成：{fileCount} 个文件，共 {FormatBytes(totalSize)}（文件过多仅显示目录，可勾选目录整体清理）"
+                    : $"扫描完成：{fileCount} 个文件，共 {FormatBytes(totalSize)}";
             }
             catch (OperationCanceledException)
             {
@@ -831,51 +914,89 @@ namespace CdiskClean
             }
         }
 
-        private void BuildCleanTree(List<CleanupFileEntry> entries, string rootPath, long totalSize)
+        /// <summary>后台构建节点树后一次性挂载，避免大量节点在 UI 线程创建导致卡死</summary>
+        private async Task BuildCleanTreeAsync(
+            List<CleanupFileEntry> entries,
+            string rootPath,
+            long totalSize,
+            bool dirOnly,
+            CancellationToken ct)
         {
+            var rootFull = rootPath.TrimEnd('\\');
+            var rootNode = await Task.Run(() =>
+                BuildCleanTreeNodes(entries, rootFull, totalSize, dirOnly), ct);
+
             cleanTreeView.BeginUpdate();
             cleanTreeView.Nodes.Clear();
-
-            var rootName = Path.GetFileName(rootPath.TrimEnd('\\'));
-            var rootNode = new TreeNode($"{rootName}  [{FormatBytes(totalSize)}]") { Tag = null };
             cleanTreeView.Nodes.Add(rootNode);
+            rootNode.Expand();
+            cleanTreeView.EndUpdate();
+        }
+
+        /// <summary>
+        /// 在后台线程构建节点树（TreeNode 无句柄，可跨线程构建父子关系，挂载后再由 UI 线程渲染）。
+        /// 跳过扫描根目录自身（entries 首项即根），避免树中出现重复根节点。
+        /// </summary>
+        private static TreeNode BuildCleanTreeNodes(
+            List<CleanupFileEntry> entries,
+            string rootFull,
+            long totalSize,
+            bool dirOnly)
+        {
+            var rootName = Path.GetFileName(rootFull);
+            var rootNode = new TreeNode($"{rootName}  [{FormatBytes(totalSize)}]")
+            {
+                Tag = null,
+                StateImageIndex = 0
+            };
 
             // 目录节点（扫描顺序保证父目录先于子目录）
             var dirNodes = new Dictionary<string, TreeNode>(StringComparer.OrdinalIgnoreCase)
             {
-                [rootPath.TrimEnd('\\')] = rootNode
+                [rootFull] = rootNode
             };
 
             foreach (var entry in entries.Where(e => e.IsDirectory))
             {
-                var node = new TreeNode($"{entry.Name}  [{FormatBytes(entry.SizeBytes)}]") { Tag = entry };
-                dirNodes[entry.FullPath.TrimEnd('\\')] = node;
+                var entryFull = entry.FullPath.TrimEnd('\\');
+                if (string.Equals(entryFull, rootFull, StringComparison.OrdinalIgnoreCase))
+                    continue;
 
-                var parentDir = Path.GetDirectoryName(entry.FullPath.TrimEnd('\\')) ?? "";
+                var node = new TreeNode($"{entry.Name}  [{FormatBytes(entry.SizeBytes)}]")
+                {
+                    Tag = entry,
+                    StateImageIndex = 0
+                };
+                dirNodes[entryFull] = node;
+
+                var parentDir = Path.GetDirectoryName(entryFull) ?? "";
                 if (dirNodes.TryGetValue(parentDir.TrimEnd('\\'), out var parent))
                     parent.Nodes.Add(node);
                 else
                     rootNode.Nodes.Add(node);
             }
 
-            // 文件节点
-            foreach (var entry in entries.Where(e => !e.IsDirectory))
+            if (!dirOnly)
             {
-                var node = new TreeNode($"{entry.Name}  [{FormatBytes(entry.SizeBytes)}, {entry.LastWriteTime:yyyy-MM-dd HH:mm}]")
+                // 文件节点
+                foreach (var entry in entries.Where(e => !e.IsDirectory))
                 {
-                    Tag = entry
-                };
+                    var node = new TreeNode($"{entry.Name}  [{FormatBytes(entry.SizeBytes)}, {entry.LastWriteTime:yyyy-MM-dd HH:mm}]")
+                    {
+                        Tag = entry,
+                        StateImageIndex = 0
+                    };
 
-                var parentDir = Path.GetDirectoryName(entry.FullPath) ?? "";
-                if (dirNodes.TryGetValue(parentDir.TrimEnd('\\'), out var parent))
-                    parent.Nodes.Add(node);
-                else
-                    rootNode.Nodes.Add(node);
+                    var parentDir = Path.GetDirectoryName(entry.FullPath) ?? "";
+                    if (dirNodes.TryGetValue(parentDir.TrimEnd('\\'), out var parent))
+                        parent.Nodes.Add(node);
+                    else
+                        rootNode.Nodes.Add(node);
+                }
             }
 
             SortCleanTreeNodes(rootNode.Nodes);
-            rootNode.Expand();
-            cleanTreeView.EndUpdate();
+            return rootNode;
         }
 
         /// <summary>目录在前，其余按大小降序排列</summary>
@@ -887,12 +1008,15 @@ namespace CdiskClean
             if (nodes.Count < 2) return;
 
             var list = nodes.Cast<TreeNode>().ToList();
+            // 目录在前，其余按大小降序排列
             list.Sort((a, b) =>
             {
+                // 目录在前
                 bool aDir = a.Tag is CleanupFileEntry ae && ae.IsDirectory;
                 bool bDir = b.Tag is CleanupFileEntry be && be.IsDirectory;
                 if (aDir != bDir) return aDir ? -1 : 1;
 
+                // 其余按大小降序排列
                 long aSize = a.Tag is CleanupFileEntry ae2 ? ae2.SizeBytes : 0;
                 long bSize = b.Tag is CleanupFileEntry be2 ? be2.SizeBytes : 0;
                 return bSize.CompareTo(aSize);
@@ -923,6 +1047,7 @@ namespace CdiskClean
             try
             {
                 SetNodeCheckedRecursive(e.Node, e.Node.Checked);
+                UpdateParentState(e.Node);
             }
             finally
             {
@@ -933,8 +1058,29 @@ namespace CdiskClean
         private static void SetNodeCheckedRecursive(TreeNode node, bool check)
         {
             node.Checked = check;
+            node.StateImageIndex = check ? StateChecked : StateUnchecked;
             foreach (TreeNode child in node.Nodes)
                 SetNodeCheckedRecursive(child, check);
+        }
+
+        /// <summary>按子节点勾选情况刷新父链图标：全选=1、全不选=0、混合=2</summary>
+        private static void UpdateParentState(TreeNode node)
+        {
+            var parent = node.Parent;
+            while (parent != null)
+            {
+                int checkedCount = 0, total = 0;
+                foreach (TreeNode child in parent.Nodes)
+                {
+                    total++;
+                    if (child.Checked) checkedCount++;
+                }
+
+                parent.StateImageIndex = checkedCount == 0 ? StateUnchecked
+                    : checkedCount == total ? StateChecked
+                    : StatePartial;
+                parent = parent.Parent;
+            }
         }
 
         private void cleanSelectAllBtn_Click(object? sender, EventArgs e)
@@ -956,6 +1102,7 @@ namespace CdiskClean
             {
                 foreach (TreeNode child in cleanTreeView.Nodes[0].Nodes)
                     SetNodeCheckedRecursive(child, check);
+                cleanTreeView.Nodes[0].StateImageIndex = check ? StateChecked : StateUnchecked;
             }
             finally
             {
@@ -1008,8 +1155,8 @@ namespace CdiskClean
 
         private static void CollectCheckedCleanNodes(TreeNode node, List<CleanupFileEntry> list)
         {
-            // 勾选的目录整体清理，其子项不再单独入列
-            if (node.Checked && node.Tag is CleanupFileEntry entry)
+            // 勾选的目录仅在"全选"态下整体清理；部分勾选（中间态）则继续下钻子项
+            if (node.Checked && node.StateImageIndex != StatePartial && node.Tag is CleanupFileEntry entry)
             {
                 list.Add(entry);
                 return;
@@ -1021,6 +1168,13 @@ namespace CdiskClean
 
         private async void cleanBtn_Click(object? sender, EventArgs e)
         {
+            // 清理进行中再次点击 = 取消剩余清理项
+            if (_cleanExecCts != null)
+            {
+                _cleanExecCts.Cancel();
+                return;
+            }
+
             var entries = GetCheckedEntries();
             if (entries.Count == 0)
             {
@@ -1072,14 +1226,18 @@ namespace CdiskClean
                     MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
                 return;
 
+            _cleanExecCts = new CancellationTokenSource();
+            var cts = _cleanExecCts;
+
             cleanBtn.Enabled = false;
+            cleanBtn.Text = "取消清理";
             cleanScanProgressBar.Style = ProgressBarStyle.Marquee;
             var progress = new Progress<string>(s => cleanStatusLabel.Text = s);
 
             long freeBefore = GetFreeSpaceSafe();
             try
             {
-                var result = await _cleanupService.ExecuteAsync(entries, method, targetDir, progress);
+                var result = await _cleanupService.ExecuteAsync(entries, method, targetDir, progress, cts.Token);
                 long freedDelta = Math.Max(0, GetFreeSpaceSafe() - freeBefore);
 
                 var summary = $"清理完成：成功 {result.Success} 项，失败 {result.Fail} 项";
@@ -1096,6 +1254,13 @@ namespace CdiskClean
                 if (Directory.Exists(cleanPathTextBox.Text.Trim()))
                     await TryScanCurrentPathAsync();
             }
+            catch (OperationCanceledException)
+            {
+                cleanStatusLabel.Text = "已取消，剩余清理项未执行";
+                RefreshDiskInfo();
+                RefreshCleanHistory();
+                RefreshFrequentPaths();
+            }
             catch (Exception ex)
             {
                 MessageBox.Show($"清理失败: {ex.Message}", "错误",
@@ -1103,9 +1268,10 @@ namespace CdiskClean
             }
             finally
             {
+                if (_cleanExecCts == cts) _cleanExecCts = null;
                 cleanBtn.Enabled = true;
+                cleanBtn.Text = "清理选中文件";
                 cleanScanProgressBar.Style = ProgressBarStyle.Blocks;
-                cleanStatusLabel.Text = "清理结束";
             }
         }
 
@@ -1143,6 +1309,93 @@ namespace CdiskClean
         {
             var records = _databaseService.GetCleanupRecords(200);
             cleanHistoryGrid.DataSource = records;
+            if (_cleanHistoryEmptyLabel != null)
+                _cleanHistoryEmptyLabel.Visible = records.Count == 0;
+
+            // 列配置（数据绑定后列才存在）：隐藏原始列，其余按比例分配宽度
+            if (records.Count > 0 && cleanHistoryGrid.Columns.Count > 0)
+            {
+                cleanHistoryGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+                foreach (DataGridViewColumn col in cleanHistoryGrid.Columns)
+                {
+                    col.Visible = col.Name is not ("Id" or "SizeBytes" or "Success");
+                    col.FillWeight = col.Name switch
+                    {
+                        "FullPath" => 30,
+                        "CleanupTime" => 16,
+                        "FileName" => 14,
+                        "Message" => 12,
+                        "Method" => 8,
+                        "SizeText" => 8,
+                        "ResultText" => 6,
+                        _ => 8
+                    };
+                }
+            }
+        }
+
+        /// <summary>历史表格：隐藏原始列、设置列宽比例、右键菜单与空状态提示</summary>
+        private void SetupCleanHistoryGrid()
+        {
+            cleanHistoryGrid.CellContextMenuStripNeeded += cleanHistoryGrid_CellContextMenuStripNeeded;
+
+            // 空状态提示标签（覆盖在表格上方）
+            _cleanHistoryEmptyLabel = new Label
+            {
+                Text = "暂无清理记录",
+                TextAlign = ContentAlignment.MiddleCenter,
+                ForeColor = Color.Gray,
+                BackColor = Color.White,
+                Visible = false,
+                Bounds = cleanHistoryGrid.Bounds,
+                Anchor = cleanHistoryGrid.Anchor
+            };
+            cleanHistoryGrid.Parent!.Controls.Add(_cleanHistoryEmptyLabel);
+            _cleanHistoryEmptyLabel.BringToFront();
+        }
+
+        private void cleanHistoryGrid_CellContextMenuStripNeeded(
+            object? sender, DataGridViewCellContextMenuStripNeededEventArgs e)
+        {
+            if (e.RowIndex < 0 || cleanHistoryGrid.Rows[e.RowIndex].DataBoundItem is not CleanupRecord record)
+                return;
+
+            var menu = new ContextMenuStrip();
+
+            // 回收站方式且清理成功的记录可定位到回收站
+            if (record.Success && string.Equals(record.Method, "回收站", StringComparison.Ordinal))
+            {
+                var openRecycle = new ToolStripMenuItem("打开回收站定位");
+                openRecycle.Click += (_, _) => OpenRecycleBin();
+                menu.Items.Add(openRecycle);
+            }
+
+            var copyPath = new ToolStripMenuItem("复制路径");
+            copyPath.Click += (_, _) =>
+            {
+                try { Clipboard.SetText(record.FullPath); }
+                catch (Exception ex) { Debug.WriteLine($"复制路径失败: {ex.Message}"); }
+            };
+            menu.Items.Add(copyPath);
+
+            e.ContextMenuStrip = menu;
+        }
+
+        private static void OpenRecycleBin()
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo("explorer.exe")
+                {
+                    Arguments = "shell:RecycleBinFolder",
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"打开回收站失败: {ex.Message}", "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         // ==================== 状态栏交互 ====================

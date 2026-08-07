@@ -106,7 +106,14 @@ public class CleanupService
         await Task.Run(() => ScanRecursive(root, entries, progress, cts.Token), cts.Token);
         return entries;
     }
-
+    /// <summary>
+    /// 递归扫描目录，返回全部文件与目录条目（目录条目在文件之前，父目录先于子目录）。
+    /// </summary>
+    /// <param name="dir"></param>
+    /// <param name="entries"></param>
+    /// <param name="progress"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
     private static CleanupFileEntry ScanRecursive(
         DirectoryInfo dir,
         List<CleanupFileEntry> entries,
@@ -204,7 +211,7 @@ public class CleanupService
     }
 
     #endregion
-
+    
     #region 清理执行
 
     public static string GetMethodDisplayName(CleanupMethod method) => method switch

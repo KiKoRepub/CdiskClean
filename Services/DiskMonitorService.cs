@@ -8,6 +8,8 @@ public class DiskMonitorService : IDisposable
     private readonly List<FileSystemWatcher> _watchers = new();
     private readonly EtwMonitorService _etwService;
     private readonly CleanupService? _cleanupService;
+    private readonly IDatabaseService _databaseService;
+
     private readonly object _lock = new();
     private volatile bool _paused;
 
@@ -30,10 +32,11 @@ public class DiskMonitorService : IDisposable
 
     public bool IsRunning => _watchers.Any(w => w.EnableRaisingEvents);
 
-    public DiskMonitorService(EtwMonitorService etwService, CleanupService? cleanupService = null)
+    public DiskMonitorService(EtwMonitorService etwService, CleanupService? cleanupService = null, IDatabaseService? databaseService = null)
     {
         _etwService = etwService;
         _cleanupService = cleanupService;
+        _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
     }
 
     public bool HasDirectory(string path) =>
@@ -173,6 +176,7 @@ public class DiskMonitorService : IDisposable
         return dir;
     }
 
+    #region 忽略进程列表 
     /// <summary>用外部忽略进程列表（如数据库）初始化，并同步 ETW 黑名单</summary>
     public void LoadIgnoreProcesses(List<IgnoreProcessRecord> records)
     {
@@ -209,6 +213,7 @@ public class DiskMonitorService : IDisposable
         _etwService.OperateIgnoreProcessArr(processName,
             status == RecordStatusEnum.USING ? 1 : 2);
     }
+    #endregion
 
     private void StartWatchingInternal(string dir, bool includeSubdirs)
     {
@@ -275,6 +280,24 @@ public class DiskMonitorService : IDisposable
         // 如果未命中 ETW 缓冲，放入延迟查询队列
         if (processName == null)
             _pendingQueries.Enqueue(new PendingQuery(record, e.FullPath));
+        else
+        {
+            // 如果命中 ETW 缓冲，且进程在忽略列表中，则不记录
+            if (processName != null && needIgnoreProcess(processName))
+            {
+                // 忽略该事件
+                return;
+            }
+            // 直接记录到数据库
+            _databaseService.SaveChangeRecord(record);
+        }
+    }
+
+    private bool needIgnoreProcess(string processName)
+    {
+        return IgnoreProcessRecords.Any(r =>
+                        string.Equals(r.ProcessName, processName, StringComparison.OrdinalIgnoreCase)
+                        && r.Status == RecordStatusEnum.USING);
     }
 
     private void OnRenamed(object sender, RenamedEventArgs e)
@@ -326,14 +349,6 @@ public class DiskMonitorService : IDisposable
         }
     }
 
-    private static string GetDownloadsPath()
-    {
-        var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var downloads = Path.Combine(userProfile, "Downloads");
-        return System.IO.Directory.Exists(downloads)
-            ? downloads
-            : Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-    }
 
     /// <summary>
     /// 后台处理延迟查询队列。FSW 比 ETW 先触发时，在此异步重试获取进程名。
@@ -373,6 +388,6 @@ public class DiskMonitorService : IDisposable
     public void Dispose()
     {
         Stop();
-        _deferredCts?.Dispose();
+        _deferredCts?.Dispose(); 
     }
 }

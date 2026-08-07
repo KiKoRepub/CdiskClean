@@ -17,14 +17,14 @@ namespace CdiskClean.Helpers
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         private struct SHFILEOPSTRUCT
         {
-            public IntPtr hwnd;
-            public uint wFunc;
-            public string pFrom;
-            public string pTo;
-            public ushort fFlags;
-            public IntPtr fAnyOperationsAborted;
-            public IntPtr hNameMappings;
-            public string lpszProgressTitle;
+            public IntPtr hwnd; // 窗口句柄
+            public uint wFunc; // 操作类型
+            public string pFrom; // 源文件路径（多个路径使用 \0 分隔，末尾必须双\0）-
+            public string pTo; // 目标文件路径（对于删除操作不使用）
+            public ushort fFlags; // 操作标志
+            public IntPtr fAnyOperationsAborted; // 是否中止操作
+            public IntPtr hNameMappings; // 文件名映射
+            public string lpszProgressTitle; // 进度窗口标题
         }
 
         [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
@@ -49,7 +49,7 @@ namespace CdiskClean.Helpers
         /// <returns>true=操作成功；false=失败/用户取消</returns>
         public static bool SendToRecycleBin(string path, bool showConfirmDialog = true, bool showProgress = false)
         {
-            if (!System.IO.File.Exists(path) && !System.IO.Directory.Exists(path))
+            if (!File.Exists(path) && !Directory.Exists(path))
             {
                 return false;
             }
@@ -106,5 +106,8 @@ namespace CdiskClean.Helpers
             return ret == 0;
         }
     }
+
+    //public static struct 
+
 }
 

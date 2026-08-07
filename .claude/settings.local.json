@@ -5,7 +5,29 @@
       "Bash(git commit -m ' *)",
       "Bash(dotnet build *)",
       "Bash(iconv -f GBK -t UTF-8 \"D:\\\\university\\\\CSharp\\\\projects\\\\CdiskClean\\\\claude-prompt.txt\")",
-      "Bash(git -C \"D:\\\\university\\\\CSharp\\\\projects\\\\CdiskClean\" status --short)"
+      "Bash(git -C \"D:\\\\university\\\\CSharp\\\\projects\\\\CdiskClean\" status --short)",
+      "Bash(git *)",
+      "Bash(powershell -Command \"Get-Content -Encoding Default -Path 'D:\\\\university\\\\CSharp\\\\projects\\\\CdiskClean\\\\claude-prompt.txt' | Out-File -Encoding utf8 'D:\\\\university\\\\CSharp\\\\projects\\\\CdiskClean\\\\claude-prompt-utf8.txt'\")",
+      "Bash(iconv -f GBK -t UTF-8 \"D:\\\\university\\\\CSharp\\\\projects\\\\CdiskClean\\\\docs\\\\p008-summary.md\")",
+      "Bash(file Forms/Form1.cs Forms/Form1.Designer.cs Services/*.cs Models/*.cs)",
+      "Bash(xxd)",
+      "Bash(sqlite3 \"D:\\\\university\\\\CSharp\\\\projects\\\\CdiskClean\\\\bin\\\\Debug\\\\net8.0-windows\\\\CdiskClean.db\" \".tables\")",
+      "Bash(mkdir -p /tmp/cleanup-test)",
+      "Read(//tmp/**)",
+      "Bash(dotnet new *)",
+      "Bash(dotnet add *)",
+      "Bash(dotnet run *)",
+      "Bash(taskkill //IM CdiskClean.exe //F)",
+      "Bash(iconv -f UTF-8 -t GBK docs/p009-summary.md -o docs/p009-summary.md.tmp)",
+      "Bash(powershell -ExecutionPolicy Bypass -File docs/_convert.ps1)",
+      "Bash(powershell -Command \"[System.IO.File]::ReadAllText\\('D:\\\\university\\\\CSharp\\\\projects\\\\CdiskClean\\\\docs\\\\p009-summary.md', [System.Text.Encoding]::GetEncoding\\('GB2312'\\)\\)\")",
+      "Bash(./bin/Debug/net8.0-windows/CdiskClean.exe)",
+      "Bash(tasklist)",
+      "Bash(pwsh --version)",
+      "Bash(cygpath *)",
+      "Bash(iconv -f UTF-8 -t GBK docs/p010-summary-utf8.md -o docs/p010-summary.md)",
+      "Bash(iconv -f GBK -t UTF-8 docs/p010-summary.md)",
+      "Bash(iconv -f UTF-8 -t GBK docs/p010-summary-utf8.md)"
     ]
   }
 }

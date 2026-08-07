@@ -65,19 +65,8 @@
             selectDirBtn = new Button();
             selectedPathTextBox = new TextBox();
             diskCleanPage = new TabPage();
-            cleanPathTextBox = new TextBox();
-            cleanSelectDirBtn = new Button();
-            cleanScanBtn = new Button();
-            cleanScanProgressBar = new ProgressBar();
-            cleanRefreshFrequentBtn = new Button();
-            frequentPathBox = new GroupBox();
-            frequentPathListView = new ListView();
-            frequentHintLabel = new Label();
-            cleanTreeBox = new GroupBox();
-            cleanTreeView = new TreeView();
-            cleanSelectAllBtn = new Button();
-            cleanSelectNoneBtn = new Button();
-            cleanStatusLabel = new Label();
+            cleanHistoryBox = new GroupBox();
+            cleanHistoryGrid = new DataGridView();
             cleanMethodBox = new GroupBox();
             cleanRecycleRadio = new RadioButton();
             cleanPermanentRadio = new RadioButton();
@@ -88,13 +77,19 @@
             cleanTargetTextBox = new TextBox();
             cleanTargetSelectBtn = new Button();
             cleanBtn = new Button();
-            cleanHistoryBox = new GroupBox();
-            cleanHistoryGrid = new DataGridView();
-            CleanTimeColumn = new DataGridViewTextBoxColumn();
-            CleanPathColumn = new DataGridViewTextBoxColumn();
-            CleanSizeColumn = new DataGridViewTextBoxColumn();
-            CleanMethodColumn = new DataGridViewTextBoxColumn();
-            CleanResultColumn = new DataGridViewTextBoxColumn();
+            cleanTreeBox = new GroupBox();
+            cleanTreeView = new TreeView();
+            cleanSelectAllBtn = new Button();
+            cleanSelectNoneBtn = new Button();
+            cleanStatusLabel = new Label();
+            frequentPathBox = new GroupBox();
+            frequentPathListView = new ListView();
+            frequentHintLabel = new Label();
+            cleanRefreshFrequentBtn = new Button();
+            cleanScanProgressBar = new ProgressBar();
+            cleanScanBtn = new Button();
+            cleanSelectDirBtn = new Button();
+            cleanPathTextBox = new TextBox();
             statusStrip1 = new StatusStrip();
             watchStatusLabel = new ToolStripStatusLabel();
             writedRecordStatusLabel = new ToolStripStatusLabel();
@@ -111,6 +106,7 @@
             panelTitle = new SplitContainer();
             label1 = new Label();
             ImportFolderDialog = new FolderBrowserDialog();
+            progressBar1 = new ProgressBar();
             statsPanel.SuspendLayout();
             TabPageControl1.SuspendLayout();
             totalReviewPage.SuspendLayout();
@@ -120,11 +116,11 @@
             ((System.ComponentModel.ISupportInitialize)changesDataGrid).BeginInit();
             folderAnalyzerPage.SuspendLayout();
             diskCleanPage.SuspendLayout();
-            frequentPathBox.SuspendLayout();
-            cleanTreeBox.SuspendLayout();
-            cleanMethodBox.SuspendLayout();
             cleanHistoryBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)cleanHistoryGrid).BeginInit();
+            cleanMethodBox.SuspendLayout();
+            cleanTreeBox.SuspendLayout();
+            frequentPathBox.SuspendLayout();
             statusStrip1.SuspendLayout();
             notifyMenuStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)panelTitle).BeginInit();
@@ -192,6 +188,7 @@
             // 
             // totalReviewPage
             // 
+            totalReviewPage.Controls.Add(progressBar1);
             totalReviewPage.Controls.Add(warningLabel);
             totalReviewPage.Controls.Add(freeSpaceLabel);
             totalReviewPage.Controls.Add(usedSpaceLabel);
@@ -635,7 +632,7 @@
             selectedPathTextBox.TabIndex = 0;
             // 
             // diskCleanPage
-            //
+            // 
             diskCleanPage.Controls.Add(cleanHistoryBox);
             diskCleanPage.Controls.Add(cleanMethodBox);
             diskCleanPage.Controls.Add(cleanTreeBox);
@@ -652,138 +649,36 @@
             diskCleanPage.TabIndex = 3;
             diskCleanPage.Text = "磁盘清理";
             diskCleanPage.UseVisualStyleBackColor = true;
-            //
-            // cleanPathTextBox
-            //
-            cleanPathTextBox.Location = new Point(8, 10);
-            cleanPathTextBox.Name = "cleanPathTextBox";
-            cleanPathTextBox.Size = new Size(350, 30);
-            cleanPathTextBox.TabIndex = 0;
-            //
-            // cleanSelectDirBtn
-            //
-            cleanSelectDirBtn.Location = new Point(366, 8);
-            cleanSelectDirBtn.Name = "cleanSelectDirBtn";
-            cleanSelectDirBtn.Size = new Size(100, 30);
-            cleanSelectDirBtn.TabIndex = 1;
-            cleanSelectDirBtn.Text = "选择目录";
-            cleanSelectDirBtn.UseVisualStyleBackColor = true;
-            cleanSelectDirBtn.Click += cleanSelectDirBtn_Click;
-            //
-            // cleanScanBtn
-            //
-            cleanScanBtn.Location = new Point(474, 8);
-            cleanScanBtn.Name = "cleanScanBtn";
-            cleanScanBtn.Size = new Size(100, 30);
-            cleanScanBtn.TabIndex = 2;
-            cleanScanBtn.Text = "开始扫描";
-            cleanScanBtn.UseVisualStyleBackColor = true;
-            cleanScanBtn.Click += cleanScanBtn_Click;
-            //
-            // cleanScanProgressBar
-            //
-            cleanScanProgressBar.Location = new Point(582, 8);
-            cleanScanProgressBar.Name = "cleanScanProgressBar";
-            cleanScanProgressBar.Size = new Size(620, 23);
-            cleanScanProgressBar.TabIndex = 3;
-            //
-            // cleanRefreshFrequentBtn
-            //
-            cleanRefreshFrequentBtn.Location = new Point(1210, 8);
-            cleanRefreshFrequentBtn.Name = "cleanRefreshFrequentBtn";
-            cleanRefreshFrequentBtn.Size = new Size(100, 30);
-            cleanRefreshFrequentBtn.TabIndex = 4;
-            cleanRefreshFrequentBtn.Text = "刷新高频参考";
-            cleanRefreshFrequentBtn.UseVisualStyleBackColor = true;
-            cleanRefreshFrequentBtn.Click += cleanRefreshFrequentBtn_Click;
-            //
-            // frequentPathBox
-            //
-            frequentPathBox.Controls.Add(frequentPathListView);
-            frequentPathBox.Controls.Add(frequentHintLabel);
-            frequentPathBox.Location = new Point(8, 50);
-            frequentPathBox.Name = "frequentPathBox";
-            frequentPathBox.Size = new Size(360, 330);
-            frequentPathBox.TabIndex = 5;
-            frequentPathBox.TabStop = false;
-            frequentPathBox.Text = "高频修改文件路径参考";
-            //
-            // frequentPathListView
-            //
-            frequentPathListView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            frequentPathListView.Location = new Point(14, 30);
-            frequentPathListView.Name = "frequentPathListView";
-            frequentPathListView.Size = new Size(332, 255);
-            frequentPathListView.TabIndex = 0;
-            frequentPathListView.UseCompatibleStateImageBehavior = false;
-            frequentPathListView.ItemSelectionChanged += frequentPathListView_ItemSelectionChanged;
-            frequentPathListView.MouseDoubleClick += frequentPathListView_MouseDoubleClick;
-            //
-            // frequentHintLabel
-            //
-            frequentHintLabel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            frequentHintLabel.ForeColor = Color.Gray;
-            frequentHintLabel.Location = new Point(14, 292);
-            frequentHintLabel.Name = "frequentHintLabel";
-            frequentHintLabel.Size = new Size(332, 25);
-            frequentHintLabel.TabIndex = 1;
-            frequentHintLabel.Text = "单击选中基础路径，双击开始扫描";
-            frequentHintLabel.TextAlign = ContentAlignment.MiddleLeft;
-            //
-            // cleanTreeBox
-            //
-            cleanTreeBox.Controls.Add(cleanTreeView);
-            cleanTreeBox.Controls.Add(cleanSelectAllBtn);
-            cleanTreeBox.Controls.Add(cleanSelectNoneBtn);
-            cleanTreeBox.Controls.Add(cleanStatusLabel);
-            cleanTreeBox.Location = new Point(376, 50);
-            cleanTreeBox.Name = "cleanTreeBox";
-            cleanTreeBox.Size = new Size(1045, 330);
-            cleanTreeBox.TabIndex = 6;
-            cleanTreeBox.TabStop = false;
-            cleanTreeBox.Text = "扫描结果（勾选要清理的文件）";
-            //
-            // cleanTreeView
-            //
-            cleanTreeView.CheckBoxes = true;
-            cleanTreeView.Location = new Point(14, 28);
-            cleanTreeView.Name = "cleanTreeView";
-            cleanTreeView.Size = new Size(1015, 250);
-            cleanTreeView.TabIndex = 0;
-            cleanTreeView.AfterCheck += cleanTreeView_AfterCheck;
-            cleanTreeView.BeforeCheck += cleanTreeView_BeforeCheck;
-            //
-            // cleanSelectAllBtn
-            //
-            cleanSelectAllBtn.Location = new Point(14, 286);
-            cleanSelectAllBtn.Name = "cleanSelectAllBtn";
-            cleanSelectAllBtn.Size = new Size(70, 30);
-            cleanSelectAllBtn.TabIndex = 1;
-            cleanSelectAllBtn.Text = "全选";
-            cleanSelectAllBtn.UseVisualStyleBackColor = true;
-            cleanSelectAllBtn.Click += cleanSelectAllBtn_Click;
-            //
-            // cleanSelectNoneBtn
-            //
-            cleanSelectNoneBtn.Location = new Point(90, 286);
-            cleanSelectNoneBtn.Name = "cleanSelectNoneBtn";
-            cleanSelectNoneBtn.Size = new Size(70, 30);
-            cleanSelectNoneBtn.TabIndex = 2;
-            cleanSelectNoneBtn.Text = "全不选";
-            cleanSelectNoneBtn.UseVisualStyleBackColor = true;
-            cleanSelectNoneBtn.Click += cleanSelectNoneBtn_Click;
-            //
-            // cleanStatusLabel
-            //
-            cleanStatusLabel.Location = new Point(170, 290);
-            cleanStatusLabel.Name = "cleanStatusLabel";
-            cleanStatusLabel.Size = new Size(850, 26);
-            cleanStatusLabel.TabIndex = 3;
-            cleanStatusLabel.Text = "请选择目录并开始扫描";
-            cleanStatusLabel.TextAlign = ContentAlignment.MiddleLeft;
-            //
+            // 
+            // cleanHistoryBox
+            // 
+            cleanHistoryBox.Controls.Add(cleanHistoryGrid);
+            cleanHistoryBox.Location = new Point(8, 490);
+            cleanHistoryBox.Name = "cleanHistoryBox";
+            cleanHistoryBox.Size = new Size(1413, 150);
+            cleanHistoryBox.TabIndex = 8;
+            cleanHistoryBox.TabStop = false;
+            cleanHistoryBox.Text = "清理历史记录";
+            // 
+            // cleanHistoryGrid
+            // 
+            cleanHistoryGrid.AllowUserToAddRows = false;
+            cleanHistoryGrid.AllowUserToDeleteRows = false;
+            cleanHistoryGrid.AllowUserToResizeRows = false;
+            cleanHistoryGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            cleanHistoryGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            cleanHistoryGrid.Location = new Point(14, 28);
+            cleanHistoryGrid.Name = "cleanHistoryGrid";
+            cleanHistoryGrid.ReadOnly = true;
+            cleanHistoryGrid.RowHeadersVisible = false;
+            cleanHistoryGrid.RowHeadersWidth = 62;
+            cleanHistoryGrid.RowTemplate.Height = 25;
+            cleanHistoryGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            cleanHistoryGrid.Size = new Size(1385, 110);
+            cleanHistoryGrid.TabIndex = 0;
+            // 
             // cleanMethodBox
-            //
+            // 
             cleanMethodBox.Controls.Add(cleanRecycleRadio);
             cleanMethodBox.Controls.Add(cleanPermanentRadio);
             cleanMethodBox.Controls.Add(cleanMoveRadio);
@@ -799,96 +694,96 @@
             cleanMethodBox.TabIndex = 7;
             cleanMethodBox.TabStop = false;
             cleanMethodBox.Text = "清理方式";
-            //
+            // 
             // cleanRecycleRadio
-            //
+            // 
             cleanRecycleRadio.AutoSize = true;
             cleanRecycleRadio.Checked = true;
             cleanRecycleRadio.Location = new Point(16, 28);
             cleanRecycleRadio.Name = "cleanRecycleRadio";
-            cleanRecycleRadio.Size = new Size(157, 28);
+            cleanRecycleRadio.Size = new Size(215, 28);
             cleanRecycleRadio.TabIndex = 0;
             cleanRecycleRadio.TabStop = true;
             cleanRecycleRadio.Text = "回收站删除（可恢复）";
             cleanRecycleRadio.UseVisualStyleBackColor = true;
             cleanRecycleRadio.CheckedChanged += cleanMethodRadio_CheckedChanged;
-            //
+            // 
             // cleanPermanentRadio
-            //
+            // 
             cleanPermanentRadio.AutoSize = true;
-            cleanPermanentRadio.Location = new Point(200, 28);
+            cleanPermanentRadio.Location = new Point(233, 28);
             cleanPermanentRadio.Name = "cleanPermanentRadio";
-            cleanPermanentRadio.Size = new Size(104, 28);
+            cleanPermanentRadio.Size = new Size(107, 28);
             cleanPermanentRadio.TabIndex = 1;
             cleanPermanentRadio.TabStop = true;
             cleanPermanentRadio.Text = "永久删除";
             cleanPermanentRadio.UseVisualStyleBackColor = true;
             cleanPermanentRadio.CheckedChanged += cleanMethodRadio_CheckedChanged;
-            //
+            // 
             // cleanMoveRadio
-            //
+            // 
             cleanMoveRadio.AutoSize = true;
-            cleanMoveRadio.Location = new Point(330, 28);
+            cleanMoveRadio.Location = new Point(351, 28);
             cleanMoveRadio.Name = "cleanMoveRadio";
-            cleanMoveRadio.Size = new Size(87, 28);
+            cleanMoveRadio.Size = new Size(89, 28);
             cleanMoveRadio.TabIndex = 2;
             cleanMoveRadio.TabStop = true;
             cleanMoveRadio.Text = "移动到";
             cleanMoveRadio.UseVisualStyleBackColor = true;
             cleanMoveRadio.CheckedChanged += cleanMethodRadio_CheckedChanged;
-            //
+            // 
             // cleanCompressRadio
-            //
+            // 
             cleanCompressRadio.AutoSize = true;
-            cleanCompressRadio.Location = new Point(440, 28);
+            cleanCompressRadio.Location = new Point(462, 28);
             cleanCompressRadio.Name = "cleanCompressRadio";
-            cleanCompressRadio.Size = new Size(87, 28);
+            cleanCompressRadio.Size = new Size(89, 28);
             cleanCompressRadio.TabIndex = 3;
             cleanCompressRadio.TabStop = true;
             cleanCompressRadio.Text = "压缩到";
             cleanCompressRadio.UseVisualStyleBackColor = true;
             cleanCompressRadio.CheckedChanged += cleanMethodRadio_CheckedChanged;
-            //
+            // 
             // cleanMklinkRadio
-            //
+            // 
             cleanMklinkRadio.AutoSize = true;
-            cleanMklinkRadio.Location = new Point(550, 28);
+            cleanMklinkRadio.Location = new Point(584, 28);
             cleanMklinkRadio.Name = "cleanMklinkRadio";
-            cleanMklinkRadio.Size = new Size(148, 28);
+            cleanMklinkRadio.Size = new Size(174, 28);
             cleanMklinkRadio.TabIndex = 4;
             cleanMklinkRadio.TabStop = true;
             cleanMklinkRadio.Text = "mkLink 软链接到";
             cleanMklinkRadio.UseVisualStyleBackColor = true;
             cleanMklinkRadio.CheckedChanged += cleanMethodRadio_CheckedChanged;
-            //
+            // 
             // cleanTargetLabel
-            //
+            // 
             cleanTargetLabel.AutoSize = true;
             cleanTargetLabel.Location = new Point(16, 61);
             cleanTargetLabel.Name = "cleanTargetLabel";
-            cleanTargetLabel.Size = new Size(83, 24);
+            cleanTargetLabel.Size = new Size(86, 24);
             cleanTargetLabel.TabIndex = 5;
             cleanTargetLabel.Text = "目标目录:";
-            //
+            // 
             // cleanTargetTextBox
-            //
-            cleanTargetTextBox.Location = new Point(105, 56);
+            // 
+            cleanTargetTextBox.Location = new Point(106, 57);
             cleanTargetTextBox.Name = "cleanTargetTextBox";
             cleanTargetTextBox.Size = new Size(500, 30);
             cleanTargetTextBox.TabIndex = 6;
-            //
+            // 
             // cleanTargetSelectBtn
-            //
-            cleanTargetSelectBtn.Location = new Point(613, 54);
+            // 
+            cleanTargetSelectBtn.Location = new Point(614, 55);
             cleanTargetSelectBtn.Name = "cleanTargetSelectBtn";
             cleanTargetSelectBtn.Size = new Size(90, 30);
             cleanTargetSelectBtn.TabIndex = 7;
             cleanTargetSelectBtn.Text = "浏览";
             cleanTargetSelectBtn.UseVisualStyleBackColor = true;
             cleanTargetSelectBtn.Click += cleanTargetSelectBtn_Click;
-            //
+            // 
             // cleanBtn
-            //
+            // 
             cleanBtn.Location = new Point(1290, 24);
             cleanBtn.Name = "cleanBtn";
             cleanBtn.Size = new Size(110, 58);
@@ -896,79 +791,135 @@
             cleanBtn.Text = "清理选中文件";
             cleanBtn.UseVisualStyleBackColor = true;
             cleanBtn.Click += cleanBtn_Click;
-            //
-            // cleanHistoryBox
-            //
-            cleanHistoryBox.Controls.Add(cleanHistoryGrid);
-            cleanHistoryBox.Location = new Point(8, 490);
-            cleanHistoryBox.Name = "cleanHistoryBox";
-            cleanHistoryBox.Size = new Size(1413, 150);
-            cleanHistoryBox.TabIndex = 8;
-            cleanHistoryBox.TabStop = false;
-            cleanHistoryBox.Text = "清理历史记录";
-            //
-            // cleanHistoryGrid
-            //
-            cleanHistoryGrid.AllowUserToAddRows = false;
-            cleanHistoryGrid.AllowUserToDeleteRows = false;
-            cleanHistoryGrid.AllowUserToResizeRows = false;
-            cleanHistoryGrid.AutoGenerateColumns = false;
-            cleanHistoryGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            cleanHistoryGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            cleanHistoryGrid.Columns.AddRange(new DataGridViewColumn[] { CleanTimeColumn, CleanPathColumn, CleanSizeColumn, CleanMethodColumn, CleanResultColumn });
-            cleanHistoryGrid.Location = new Point(14, 28);
-            cleanHistoryGrid.Name = "cleanHistoryGrid";
-            cleanHistoryGrid.ReadOnly = true;
-            cleanHistoryGrid.RowHeadersVisible = false;
-            cleanHistoryGrid.RowTemplate.Height = 25;
-            cleanHistoryGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            cleanHistoryGrid.Size = new Size(1385, 110);
-            cleanHistoryGrid.TabIndex = 0;
-            //
-            // CleanTimeColumn
-            //
-            CleanTimeColumn.DataPropertyName = "CleanupTime";
-            CleanTimeColumn.FillWeight = 90F;
-            CleanTimeColumn.HeaderText = "时间";
-            CleanTimeColumn.MinimumWidth = 8;
-            CleanTimeColumn.Name = "CleanTimeColumn";
-            CleanTimeColumn.ReadOnly = true;
-            //
-            // CleanPathColumn
-            //
-            CleanPathColumn.DataPropertyName = "FullPath";
-            CleanPathColumn.FillWeight = 160F;
-            CleanPathColumn.HeaderText = "路径";
-            CleanPathColumn.MinimumWidth = 8;
-            CleanPathColumn.Name = "CleanPathColumn";
-            CleanPathColumn.ReadOnly = true;
-            //
-            // CleanSizeColumn
-            //
-            CleanSizeColumn.DataPropertyName = "SizeText";
-            CleanSizeColumn.FillWeight = 50F;
-            CleanSizeColumn.HeaderText = "大小";
-            CleanSizeColumn.MinimumWidth = 8;
-            CleanSizeColumn.Name = "CleanSizeColumn";
-            CleanSizeColumn.ReadOnly = true;
-            //
-            // CleanMethodColumn
-            //
-            CleanMethodColumn.DataPropertyName = "Method";
-            CleanMethodColumn.FillWeight = 60F;
-            CleanMethodColumn.HeaderText = "方式";
-            CleanMethodColumn.MinimumWidth = 8;
-            CleanMethodColumn.Name = "CleanMethodColumn";
-            CleanMethodColumn.ReadOnly = true;
-            //
-            // CleanResultColumn
-            //
-            CleanResultColumn.DataPropertyName = "ResultText";
-            CleanResultColumn.FillWeight = 50F;
-            CleanResultColumn.HeaderText = "结果";
-            CleanResultColumn.MinimumWidth = 8;
-            CleanResultColumn.Name = "CleanResultColumn";
-            CleanResultColumn.ReadOnly = true;
+            // 
+            // cleanTreeBox
+            // 
+            cleanTreeBox.Controls.Add(cleanTreeView);
+            cleanTreeBox.Controls.Add(cleanSelectAllBtn);
+            cleanTreeBox.Controls.Add(cleanSelectNoneBtn);
+            cleanTreeBox.Controls.Add(cleanStatusLabel);
+            cleanTreeBox.Location = new Point(376, 50);
+            cleanTreeBox.Name = "cleanTreeBox";
+            cleanTreeBox.Size = new Size(1045, 330);
+            cleanTreeBox.TabIndex = 6;
+            cleanTreeBox.TabStop = false;
+            cleanTreeBox.Text = "扫描结果（勾选要清理的文件）";
+            // 
+            // cleanTreeView
+            // 
+            cleanTreeView.CheckBoxes = true;
+            cleanTreeView.Location = new Point(14, 28);
+            cleanTreeView.Name = "cleanTreeView";
+            cleanTreeView.Size = new Size(1015, 250);
+            cleanTreeView.TabIndex = 0;
+            cleanTreeView.BeforeCheck += cleanTreeView_BeforeCheck;
+            cleanTreeView.AfterCheck += cleanTreeView_AfterCheck;
+            // 
+            // cleanSelectAllBtn
+            // 
+            cleanSelectAllBtn.Location = new Point(14, 286);
+            cleanSelectAllBtn.Name = "cleanSelectAllBtn";
+            cleanSelectAllBtn.Size = new Size(70, 30);
+            cleanSelectAllBtn.TabIndex = 1;
+            cleanSelectAllBtn.Text = "全选";
+            cleanSelectAllBtn.UseVisualStyleBackColor = true;
+            cleanSelectAllBtn.Click += cleanSelectAllBtn_Click;
+            // 
+            // cleanSelectNoneBtn
+            // 
+            cleanSelectNoneBtn.Location = new Point(90, 286);
+            cleanSelectNoneBtn.Name = "cleanSelectNoneBtn";
+            cleanSelectNoneBtn.Size = new Size(70, 30);
+            cleanSelectNoneBtn.TabIndex = 2;
+            cleanSelectNoneBtn.Text = "全不选";
+            cleanSelectNoneBtn.UseVisualStyleBackColor = true;
+            cleanSelectNoneBtn.Click += cleanSelectNoneBtn_Click;
+            // 
+            // cleanStatusLabel
+            // 
+            cleanStatusLabel.Location = new Point(170, 290);
+            cleanStatusLabel.Name = "cleanStatusLabel";
+            cleanStatusLabel.Size = new Size(850, 26);
+            cleanStatusLabel.TabIndex = 3;
+            cleanStatusLabel.Text = "请选择目录并开始扫描";
+            cleanStatusLabel.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // frequentPathBox
+            // 
+            frequentPathBox.Controls.Add(frequentPathListView);
+            frequentPathBox.Controls.Add(frequentHintLabel);
+            frequentPathBox.Location = new Point(8, 50);
+            frequentPathBox.Name = "frequentPathBox";
+            frequentPathBox.Size = new Size(360, 330);
+            frequentPathBox.TabIndex = 5;
+            frequentPathBox.TabStop = false;
+            frequentPathBox.Text = "高频修改文件路径参考";
+            // 
+            // frequentPathListView
+            // 
+            frequentPathListView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            frequentPathListView.Location = new Point(14, 30);
+            frequentPathListView.Name = "frequentPathListView";
+            frequentPathListView.Size = new Size(332, 255);
+            frequentPathListView.TabIndex = 0;
+            frequentPathListView.UseCompatibleStateImageBehavior = false;
+            frequentPathListView.ItemSelectionChanged += frequentPathListView_ItemSelectionChanged;
+            frequentPathListView.MouseDoubleClick += frequentPathListView_MouseDoubleClick;
+            // 
+            // frequentHintLabel
+            // 
+            frequentHintLabel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            frequentHintLabel.ForeColor = Color.Gray;
+            frequentHintLabel.Location = new Point(14, 292);
+            frequentHintLabel.Name = "frequentHintLabel";
+            frequentHintLabel.Size = new Size(332, 25);
+            frequentHintLabel.TabIndex = 1;
+            frequentHintLabel.Text = "单击选中基础路径，双击开始扫描";
+            frequentHintLabel.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // cleanRefreshFrequentBtn
+            // 
+            cleanRefreshFrequentBtn.Location = new Point(1210, 8);
+            cleanRefreshFrequentBtn.Name = "cleanRefreshFrequentBtn";
+            cleanRefreshFrequentBtn.Size = new Size(100, 30);
+            cleanRefreshFrequentBtn.TabIndex = 4;
+            cleanRefreshFrequentBtn.Text = "刷新高频参考";
+            cleanRefreshFrequentBtn.UseVisualStyleBackColor = true;
+            cleanRefreshFrequentBtn.Click += cleanRefreshFrequentBtn_Click;
+            // 
+            // cleanScanProgressBar
+            // 
+            cleanScanProgressBar.Location = new Point(582, 8);
+            cleanScanProgressBar.Name = "cleanScanProgressBar";
+            cleanScanProgressBar.Size = new Size(620, 23);
+            cleanScanProgressBar.TabIndex = 3;
+            // 
+            // cleanScanBtn
+            // 
+            cleanScanBtn.Location = new Point(474, 8);
+            cleanScanBtn.Name = "cleanScanBtn";
+            cleanScanBtn.Size = new Size(100, 30);
+            cleanScanBtn.TabIndex = 2;
+            cleanScanBtn.Text = "开始扫描";
+            cleanScanBtn.UseVisualStyleBackColor = true;
+            cleanScanBtn.Click += cleanScanBtn_Click;
+            // 
+            // cleanSelectDirBtn
+            // 
+            cleanSelectDirBtn.Location = new Point(366, 8);
+            cleanSelectDirBtn.Name = "cleanSelectDirBtn";
+            cleanSelectDirBtn.Size = new Size(100, 30);
+            cleanSelectDirBtn.TabIndex = 1;
+            cleanSelectDirBtn.Text = "选择目录";
+            cleanSelectDirBtn.UseVisualStyleBackColor = true;
+            cleanSelectDirBtn.Click += cleanSelectDirBtn_Click;
+            // 
+            // cleanPathTextBox
+            // 
+            cleanPathTextBox.Location = new Point(8, 10);
+            cleanPathTextBox.Name = "cleanPathTextBox";
+            cleanPathTextBox.Size = new Size(350, 30);
+            cleanPathTextBox.TabIndex = 0;
             // 
             // statusStrip1
             // 
@@ -1126,6 +1077,13 @@
             label1.Text = "      C盘管理工具";
             label1.TextAlign = ContentAlignment.MiddleRight;
             // 
+            // progressBar1
+            // 
+            progressBar1.Location = new Point(248, 412);
+            progressBar1.Name = "progressBar1";
+            progressBar1.Size = new Size(8, 8);
+            progressBar1.TabIndex = 6;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(11F, 24F);
@@ -1159,15 +1117,12 @@
             folderAnalyzerPage.PerformLayout();
             diskCleanPage.ResumeLayout(false);
             diskCleanPage.PerformLayout();
-            frequentPathBox.ResumeLayout(false);
-            frequentPathBox.PerformLayout();
-            cleanTreeBox.ResumeLayout(false);
-            cleanTreeBox.PerformLayout();
+            cleanHistoryBox.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)cleanHistoryGrid).EndInit();
             cleanMethodBox.ResumeLayout(false);
             cleanMethodBox.PerformLayout();
-            cleanHistoryBox.ResumeLayout(false);
-            cleanHistoryBox.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)cleanHistoryGrid).EndInit();
+            cleanTreeBox.ResumeLayout(false);
+            frequentPathBox.ResumeLayout(false);
             statusStrip1.ResumeLayout(false);
             statusStrip1.PerformLayout();
             notifyMenuStrip.ResumeLayout(false);
@@ -1290,5 +1245,6 @@
         private DataGridViewTextBoxColumn CleanSizeColumn;
         private DataGridViewTextBoxColumn CleanMethodColumn;
         private DataGridViewTextBoxColumn CleanResultColumn;
+        private ProgressBar progressBar1;
     }
 }
