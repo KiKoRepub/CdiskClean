@@ -16,7 +16,6 @@ namespace CdiskClean
         private readonly DiskMonitorService _monitorService;
         private readonly DiskSpaceService _diskSpaceService;
         private readonly FolderSizeAnalyzer _folderAnalyzer;
-        private readonly StatisticsService _statisticsService;
         private readonly NotificationService _notificationService;
         private readonly CleanupService _cleanupService;
         private readonly BindingList<FileChangeRecord> _records;
@@ -45,23 +44,27 @@ namespace CdiskClean
             if (savedDirs.Count > 0)
                 _monitorService.LoadDirectories(savedDirs);
             else
+            {
                 _monitorService.LoadDefaults();
+                foreach (var dir in _monitorService.WatchDirectories)
+                    _databaseService.SaveWatchDirectory(dir);
+            }
 
             // 从数据库加载忽略进程（空则用默认列表），并同步进 ETW 黑名单
             var savedProcs = _databaseService.GetIgnoreProcessRecords();
             if (savedProcs.Count > 0)
                 _monitorService.LoadIgnoreProcesses(savedProcs);
             else
-                _monitorService.LoadIgnoreProcesses(IgnoreProcessRecord.getDefaultRecords());
+            {
+                var defaultProcesses = IgnoreProcessRecord.getDefaultRecords();
+                _monitorService.LoadIgnoreProcesses(defaultProcesses);
+                foreach (var process in defaultProcesses)
+                    _databaseService.SaveIgnoreProcessRecord(process);
+            }
 
             // 初始化磁盘空间服务和文件夹分析器
             _diskSpaceService = new DiskSpaceService();
             _folderAnalyzer = new FolderSizeAnalyzer();
-
-            // 初始化统计服务
-            _statisticsService = new StatisticsService();
-            _statisticsService.CountdownChanged += OnCountdownChanged;
-            _statisticsService.StatsReady += OnStatsReady;
 
             // 初始化右下角提醒服务（与统计按钮相互独立）
             _notificationService = new NotificationService();
@@ -70,13 +73,12 @@ namespace CdiskClean
             // 设置数据绑定
             _records = new BindingList<FileChangeRecord>();
             changesDataGrid.DataSource = _records;
-
+            changesDataGrid.CellFormatting += changesDataGrid_CellFormatting;
 
             typeFilterCombo.SelectedIndex = 0;
 
             // 订阅监视服务事件
             _monitorService.FileChanged += OnFileChanged;
-            _monitorService.FileRecordUpdated += OnFileRecordUpdated;
             _monitorService.MonitorError += OnMonitorError;
 
             // 初始化监视目录列表视图
@@ -277,14 +279,28 @@ namespace CdiskClean
 
         private void ChangeDirStatus(WatchingDirectory dir, RecordStatusEnum newStatus)
         {
-            dir.Status = newStatus;
-            _monitorService.SetDirectoryStatus(dir.Path, newStatus);
+            try
+            {
+                if (newStatus == RecordStatusEnum.DELETED)
+                {
+                    _databaseService.DeleteWatchDirectory(dir.Path);
+                }
+                else
+                {
+                    _databaseService.SaveWatchDirectory(new WatchingDirectory(dir.Path, dir.IncludeSubdirs)
+                    {
+                        Status = newStatus
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"更新监测目录失败: {ex.Message}", "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
-            // 同步数据库
-            if (newStatus == RecordStatusEnum.DELETED)
-                _databaseService.DeleteWatchDirectory(dir.Path);
-            else
-                _databaseService.SaveWatchDirectory(dir);
+            _monitorService.SetDirectoryStatus(dir.Path, newStatus);
 
             PopulateDirListView();
         }
@@ -326,14 +342,29 @@ namespace CdiskClean
 
         private void ChangeProcessStatus(IgnoreProcessRecord proc, RecordStatusEnum newStatus)
         {
-            // 同步 ETW 黑名单（USING 加入、FORBIDDEN/DELETED 移出）
-            _monitorService.SetIgnoreProcessStatus(proc.ProcessName, newStatus);
+            try
+            {
+                if (newStatus == RecordStatusEnum.DELETED)
+                {
+                    _databaseService.DeleteIgnoreProcessRecord(proc.ProcessName);
+                }
+                else
+                {
+                    _databaseService.SaveIgnoreProcessRecord(new IgnoreProcessRecord(proc.ProcessName)
+                    {
+                        Status = newStatus
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"更新忽略进程失败: {ex.Message}", "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
-            // 同步数据库：DELETED 物理删除，其余更新状态
-            if (newStatus == RecordStatusEnum.DELETED)
-                _databaseService.DeleteIgnoreProcessRecord(proc.ProcessName);
-            else
-                _databaseService.SaveIgnoreProcessRecord(proc);
+            // 数据库成功后再同步内存与 ETW 黑名单，避免两处状态不一致。
+            _monitorService.SetIgnoreProcessStatus(proc.ProcessName, newStatus);
 
             PopulateProcessListView();
         }
@@ -397,22 +428,21 @@ namespace CdiskClean
             {
                 _etwService.Start();
                 _monitorService.Start();
-                _statisticsService.Start();
                 _notificationService.Start();
                 pauseBtn.Text = "暂停";
                 watchStatusLabel.Text = "监测中";
                 watchStatusLabel.ForeColor = Color.Green;
-                notifyIcon1.Text += "\r\n监测中...";
+                notifyIcon1.Text = "C盘管理工具\r\n监测中";
             }
             else
             {
                 _monitorService.Stop();
                 _etwService.Stop();
-                _statisticsService.Stop();
                 _notificationService.Stop();
                 pauseBtn.Text = "开始监测";
                 watchStatusLabel.Text = "已暂停";
                 watchStatusLabel.ForeColor = Color.Gray;
+                notifyIcon1.Text = "C盘管理工具\r\n已暂停";
             }
         }
 
@@ -452,7 +482,9 @@ namespace CdiskClean
                     {
                         var size = r.SizeBytes.HasValue ? r.SizeBytes.ToString() : "";
                         var proc = r.SourceProcess ?? "";
-                        writer.WriteLine($"{r.Timestamp:yyyy-MM-dd HH:mm:ss},{r.ChangeType},\"{r.FileName}\",\"{r.FullPath}\",{size},\"{proc}\"");
+                        writer.WriteLine(
+                            $"{r.Timestamp:yyyy-MM-dd HH:mm:ss},{EnumHelper.FormatChangeType(r.ChangeType)}," +
+                            $"{EscapeCsv(r.FileName)},{EscapeCsv(r.FullPath)},{size},{EscapeCsv(proc)}");
                     }
 
                     BeginInvoke(() =>
@@ -500,12 +532,18 @@ namespace CdiskClean
             changesDataGrid.AutoGenerateColumns = false;
         }
 
+        private void changesDataGrid_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.ColumnIndex == TypeColumn.Index && e.Value is ChangeType changeType)
+            {
+                e.Value = EnumHelper.FormatChangeType(changeType);
+                e.FormattingApplied = true;
+            }
+        }
+
         private void OnFileChanged(FileChangeRecord record)
         {
-            // 喂入统计服务
-            _statisticsService.RecordChange(record);
-
-            // 进程已知时直接喂入提醒服务；未知的等待 ETW 延迟解析后在 OnFileRecordUpdated 补入
+            // DiskMonitorService 已完成延迟归因与忽略过滤；已知进程可直接进入提醒聚合。
             if (record.SourceProcess != null)
                 _notificationService.RecordChange(record);
 
@@ -538,18 +576,6 @@ namespace CdiskClean
             BeginInvoke(() =>
             {
                 writedRecordStatusLabel.Text = message;
-            });
-        }
-
-        private void OnFileRecordUpdated(FileChangeRecord record)
-        {
-            // ETW 延迟解析到来源进程后，补喂提醒服务（避免归入"未知进程"）
-            if (record.SourceProcess != null)
-                _notificationService.RecordChange(record);
-
-            BeginInvoke(() =>
-            {
-                changesDataGrid.Refresh();
             });
         }
 
@@ -787,6 +813,22 @@ namespace CdiskClean
                 snapshot = _records.ToList();
             }
 
+            try
+            {
+                var seen = new HashSet<string>(
+                    snapshot.Select(GetChangeRecordKey),
+                    StringComparer.OrdinalIgnoreCase);
+                foreach (var record in _databaseService.GetChangeRecords(5000))
+                {
+                    if (seen.Add(GetChangeRecordKey(record)))
+                        snapshot.Add(record);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"读取历史变更记录失败: {ex.Message}");
+            }
+
             var paths = CleanupService.GetFrequentPaths(snapshot, 30);
             if (paths.Count == 0)
             {
@@ -947,7 +989,7 @@ namespace CdiskClean
             var rootNode = new TreeNode($"{rootName}  [{FormatBytes(totalSize)}]")
             {
                 Tag = null,
-                StateImageIndex = 0
+                StateImageIndex = -1
             };
 
             // 目录节点（扫描顺序保证父目录先于子目录）
@@ -1067,18 +1109,32 @@ namespace CdiskClean
         private static void UpdateParentState(TreeNode node)
         {
             var parent = node.Parent;
-            while (parent != null)
+            while (parent?.Parent != null)
             {
-                int checkedCount = 0, total = 0;
+                bool hasChecked = false;
+                bool hasUnchecked = false;
                 foreach (TreeNode child in parent.Nodes)
                 {
-                    total++;
-                    if (child.Checked) checkedCount++;
+                    if (child.StateImageIndex == StatePartial)
+                    {
+                        hasChecked = true;
+                        hasUnchecked = true;
+                    }
+                    else if (child.Checked)
+                    {
+                        hasChecked = true;
+                    }
+                    else
+                    {
+                        hasUnchecked = true;
+                    }
                 }
 
-                parent.StateImageIndex = checkedCount == 0 ? StateUnchecked
-                    : checkedCount == total ? StateChecked
-                    : StatePartial;
+                var state = hasChecked && hasUnchecked
+                    ? StatePartial
+                    : hasChecked ? StateChecked : StateUnchecked;
+                parent.Checked = state != StateUnchecked;
+                parent.StateImageIndex = state;
                 parent = parent.Parent;
             }
         }
@@ -1102,7 +1158,6 @@ namespace CdiskClean
             {
                 foreach (TreeNode child in cleanTreeView.Nodes[0].Nodes)
                     SetNodeCheckedRecursive(child, check);
-                cleanTreeView.Nodes[0].StateImageIndex = check ? StateChecked : StateUnchecked;
             }
             finally
             {
@@ -1245,7 +1300,7 @@ namespace CdiskClean
                     summary += $"\n释放空间约 {FormatBytes(freedDelta)}";
                 MessageBox.Show(summary, "清理完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                ShowCleanupBalloon(method, result, freedDelta);
+                ShowCleanupBalloon(method, result, freedDelta, totalSize);
                 RefreshDiskInfo();
                 RefreshCleanHistory();
                 RefreshFrequentPaths();
@@ -1283,14 +1338,19 @@ namespace CdiskClean
                    full.StartsWith(root + "\\", StringComparison.OrdinalIgnoreCase);
         }
 
-        private void ShowCleanupBalloon(CleanupMethod method, CleanupResult result, long freedDelta)
+        private void ShowCleanupBalloon(
+            CleanupMethod method,
+            CleanupResult result,
+            long freedDelta,
+            long selectedTotalSize)
         {
             var msg = method switch
             {
                 CleanupMethod.RecycleBin => $"已将 {result.Success} 项移入回收站（可在回收站恢复）",
                 CleanupMethod.PermanentDelete => $"已永久删除 {result.Success} 项，释放约 {FormatBytes(freedDelta)}",
                 CleanupMethod.Move => $"已将 {result.Success} 项移动到目标目录",
-                CleanupMethod.Compress => $"已压缩 {result.Success} 项到目标目录，释放约 {FormatBytes(freedDelta)}",
+                CleanupMethod.Compress =>
+                    $"已压缩 {result.Success} 项到目标目录，选中文件总大小 {FormatBytes(selectedTotalSize)}",
                 CleanupMethod.Mklink => $"已将 {result.Success} 项迁移至目标目录并创建软链接",
                 _ => $"清理完成，成功 {result.Success} 项"
             };
@@ -1454,6 +1514,17 @@ namespace CdiskClean
             return $"{len:0.##} {sizes[order]}";
         }
 
+        private static string GetChangeRecordKey(FileChangeRecord record) =>
+            $"{record.Timestamp.Ticks}|{record.ChangeType}|{record.FullPath}";
+
+        private static string EscapeCsv(string? value)
+        {
+            const char quote = (char)34;
+            return quote + (value ?? string.Empty).Replace(
+                quote.ToString(),
+                new string(quote, 2)) + quote;
+        }
+
         private Point mouseDownPoint;
         private void splitContainer1_MouseDown(object sender, MouseEventArgs e)
         {
@@ -1488,7 +1559,6 @@ namespace CdiskClean
         {
             _monitorService.Dispose();
             _etwService.Dispose();
-            _statisticsService.Dispose();
             _notificationService.Dispose();
             diskRefreshTimer.Stop();
             timer1.Stop();
@@ -1557,11 +1627,21 @@ namespace CdiskClean
             if (result == DialogResult.OK)
             {
                 string selectedPath = ImportFolderDialog.SelectedPath;
-                //MessageBox.Show(selectedPath);
-                // 将选中的目录添加到监视列表
-                WatchingDirectory dir = _monitorService.AddDirectoryToEtwArr(selectedPath, true);
-                // 显示在列表
-                addWatchingToListView(dir);
+                var newDir = new WatchingDirectory(selectedPath, true);
+                try
+                {
+                    _databaseService.SaveWatchDirectory(newDir);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"保存监测目录失败: {ex.Message}", "错误",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                var dir = _monitorService.AddDirectoryToEtwArr(selectedPath, true);
+                _monitorService.SetDirectoryStatus(dir.Path, RecordStatusEnum.USING);
+                PopulateDirListView();
             }
         }
 
@@ -1588,55 +1668,6 @@ namespace CdiskClean
 
 
 
-
-        private void OnCountdownChanged(int remaining)
-        {
-            BeginInvoke(() =>
-            {
-                if (remaining > 0)
-                {
-                    statsCountdownLabel.Text = $"倒计时: {remaining}s";
-                    statsCountdownLabel.ForeColor = Color.SteelBlue;
-                }
-                else
-                {
-                    statsCountdownLabel.Text = "统计就绪";
-                    statsCountdownLabel.ForeColor = Color.Green;
-                }
-            });
-        }
-
-        private void OnStatsReady(List<Models.AppChangeStats> stats)
-        {
-            BeginInvoke(() =>
-            {
-                if (stats.Count == 0)
-                {
-                    statsSummaryLabel.Text = "暂无统计数据";
-                    return;
-                }
-
-                var lines = new List<string>();
-                foreach (var s in stats.Take(5))
-                {
-                    var timeStr = s.LastChangeTime.ToString("HH:mm:ss");
-                    lines.Add($"{s.AppName}: {s.ChangeCount}次 (最后: {timeStr})");
-                }
-
-                if (stats.Count > 5)
-                    lines.Add($"...及其他 {stats.Count - 5} 个应用");
-
-                statsSummaryLabel.Text = string.Join("  |  ", lines);
-            });
-        }
-
-        private void statsResetBtn_Click(object? sender, EventArgs e)
-        {
-            _statisticsService.Reset();
-            statsCountdownLabel.Text = "倒计时: --s";
-            statsCountdownLabel.ForeColor = Color.SteelBlue;
-            statsSummaryLabel.Text = "等待数据收集中...";
-        }
 
         private void ProcessAddButton_Click(object sender, EventArgs e)
         {
@@ -1690,8 +1721,9 @@ namespace CdiskClean
 
         private void ignoreProcessView_DragEnter(object sender, DragEventArgs e)
         {
-            if (e.Data.GetDataPresent(typeof(FileChangeRecord)) &&
-                (e.Data.GetData(typeof(FileChangeRecord)) as FileChangeRecord)?.SourceProcess != null)
+            if (e.Data?.GetDataPresent(typeof(FileChangeRecord)) == true &&
+                !string.IsNullOrWhiteSpace(
+                    (e.Data.GetData(typeof(FileChangeRecord)) as FileChangeRecord)?.SourceProcess))
             {
                 e.Effect = DragDropEffects.Copy;
             }
@@ -1703,7 +1735,7 @@ namespace CdiskClean
 
         private void ignoreProcessView_DragDrop(object sender, DragEventArgs e)
         {
-            if (e.Data.GetData(typeof(FileChangeRecord)) is not FileChangeRecord record ||
+            if (e.Data?.GetData(typeof(FileChangeRecord)) is not FileChangeRecord record ||
                 string.IsNullOrEmpty(record.SourceProcess))
                 return;
 
@@ -1723,37 +1755,47 @@ namespace CdiskClean
         /// </summary>
         private void AddIgnoreProcessInternal(string processName)
         {
-            IgnoreProcessRecord recordToAdd = _monitorService.IgnoreProcessRecords.FirstOrDefault(r =>
-                    string.Equals(r.ProcessName, processName, StringComparison.OrdinalIgnoreCase));
-            if (recordToAdd.Status == RecordStatusEnum.DELETED)
-            {
-                ////  删除状态的记录，恢复为正常状态
-                //_databaseService.UpdateIgnoreProcessRecordStatus(processName, RecordStatusEnum.USING);
-                // 同步 ETW 黑名单
-                _monitorService.SetIgnoreProcessStatus(processName, RecordStatusEnum.USING);
+            processName = Path.GetFileNameWithoutExtension(processName.Trim());
+            if (string.IsNullOrWhiteSpace(processName)) return;
 
-            }
-            // 已存在且未删除 则不重复添加
-            if (recordToAdd != default)
+            var existing = _monitorService.IgnoreProcessRecords.FirstOrDefault(r =>
+                string.Equals(r.ProcessName, processName, StringComparison.OrdinalIgnoreCase));
+
+            if (existing != null && existing.Status != RecordStatusEnum.DELETED)
             {
                 MessageBox.Show($"进程「{processName}」已在忽略列表中。", "提示",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
+                SelectProcessInListView(processName);
                 return;
             }
-            var record = _monitorService.AddIgnoreProcess(processName);
 
+            var record = new IgnoreProcessRecord(processName);
             try
             {
                 _databaseService.SaveIgnoreProcessRecord(record);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"保存忽略进程失败: {ex.Message}");
+                MessageBox.Show($"保存忽略进程失败: {ex.Message}", "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (existing != null)
+            {
+                _monitorService.SetIgnoreProcessStatus(processName, RecordStatusEnum.USING);
+            }
+            else
+            {
+                _monitorService.AddIgnoreProcess(processName);
             }
 
             PopulateProcessListView();
+            SelectProcessInListView(processName);
+        }
 
-            // 选中刚添加的项
+        private void SelectProcessInListView(string processName)
+        {
             foreach (ListViewItem item in ignoreProcessView.Items)
             {
                 if (string.Equals(item.Text, processName, StringComparison.OrdinalIgnoreCase))

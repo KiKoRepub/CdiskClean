@@ -1,4 +1,5 @@
 using CdiskClean.Models;
+using CdiskClean.Helpers;
 using System.ComponentModel;
 
 namespace CdiskClean
@@ -11,6 +12,7 @@ namespace CdiskClean
             LoadNotifications(notifications);
             LoadProcessStats(records);
             LoadDetailRecords(records);
+            detailDataGrid.CellFormatting += detailDataGrid_CellFormatting;
         }
 
         private void LoadNotifications(List<ProcessNotificationRecord> notifications)
@@ -44,6 +46,15 @@ namespace CdiskClean
                 .ToList();
 
             detailDataGrid.DataSource = new BindingList<FileChangeRecord>(sorted);
+        }
+
+        private void detailDataGrid_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.ColumnIndex == DetailTypeColumn.Index && e.Value is ChangeType changeType)
+            {
+                e.Value = EnumHelper.FormatChangeType(changeType);
+                e.FormattingApplied = true;
+            }
         }
 
         private void closeBtn_Click(object? sender, EventArgs e)

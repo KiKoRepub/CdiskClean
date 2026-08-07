@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using Microsoft.Diagnostics.Tracing.Parsers;
 using Microsoft.Diagnostics.Tracing.Parsers.Kernel;
 using Microsoft.Diagnostics.Tracing.Session;
@@ -23,6 +24,7 @@ public class EtwMonitorService : IDisposable
     /// </summary>
     private readonly ConcurrentDictionary<string, (string ProcessName, DateTime Timestamp)> _eventBuffer = new(StringComparer.OrdinalIgnoreCase);
     private readonly TimeSpan _bufferTtl = TimeSpan.FromSeconds(3);
+    private static readonly string CurrentProcessName = Process.GetCurrentProcess().ProcessName;
     // 定义一个原子引用（因为引用赋值是原子的，不需要锁）
     private volatile string[] _watchDirectoryArray = new string[0]; // 白名单
     private volatile string[] _ignoreProcessArray = new string[0]; // 黑名单
@@ -50,7 +52,6 @@ public class EtwMonitorService : IDisposable
 
                     var source = _session.Source;
                     source.Kernel.FileIOCreate += d => BufferEvent(d.FileName, d.ProcessName);
-                    source.Kernel.FileIORead += d => BufferEvent(d.FileName, d.ProcessName);
                     source.Kernel.FileIOWrite += d => BufferEvent(d.FileName, d.ProcessName);
                     source.Kernel.FileIODelete += d => BufferEvent(d.FileName, d.ProcessName);
 
@@ -101,8 +102,8 @@ public class EtwMonitorService : IDisposable
         if (type == 1)
             list.Add(processName);
         if (type == 2)
-            list.Remove(processName);
-        _ignoreProcessArray = list.Distinct().ToArray();
+            list.RemoveAll(p => string.Equals(p, processName, StringComparison.OrdinalIgnoreCase));
+        _ignoreProcessArray = list.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
     }
     public void OperateIgnoreProcessArr(string[] processNames)
     {
@@ -122,22 +123,16 @@ public class EtwMonitorService : IDisposable
         {
             // 过滤空文件
             if (string.IsNullOrEmpty(fileName)) return;
+            if (string.IsNullOrWhiteSpace(processName) ||
+                string.Equals(processName, CurrentProcessName, StringComparison.OrdinalIgnoreCase))
+                return;
             // 对于 白名单中的 目录路径进行选取
 
             var dirs = _watchDirectoryArray;
 
-            // 对于 黑名单中的 进程名进行过滤（大小写不敏感）
-            var ignoreProcesses = _ignoreProcessArray;
-
-            if (ignoreProcesses.Any(p => string.Equals(p, processName, StringComparison.OrdinalIgnoreCase)))
-            {
-                return;
-            }
-
-
             foreach (var dir in dirs)
             {
-                if (fileName.StartsWith(dir))
+                if (IsPathInside(fileName, dir))
                 {
                     // 匹配成功
                     var normalized = NormalizePath(fileName);
@@ -154,14 +149,15 @@ public class EtwMonitorService : IDisposable
     /// <summary>
     /// 快速单次查找，不重试，不移除缓冲。用于 FSW 事件触发时的即时查询。
     /// </summary>
-    public string? TryGetProcessOnce(string filePath)
+    public string? TryGetProcessOnce(string filePath, DateTime? notBefore = null)
     {
-        if (!IsRunning || string.IsNullOrEmpty(filePath)) return null;
+        if (string.IsNullOrEmpty(filePath)) return null;
 
         var normalized = NormalizePath(filePath);
         if (_eventBuffer.TryGetValue(normalized, out var entry))
         {
-            if (DateTime.Now - entry.Timestamp <= _bufferTtl)
+            if (DateTime.Now - entry.Timestamp <= _bufferTtl &&
+                (!notBefore.HasValue || entry.Timestamp >= notBefore.Value))
                 return entry.ProcessName;
         }
         return null;
@@ -174,9 +170,13 @@ public class EtwMonitorService : IDisposable
     /// <param name="maxDelayMs">最大等待毫秒数（默认 1500ms）</param>
     /// <param name="ct">取消令牌</param>
     /// <returns>进程名，超时则返回 null</returns>
-    public async Task<string?> TryGetProcessAsync(string filePath, int maxDelayMs = 1500, CancellationToken ct = default)
+    public async Task<string?> TryGetProcessAsync(
+        string filePath,
+        int maxDelayMs = 1500,
+        CancellationToken ct = default,
+        DateTime? notBefore = null)
     {
-        if (!IsRunning || string.IsNullOrEmpty(filePath)) return null;
+        if (string.IsNullOrEmpty(filePath)) return null;
 
         var normalized = NormalizePath(filePath);
         var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -192,9 +192,9 @@ public class EtwMonitorService : IDisposable
             if (_eventBuffer.TryGetValue(normalized, out var entry))
             {
                 // 如果事件在缓冲区中，并且没有过期，则返回进程名并移除缓冲区中的记录
-                if (DateTime.Now - entry.Timestamp <= _bufferTtl)
+                if (DateTime.Now - entry.Timestamp <= _bufferTtl &&
+                    (!notBefore.HasValue || entry.Timestamp >= notBefore.Value))
                 {
-                    _eventBuffer.TryRemove(normalized, out _);
                     return entry.ProcessName;
                 }
             }
@@ -227,7 +227,6 @@ public class EtwMonitorService : IDisposable
             {
                 if (DateTime.Now - entry.Timestamp <= _bufferTtl)
                 {
-                    _eventBuffer.TryRemove(normalized, out _);
                     return entry.ProcessName;
                 }
             }
@@ -251,12 +250,21 @@ public class EtwMonitorService : IDisposable
     private static string NormalizePath(string path) =>
         path.Replace('/', '\\').TrimEnd('\\');
 
+    private static bool IsPathInside(string path, string parent)
+    {
+        var full = NormalizePath(path);
+        var root = NormalizePath(parent);
+        return full.Equals(root, StringComparison.OrdinalIgnoreCase) ||
+               full.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+    }
+
     public void Stop()
     {
         IsRunning = false;
         _cts?.Cancel();
         try { _session?.Dispose(); } catch { }
         _session = null;
+        _eventBuffer.Clear();
     }
 
     public void Dispose()

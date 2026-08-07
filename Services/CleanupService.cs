@@ -370,10 +370,7 @@ public class CleanupService
         if (string.IsNullOrWhiteSpace(targetDir)) throw new ArgumentException("未指定目标目录");
         Directory.CreateDirectory(targetDir);
         var dest = GetUniquePath(targetDir, entry.Name);
-        if (entry.IsDirectory)
-            Directory.Move(full, dest);
-        else
-            File.Move(full, dest);
+        MoveWithRetry(full, dest, entry.IsDirectory);
     }
 
     /// <summary>把文件/目录压缩到目标目录，返回估算释放空间（原大小-压缩包大小）</summary>
@@ -408,21 +405,74 @@ public class CleanupService
 
         if (entry.IsDirectory)
         {
-            Directory.Move(full, dest);
+            MoveWithRetry(full, dest, true);
             // 目录使用联接（junction /J），无需管理员权限且支持跨卷
             if (!RunCmd($"mklink /J \"{full}\" \"{dest}\""))
-                throw new IOException($"创建目录联接失败: {full}");
+                throw RollbackAfterLinkFailure(dest, full, true, "创建目录联接失败");
         }
         else
         {
             if (!string.Equals(Path.GetPathRoot(full), Path.GetPathRoot(targetDir), StringComparison.OrdinalIgnoreCase))
                 throw new IOException("硬链接要求源与目标位于同一磁盘卷，请改用其他清理方式");
 
-            File.Move(full, dest);
+            MoveWithRetry(full, dest, false);
             // 文件使用硬链接（/H），无需管理员权限，原路径即刻可继续使用
             if (!RunCmd($"mklink /H \"{full}\" \"{dest}\""))
-                throw new IOException($"创建文件硬链接失败: {full}");
+                throw RollbackAfterLinkFailure(dest, full, false, "创建文件硬链接失败");
         }
+    }
+
+    private static void MoveWithRetry(string source, string destination, bool isDirectory)
+    {
+        IOException? lastError = null;
+        const int maxAttempts = 4;
+
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                if (isDirectory)
+                    Directory.Move(source, destination);
+                else
+                    File.Move(source, destination);
+                return;
+            }
+            catch (IOException ex) when (attempt < maxAttempts)
+            {
+                lastError = ex;
+                Thread.Sleep(300 * attempt);
+            }
+            catch (IOException ex)
+            {
+                lastError = ex;
+            }
+        }
+
+        throw new IOException(
+            $"文件被占用或移动失败，重试 {maxAttempts} 次后仍未成功: {lastError?.Message}",
+            lastError);
+    }
+
+    private static IOException RollbackAfterLinkFailure(
+        string movedPath,
+        string originalPath,
+        bool isDirectory,
+        string message)
+    {
+        try
+        {
+            if (!File.Exists(originalPath) && !Directory.Exists(originalPath))
+            {
+                MoveWithRetry(movedPath, originalPath, isDirectory);
+                return new IOException($"{message}: {originalPath}；已恢复原位置");
+            }
+        }
+        catch
+        {
+            // 返回的错误会明确告知数据保留位置。
+        }
+
+        return new IOException($"{message}: {originalPath}；数据保留在目标位置: {movedPath}");
     }
 
     private static bool RunCmd(string arguments)
@@ -437,7 +487,11 @@ public class CleanupService
             };
             using var proc = Process.Start(psi);
             if (proc == null) return false;
-            proc.WaitForExit(15000);
+            if (!proc.WaitForExit(15000))
+            {
+                try { proc.Kill(true); } catch { }
+                return false;
+            }
             return proc.ExitCode == 0;
         }
         catch

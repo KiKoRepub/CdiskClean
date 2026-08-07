@@ -4,7 +4,7 @@ namespace CdiskClean.Services;
 
 /// <summary>
 /// 按进程跟踪文件操作窗口：进程首次操作开始计时，空闲超过 IdleDelaySeconds 后触发一次提醒。
-/// 与 StatisticsService（统计面板）完全独立。
+/// 统计详情由 Form4 基于当前记录按需计算，本服务仅负责右下角提醒。
 /// </summary>
 public class NotificationService : IDisposable
 {

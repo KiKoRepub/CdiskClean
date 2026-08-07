@@ -12,7 +12,9 @@ public class DatabaseService : IDatabaseService
         _connectionString = new SqliteConnectionStringBuilder
         {
             DataSource = dbPath,
-            Mode = SqliteOpenMode.ReadWriteCreate
+            Mode = SqliteOpenMode.ReadWriteCreate,
+            DefaultTimeout = 5,
+            Pooling = true
         }.ToString();
     }
 
@@ -35,6 +37,32 @@ public class DatabaseService : IDatabaseService
 
             CleanupRecord.getCreateSQL());
 
+        cmd.ExecuteNonQuery();
+        TrimHistoryTables(connection);
+    }
+
+    private static void TrimHistoryTables(SqliteConnection connection)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            DELETE FROM ChangeRecords
+            WHERE Id < COALESCE((
+                SELECT MIN(Id) FROM (
+                    SELECT Id FROM ChangeRecords ORDER BY Id DESC LIMIT 50000
+                ) AS RecentChanges
+            ), 0);
+            DELETE FROM ProcessNotifications
+            WHERE Id < COALESCE((
+                SELECT MIN(Id) FROM (
+                    SELECT Id FROM ProcessNotifications ORDER BY Id DESC LIMIT 5000
+                ) AS RecentNotifications
+            ), 0);
+            DELETE FROM CleanupRecords
+            WHERE Id < COALESCE((
+                SELECT MIN(Id) FROM (
+                    SELECT Id FROM CleanupRecords ORDER BY Id DESC LIMIT 5000
+                ) AS RecentCleanups
+            ), 0);";
         cmd.ExecuteNonQuery();
     }
 

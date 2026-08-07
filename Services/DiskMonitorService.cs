@@ -11,26 +11,32 @@ public class DiskMonitorService : IDisposable
     private readonly IDatabaseService _databaseService;
 
     private readonly object _lock = new();
+    private readonly object _ignoreProcessLock = new();
     private volatile bool _paused;
 
     public event Action<FileChangeRecord>? FileChanged;
-    public event Action<FileChangeRecord>? FileRecordUpdated;
     public event Action<string>? MonitorError;
 
     public List<WatchingDirectory> WatchDirectories { get; } = new();
 
     public List<IgnoreProcessRecord> IgnoreProcessRecords { get; } = new();
 
-    private readonly ConcurrentDictionary<string, FileSystemWatcher> _watcherMap = new();
+    private readonly ConcurrentDictionary<string, FileSystemWatcher> _watcherMap =
+        new(StringComparer.OrdinalIgnoreCase);
 
     // 延迟查询机制：FSW 先触发，ETW 可能还没捕捉到进程信息
     private readonly ConcurrentQueue<PendingQuery> _pendingQueries = new();
     private CancellationTokenSource? _deferredCts; // 用于取消延迟查询任务
     private Task? _deferredTask;
+    private const int MaxPendingQueries = 10000;
+    private const int MaxConcurrentQueries = 32;
 
-    private record struct PendingQuery(FileChangeRecord Record, string FilePath);
+    private record struct PendingQuery(
+        FileChangeRecord Record,
+        string FilePath,
+        DateTime AttributionNotBefore);
 
-    public bool IsRunning => _watchers.Any(w => w.EnableRaisingEvents);
+    public bool IsRunning { get; private set; }
 
     public DiskMonitorService(EtwMonitorService etwService, CleanupService? cleanupService = null, IDatabaseService? databaseService = null)
     {
@@ -61,10 +67,13 @@ public class DiskMonitorService : IDisposable
     {
         WatchDirectories.Clear();
         WatchDirectories.AddRange(WatchingDirectory.getDefaultDirectories());
+        _etwService.OperateWriteFolderArr(WatchDirectories.Select(d => d.Path).ToArray());
     }
 
     public void Start()
     {
+        if (IsRunning) return;
+
         lock (_lock)
         {
             foreach (var item in WatchDirectories)
@@ -75,14 +84,19 @@ public class DiskMonitorService : IDisposable
         }
 
         // 启动延迟查询后台处理器
+        _deferredCts?.Cancel();
+        _deferredCts?.Dispose();
         _deferredCts = new CancellationTokenSource();
         _deferredTask = Task.Run(() => ProcessPendingQueriesAsync(_deferredCts.Token));
+        IsRunning = true;
     }
 
     public void Stop()
     {
         _deferredCts?.Cancel();
         _deferredTask = null;
+        while (_pendingQueries.TryDequeue(out _)) { }
+        IsRunning = false;
 
         lock (_lock)
         {
@@ -114,7 +128,8 @@ public class DiskMonitorService : IDisposable
             foreach (var w in _watchers)
             {
                 var dir = w.Path;
-                var item = WatchDirectories.FirstOrDefault(d => d.Path == dir);
+                var item = WatchDirectories.FirstOrDefault(d =>
+                    string.Equals(d.Path, dir, StringComparison.OrdinalIgnoreCase));
                 if (item?.Status == RecordStatusEnum.USING)
                     w.EnableRaisingEvents = true;
             }
@@ -148,11 +163,17 @@ public class DiskMonitorService : IDisposable
     /// <summary>更新单个目录的状态</summary>
     public void SetDirectoryStatus(string path, RecordStatusEnum status)
     {
-        var item = WatchDirectories.FirstOrDefault(d => d.Path == path);
+        var item = WatchDirectories.FirstOrDefault(d =>
+            string.Equals(d.Path, path, StringComparison.OrdinalIgnoreCase));
         if (item != null)
-            item.Status = status;
+        {
+            if (status == RecordStatusEnum.DELETED)
+                WatchDirectories.Remove(item);
+            else
+                item.Status = status;
+        }
 
-        if (status == RecordStatusEnum.USING)
+        if (status == RecordStatusEnum.USING && IsRunning)
             StartDirectory(path, item?.IncludeSubdirs ?? true);
         else
             StopDirectory(path);
@@ -161,16 +182,18 @@ public class DiskMonitorService : IDisposable
     /// <summary>添加新目录到监视列表</summary>
     public WatchingDirectory AddDirectoryToEtwArr(string path, bool includeSubdirs)
     {
-
+        path = Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
         var dir = new WatchingDirectory(path, includeSubdirs);
 
         // 如果已经存在，则不重复添加
-        if (WatchDirectories.Any(d => d.Path == path)) return dir;
+        var existing = WatchDirectories.FirstOrDefault(d =>
+            string.Equals(d.Path, path, StringComparison.OrdinalIgnoreCase));
+        if (existing != null) return existing;
         
         WatchDirectories.Add(dir);
         _etwService.OperateWriteFolderArr(dir.Path, 1);
 
-        if (_watchers.Any(w => w.EnableRaisingEvents))
+        if (IsRunning)
             StartDirectory(path, includeSubdirs);
 
         return dir;
@@ -180,8 +203,11 @@ public class DiskMonitorService : IDisposable
     /// <summary>用外部忽略进程列表（如数据库）初始化，并同步 ETW 黑名单</summary>
     public void LoadIgnoreProcesses(List<IgnoreProcessRecord> records)
     {
-        IgnoreProcessRecords.Clear();
-        IgnoreProcessRecords.AddRange(records);
+        lock (_ignoreProcessLock)
+        {
+            IgnoreProcessRecords.Clear();
+            IgnoreProcessRecords.AddRange(records);
+        }
 
         // 只有 USING 状态的进程才进 ETW 黑名单
         _etwService.OperateIgnoreProcessArr(
@@ -192,12 +218,16 @@ public class DiskMonitorService : IDisposable
     /// <summary>添加忽略进程并同步 ETW 黑名单（已存在则返回现有记录）</summary>
     public IgnoreProcessRecord AddIgnoreProcess(string processName)
     {
-        var existing = IgnoreProcessRecords.FirstOrDefault(r =>
-            string.Equals(r.ProcessName, processName, StringComparison.OrdinalIgnoreCase));
-        if (existing != null) return existing;
+        IgnoreProcessRecord record;
+        lock (_ignoreProcessLock)
+        {
+            var existing = IgnoreProcessRecords.FirstOrDefault(r =>
+                string.Equals(r.ProcessName, processName, StringComparison.OrdinalIgnoreCase));
+            if (existing != null) return existing;
 
-        var record = new IgnoreProcessRecord(processName);
-        IgnoreProcessRecords.Add(record);
+            record = new IgnoreProcessRecord(processName);
+            IgnoreProcessRecords.Add(record);
+        }
         _etwService.OperateIgnoreProcessArr(record.ProcessName, 1);
         return record;
     }
@@ -205,10 +235,18 @@ public class DiskMonitorService : IDisposable
     /// <summary>更新忽略进程状态：USING 加入 ETW 黑名单，其他状态移出黑名单</summary>
     public void SetIgnoreProcessStatus(string processName, RecordStatusEnum status)
     {
-        var item = IgnoreProcessRecords.FirstOrDefault(r =>
-            string.Equals(r.ProcessName, processName, StringComparison.OrdinalIgnoreCase));
-        if (item != null)
-            item.Status = status;
+        lock (_ignoreProcessLock)
+        {
+            var item = IgnoreProcessRecords.FirstOrDefault(r =>
+                string.Equals(r.ProcessName, processName, StringComparison.OrdinalIgnoreCase));
+            if (item != null)
+            {
+                if (status == RecordStatusEnum.DELETED)
+                    IgnoreProcessRecords.Remove(item);
+                else
+                    item.Status = status;
+            }
+        }
 
         _etwService.OperateIgnoreProcessArr(processName,
             status == RecordStatusEnum.USING ? 1 : 2);
@@ -261,12 +299,14 @@ public class DiskMonitorService : IDisposable
             _ => ChangeType.Changed
         };
 
+        var eventTime = DateTime.Now;
+        var attributionNotBefore = eventTime.AddMilliseconds(-500);
         // 先用快速非阻塞方式查询 ETW 缓冲区
-        var processName = _etwService.TryGetProcessOnce(e.FullPath);
+        var processName = _etwService.TryGetProcessOnce(e.FullPath, attributionNotBefore);
 
         var record = new FileChangeRecord
         {
-            Timestamp = DateTime.Now,
+            Timestamp = eventTime,
             ChangeType = changeType,
             FullPath = e.FullPath,
             FileName = Path.GetFileName(e.FullPath),
@@ -275,29 +315,28 @@ public class DiskMonitorService : IDisposable
             SourceProcess = processName
         };
 
-        FileChanged?.Invoke(record);
-
-        // 如果未命中 ETW 缓冲，放入延迟查询队列
-        if (processName == null)
-            _pendingQueries.Enqueue(new PendingQuery(record, e.FullPath));
-        else
+        if (processName != null)
         {
-            // 如果命中 ETW 缓冲，且进程在忽略列表中，则不记录
-            if (processName != null && needIgnoreProcess(processName))
-            {
-                // 忽略该事件
-                return;
-            }
-            // 直接记录到数据库
-            _databaseService.SaveChangeRecord(record);
+            if (needIgnoreProcess(processName)) return;
+            PublishRecord(record);
+            return;
         }
+
+        EnqueuePending(record, e.FullPath, attributionNotBefore);
     }
 
     private bool needIgnoreProcess(string processName)
     {
-        return IgnoreProcessRecords.Any(r =>
-                        string.Equals(r.ProcessName, processName, StringComparison.OrdinalIgnoreCase)
-                        && r.Status == RecordStatusEnum.USING);
+        var normalized = Path.GetFileNameWithoutExtension(processName);
+        lock (_ignoreProcessLock)
+        {
+            return IgnoreProcessRecords.Any(r =>
+                string.Equals(
+                    Path.GetFileNameWithoutExtension(r.ProcessName),
+                    normalized,
+                    StringComparison.OrdinalIgnoreCase) &&
+                r.Status == RecordStatusEnum.USING);
+        }
     }
 
     private void OnRenamed(object sender, RenamedEventArgs e)
@@ -311,11 +350,13 @@ public class DiskMonitorService : IDisposable
              _cleanupService.ShouldIgnoreEvent(e.OldFullPath)))
             return;
 
-        var processName = _etwService.TryGetProcessOnce(e.FullPath);
+        var eventTime = DateTime.Now;
+        var attributionNotBefore = eventTime.AddMilliseconds(-500);
+        var processName = _etwService.TryGetProcessOnce(e.FullPath, attributionNotBefore);
 
         var record = new FileChangeRecord
         {
-            Timestamp = DateTime.Now,
+            Timestamp = eventTime,
             ChangeType = ChangeType.Renamed,
             FullPath = e.FullPath,
             FileName = Path.GetFileName(e.FullPath),
@@ -324,10 +365,43 @@ public class DiskMonitorService : IDisposable
             SourceProcess = processName
         };
 
-        FileChanged?.Invoke(record);
+        if (processName != null)
+        {
+            if (needIgnoreProcess(processName)) return;
+            PublishRecord(record);
+            return;
+        }
 
-        if (processName == null)
-            _pendingQueries.Enqueue(new PendingQuery(record, e.FullPath));
+        EnqueuePending(record, e.FullPath, attributionNotBefore);
+    }
+
+    private void EnqueuePending(
+        FileChangeRecord record,
+        string filePath,
+        DateTime attributionNotBefore)
+    {
+        if (_pendingQueries.Count >= MaxPendingQueries)
+        {
+            PublishRecord(record);
+            MonitorError?.Invoke("待解析进程队列已达上限，部分记录将显示为未知进程");
+            return;
+        }
+
+        _pendingQueries.Enqueue(new PendingQuery(record, filePath, attributionNotBefore));
+    }
+
+    private void PublishRecord(FileChangeRecord record)
+    {
+        try
+        {
+            _databaseService.SaveChangeRecord(record);
+        }
+        catch (Exception ex)
+        {
+            MonitorError?.Invoke($"保存变更记录失败: {ex.Message}");
+        }
+
+        FileChanged?.Invoke(record);
     }
 
     private void OnError(object sender, ErrorEventArgs e)
@@ -357,31 +431,49 @@ public class DiskMonitorService : IDisposable
     {
         while (!ct.IsCancellationRequested)
         {
-            while (_pendingQueries.TryDequeue(out var query))
+            var batch = new List<PendingQuery>(MaxConcurrentQueries);
+            while (batch.Count < MaxConcurrentQueries &&
+                   _pendingQueries.TryDequeue(out var query))
+                batch.Add(query);
+
+            if (batch.Count == 0)
             {
-                try
-                {
-                    var processName = await _etwService.TryGetProcessAsync(query.FilePath, 1500, ct);
-                    if (processName != null)
-                    {
-                        query.Record.SourceProcess = processName;
-                        FileRecordUpdated?.Invoke(query.Record);
-                    }
-                }
-                catch
-                {
-                    // 单条查询失败不影响后续处理
-                }
+                try { await Task.Delay(100, ct); }
+                catch (OperationCanceledException) { break; }
+                continue;
             }
 
-            try
+            await Task.WhenAll(batch.Select(query => ResolvePendingQueryAsync(query, ct)));
+        }
+    }
+
+    private async Task ResolvePendingQueryAsync(PendingQuery query, CancellationToken ct)
+    {
+        try
+        {
+            var processName = await _etwService.TryGetProcessAsync(
+                query.FilePath,
+                1500,
+                ct,
+                query.AttributionNotBefore);
+            ct.ThrowIfCancellationRequested();
+            if (processName != null)
             {
-                await Task.Delay(100, ct);
+                query.Record.SourceProcess = processName;
+                if (needIgnoreProcess(processName))
+                    return;
             }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
+
+            PublishRecord(query.Record);
+        }
+        catch (OperationCanceledException)
+        {
+            // 停止监控时不再发布尚未完成归因的记录。
+        }
+        catch (Exception ex)
+        {
+            MonitorError?.Invoke($"解析来源进程失败: {ex.Message}");
+            PublishRecord(query.Record);
         }
     }
 
