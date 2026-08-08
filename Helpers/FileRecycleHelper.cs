@@ -107,7 +107,7 @@ namespace CdiskClean.Helpers
         }
     }
 
-    public static struct 
+    //public static struct 
 
 }
 

@@ -19,10 +19,6 @@
         {
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
-            statsPanel = new GroupBox();
-            statsCountdownLabel = new Label();
-            statsSummaryLabel = new Label();
-            statsResetBtn = new Button();
             TabPageControl1 = new TabControl();
             totalReviewPage = new TabPage();
             warningLabel = new Label();
@@ -107,7 +103,6 @@
             label1 = new Label();
             ImportFolderDialog = new FolderBrowserDialog();
             progressBar1 = new ProgressBar();
-            statsPanel.SuspendLayout();
             TabPageControl1.SuspendLayout();
             totalReviewPage.SuspendLayout();
             watcherPage.SuspendLayout();
@@ -128,50 +123,6 @@
             panelTitle.Panel2.SuspendLayout();
             panelTitle.SuspendLayout();
             SuspendLayout();
-            // 
-            // statsPanel
-            // 
-            statsPanel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            statsPanel.Controls.Add(statsCountdownLabel);
-            statsPanel.Controls.Add(statsSummaryLabel);
-            statsPanel.Controls.Add(statsResetBtn);
-            statsPanel.Location = new Point(160, 568);
-            statsPanel.Name = "statsPanel";
-            statsPanel.Size = new Size(528, 78);
-            statsPanel.TabIndex = 12;
-            statsPanel.TabStop = false;
-            statsPanel.Text = "统计面板";
-            // 
-            // statsCountdownLabel
-            // 
-            statsCountdownLabel.AutoSize = true;
-            statsCountdownLabel.Font = new Font("Microsoft YaHei UI", 10F, FontStyle.Bold, GraphicsUnit.Point, 134);
-            statsCountdownLabel.ForeColor = Color.SteelBlue;
-            statsCountdownLabel.Location = new Point(6, 22);
-            statsCountdownLabel.Name = "statsCountdownLabel";
-            statsCountdownLabel.Size = new Size(112, 27);
-            statsCountdownLabel.TabIndex = 0;
-            statsCountdownLabel.Text = "倒计时: --s";
-            // 
-            // statsSummaryLabel
-            // 
-            statsSummaryLabel.AutoSize = true;
-            statsSummaryLabel.Location = new Point(6, 49);
-            statsSummaryLabel.Name = "statsSummaryLabel";
-            statsSummaryLabel.Size = new Size(148, 24);
-            statsSummaryLabel.TabIndex = 1;
-            statsSummaryLabel.Text = "等待数据收集中...";
-            // 
-            // statsResetBtn
-            // 
-            statsResetBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            statsResetBtn.Location = new Point(776, 16);
-            statsResetBtn.Name = "statsResetBtn";
-            statsResetBtn.Size = new Size(74, 34);
-            statsResetBtn.TabIndex = 2;
-            statsResetBtn.Text = "重置";
-            statsResetBtn.UseVisualStyleBackColor = true;
-            statsResetBtn.Click += statsResetBtn_Click;
             // 
             // TabPageControl1
             // 
@@ -266,7 +217,6 @@
             // 
             watcherPage.Controls.Add(ignoreProcessBox);
             watcherPage.Controls.Add(statisticButton);
-            watcherPage.Controls.Add(statsPanel);
             watcherPage.Controls.Add(WatcherDirectoryBox);
             watcherPage.Controls.Add(exportBtn);
             watcherPage.Controls.Add(typeFilterCombo);
@@ -1101,8 +1051,6 @@
             StartPosition = FormStartPosition.CenterScreen;
             Text = "C盘监测工具";
             Load += Form1_Load;
-            statsPanel.ResumeLayout(false);
-            statsPanel.PerformLayout();
             TabPageControl1.ResumeLayout(false);
             totalReviewPage.ResumeLayout(false);
             totalReviewPage.PerformLayout();
@@ -1201,10 +1149,6 @@
         private Button dirAddButton;
         private FolderBrowserDialog ImportFolderDialog;
         private Button statisticButton;
-        private GroupBox statsPanel;
-        private Label statsCountdownLabel;
-        private Label statsSummaryLabel;
-        private Button statsResetBtn;
         private GroupBox ignoreProcessBox;
         private ListView ignoreProcessView;
         private Label label3;

@@ -27,14 +27,7 @@
       "Bash(cygpath *)",
       "Bash(iconv -f UTF-8 -t GBK docs/p010-summary-utf8.md -o docs/p010-summary.md)",
       "Bash(iconv -f GBK -t UTF-8 docs/p010-summary.md)",
-      "Bash(iconv -f UTF-8 -t GBK docs/p010-summary-utf8.md)",
-      "Bash(tasklist //FI \"PID eq 13148\")",
-      "Bash(mkdir -p /tmp/p011test)",
-      "Bash(cat)",
-      "Bash(grep -n \"statisticsService\\\\|statsPanel\\\\|statsCountdown\\\\|statsSummary\\\\|statsReset\\\\|StatisticsService\" Forms/Form1.cs Forms/Form1.Designer.cs Services/*.cs)",
-      "Bash(echo \"---exit $?\")",
-      "Bash(python -c ' *)",
-      "Bash(rm -f \"C:\\\\tmp\\\\p011-summary-utf8.md\")"
+      "Bash(iconv -f UTF-8 -t GBK docs/p010-summary-utf8.md)"
     ]
   }
 }

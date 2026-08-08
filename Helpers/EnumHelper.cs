@@ -24,5 +24,17 @@ namespace CdiskClean.Helpers
                 _ => "未知"
             };
         }
+
+        public static string FormatChangeType(ChangeType changeType)
+        {
+            return changeType switch
+            {
+                ChangeType.Created => "创建",
+                ChangeType.Changed => "修改",
+                ChangeType.Deleted => "删除",
+                ChangeType.Renamed => "重命名",
+                _ => "未知"
+            };
+        }
     }
 }
