@@ -4,6 +4,9 @@ using System.ComponentModel;
 
 namespace CdiskClean
 {
+    /// <summary>
+    /// 统计窗口
+    /// </summary>
     public partial class Form4 : Form
     {
         public Form4(List<FileChangeRecord> records, List<ProcessNotificationRecord> notifications)

@@ -534,7 +534,7 @@ namespace CdiskClean
 
         private void changesDataGrid_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
         {
-            if (e.ColumnIndex == TypeColumn.Index && e.Value is ChangeType changeType)
+            if (e.ColumnIndex == TypeColumn.Index + 1 && e.Value is ChangeType changeType)
             {
                 e.Value = EnumHelper.FormatChangeType(changeType);
                 e.FormattingApplied = true;

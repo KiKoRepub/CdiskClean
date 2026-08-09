@@ -21,6 +21,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             TabPageControl1 = new TabControl();
             totalReviewPage = new TabPage();
+            progressBar1 = new ProgressBar();
             warningLabel = new Label();
             freeSpaceLabel = new Label();
             usedSpaceLabel = new Label();
@@ -102,7 +103,6 @@
             panelTitle = new SplitContainer();
             label1 = new Label();
             ImportFolderDialog = new FolderBrowserDialog();
-            progressBar1 = new ProgressBar();
             TabPageControl1.SuspendLayout();
             totalReviewPage.SuspendLayout();
             watcherPage.SuspendLayout();
@@ -153,6 +153,13 @@
             totalReviewPage.TabIndex = 0;
             totalReviewPage.Text = "概览";
             totalReviewPage.UseVisualStyleBackColor = true;
+            // 
+            // progressBar1
+            // 
+            progressBar1.Location = new Point(248, 412);
+            progressBar1.Name = "progressBar1";
+            progressBar1.Size = new Size(8, 8);
+            progressBar1.TabIndex = 6;
             // 
             // warningLabel
             // 
@@ -287,7 +294,7 @@
             label3.Name = "label3";
             label3.Size = new Size(167, 39);
             label3.TabIndex = 1;
-            label3.Text = "选中线程为";
+            label3.Text = "选中进程为";
             // 
             // ignoreProcessView
             // 
@@ -1026,13 +1033,6 @@
             label1.TabIndex = 0;
             label1.Text = "      C盘管理工具";
             label1.TextAlign = ContentAlignment.MiddleRight;
-            // 
-            // progressBar1
-            // 
-            progressBar1.Location = new Point(248, 412);
-            progressBar1.Name = "progressBar1";
-            progressBar1.Size = new Size(8, 8);
-            progressBar1.TabIndex = 6;
             // 
             // Form1
             // 

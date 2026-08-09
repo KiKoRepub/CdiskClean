@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO.Compression;
+using System.Runtime.InteropServices;
 using CdiskClean.Helpers;
 using CdiskClean.Models;
 
@@ -405,8 +406,8 @@ public class CleanupService
 
         if (entry.IsDirectory)
         {
-            MoveWithRetry(full, dest, true);
             // 目录使用联接（junction /J），无需管理员权限且支持跨卷
+            MoveWithRetry(full, dest, true);
             if (!RunCmd($"mklink /J \"{full}\" \"{dest}\""))
                 throw RollbackAfterLinkFailure(dest, full, true, "创建目录联接失败");
         }
@@ -416,16 +417,28 @@ public class CleanupService
                 throw new IOException("硬链接要求源与目标位于同一磁盘卷，请改用其他清理方式");
 
             MoveWithRetry(full, dest, false);
-            // 文件使用硬链接（/H），无需管理员权限，原路径即刻可继续使用
-            if (!RunCmd($"mklink /H \"{full}\" \"{dest}\""))
-                throw RollbackAfterLinkFailure(dest, full, false, "创建文件硬链接失败");
+            // 文件使用 Win32 原生硬链接 API（替代 cmd.exe mklink /H），
+            // 无需管理员权限，原路径即刻可继续使用
+            if (!CreateHardLinkW(full, dest, IntPtr.Zero))
+            {
+                var win32Error = Marshal.GetLastWin32Error();
+                throw RollbackAfterLinkFailure(dest, full, false,
+                    $"创建文件硬链接失败(Win32 错误码 {win32Error})");
+            }
         }
     }
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CreateHardLinkW(
+        string lpFileName,
+        string lpExistingFileName,
+        IntPtr lpSecurityAttributes);
 
     private static void MoveWithRetry(string source, string destination, bool isDirectory)
     {
         IOException? lastError = null;
-        const int maxAttempts = 4;
+        const int maxAttempts = 8;
 
         for (int attempt = 1; attempt <= maxAttempts; attempt++)
         {
@@ -440,7 +453,10 @@ public class CleanupService
             catch (IOException ex) when (attempt < maxAttempts)
             {
                 lastError = ex;
-                Thread.Sleep(300 * attempt);
+                // 移动前先回收本程序可能滞留的句柄（如压缩/扫描遗留流），
+                // 再等待瞬时占用（杀毒扫描、搜索索引等）自动释放后重试
+                ReleaseFileLocks();
+                Thread.Sleep(500 * attempt);
             }
             catch (IOException ex)
             {
@@ -449,8 +465,24 @@ public class CleanupService
         }
 
         throw new IOException(
-            $"文件被占用或移动失败，重试 {maxAttempts} 次后仍未成功: {lastError?.Message}",
+            $"文件被占用或移动失败，重试 {maxAttempts} 次（约 14 秒）后仍未成功。" +
+            $"文件可能正被编辑器/播放器/下载器/杀毒软件/搜索索引等程序使用，请关闭后重试。{lastError?.Message}",
             lastError);
+    }
+
+    /// <summary>回收本程序可能滞留的文件句柄（垃圾回收并等待终结器）</summary>
+    private static void ReleaseFileLocks()
+    {
+        try
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+        }
+        catch
+        {
+            // 回收失败不影响主流程，仅无法释放滞留句柄
+        }
     }
 
     private static IOException RollbackAfterLinkFailure(
