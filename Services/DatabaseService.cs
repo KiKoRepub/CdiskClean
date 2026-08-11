@@ -1,13 +1,14 @@
 using Microsoft.Data.Sqlite;
 using CdiskClean.Models;
+using System.Data.Common;
 
 namespace CdiskClean.Services;
 
-public class DatabaseService : IDatabaseService
+public class SqlLiteDatabaseService : IDatabaseService
 {
     private readonly string _connectionString;
 
-    public DatabaseService(string dbPath)
+    public SqlLiteDatabaseService(string dbPath)
     {
         _connectionString = new SqliteConnectionStringBuilder
         {

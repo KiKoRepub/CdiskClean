@@ -7,8 +7,7 @@ using System.Threading.Tasks;
 namespace CdiskClean;
 
 
-
- partial class Form2
+partial class FuncTestForm
 {
     class Person
     {

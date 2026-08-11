@@ -7,9 +7,9 @@ namespace CdiskClean
     /// <summary>
     /// 统计窗口
     /// </summary>
-    public partial class Form4 : Form
+    public partial class StatisticForm : Form
     {
-        public Form4(List<FileChangeRecord> records, List<ProcessNotificationRecord> notifications)
+        public StatisticForm(List<FileChangeRecord> records, List<ProcessNotificationRecord> notifications)
         {
             InitializeComponent();
             LoadNotifications(notifications);

@@ -1,10 +1,10 @@
+using CdiskClean.Forms;
 using CdiskClean.Helpers;
 using CdiskClean.Models;
 using CdiskClean.Services;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing.Drawing2D;
-using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 
 namespace CdiskClean
@@ -23,16 +23,22 @@ namespace CdiskClean
         private readonly object _recordsLock = new();
         private const int MaxRecords = 5000;
 
-        public Form1()
+        /// <summary>变更网格当前是否直接绑定 _records（false=过滤快照）</summary>
+        private bool _gridBoundToRecords;
+
+        public Form1(string roleLabelText)
         {
             InitializeComponent();
+
+
+            label1.Text += $" —— {roleLabelText}";
 
             // 初始化 ETW 监控
             _etwService = new EtwMonitorService();
 
             // 初始化数据库
             var dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CdiskClean.db");
-            _databaseService = new DatabaseService(dbPath);
+            _databaseService = new SqlLiteDatabaseService(dbPath);
             _databaseService.Initialize();
 
             // 清理服务（清理期间监控联动过滤自身动作）
@@ -70,9 +76,11 @@ namespace CdiskClean
             _notificationService = new NotificationService();
             _notificationService.NotificationTriggered += OnNotificationTriggered;
 
-            // 设置数据绑定
+            // 设置数据绑定（关闭自动生成列，使用设计器定义的手动列）
             _records = new BindingList<FileChangeRecord>();
+            changesDataGrid.AutoGenerateColumns = false;
             changesDataGrid.DataSource = _records;
+            _gridBoundToRecords = true;
             changesDataGrid.CellFormatting += changesDataGrid_CellFormatting;
 
             typeFilterCombo.SelectedIndex = 0;
@@ -386,8 +394,8 @@ namespace CdiskClean
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"获取磁盘信息失败: {ex.Message}", "错误",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                // 定时刷新失败仅记录日志，避免每 30 秒弹窗骚扰
+                Debug.WriteLine($"获取磁盘信息失败: {ex.Message}");
             }
         }
 
@@ -426,7 +434,12 @@ namespace CdiskClean
         {
             if (!_monitorService.IsRunning)
             {
-                _etwService.Start();
+                if (!_etwService.Start())
+                {
+                    MessageBox.Show("ETW 监控会话启动失败，请确认程序以管理员权限运行。", "错误",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
                 _monitorService.Start();
                 _notificationService.Start();
                 pauseBtn.Text = "暂停";
@@ -512,7 +525,12 @@ namespace CdiskClean
             var filterIndex = typeFilterCombo.SelectedIndex;
             if (filterIndex <= 0)
             {
-                changesDataGrid.DataSource = _records;
+                // 已绑定 _records 时无需重新赋值，避免网格滚动/选择位置被重置
+                if (!_gridBoundToRecords)
+                {
+                    changesDataGrid.DataSource = _records;
+                    _gridBoundToRecords = true;
+                }
                 return;
             }
 
@@ -528,13 +546,12 @@ namespace CdiskClean
             var filtered = _records.Where(r => r.ChangeType == targetType).ToList();
             changesDataGrid.DataSource = new BindingList<FileChangeRecord>(
                 new List<FileChangeRecord>(filtered));
-
-            changesDataGrid.AutoGenerateColumns = false;
+            _gridBoundToRecords = false;
         }
 
         private void changesDataGrid_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
         {
-            if (e.ColumnIndex == TypeColumn.Index + 1 && e.Value is ChangeType changeType)
+            if (e.ColumnIndex == TypeColumn.Index && e.Value is ChangeType changeType)
             {
                 e.Value = EnumHelper.FormatChangeType(changeType);
                 e.FormattingApplied = true;
@@ -559,15 +576,9 @@ namespace CdiskClean
 
                 UpdateRecordCount();
 
-                if (typeFilterCombo.SelectedIndex <= 0)
-                {
-                    changesDataGrid.DataSource = _records;
-                    changesDataGrid.Refresh();
-                }
-                else
-                {
+                // 过滤模式下重建过滤快照以包含新记录；全部模式下 BindingList 自动通知网格
+                if (typeFilterCombo.SelectedIndex > 0)
                     ApplyFilter();
-                }
             });
         }
 
@@ -655,10 +666,7 @@ namespace CdiskClean
 
                 var result = await _folderAnalyzer.ScanFolderAsync(path, progress, cts.Token);
 
-                await Task.Run(() =>
-                {
-                    BeginInvoke(() => PopulateTreeView(result));
-                });
+                PopulateTreeView(result);
             }
             catch (OperationCanceledException)
             {
@@ -1289,11 +1297,15 @@ namespace CdiskClean
             cleanScanProgressBar.Style = ProgressBarStyle.Marquee;
             var progress = new Progress<string>(s => cleanStatusLabel.Text = s);
 
-            long freeBefore = GetFreeSpaceSafe();
+            // 按待清理文件所在盘统计释放空间（清理对象可能不在 C 盘）
+            var freedDriveRoot = entries[0].FullPath.Length >= 2
+                ? Path.GetPathRoot(entries[0].FullPath)
+                : null;
+            long freeBefore = GetFreeSpaceSafe(freedDriveRoot);
             try
             {
                 var result = await _cleanupService.ExecuteAsync(entries, method, targetDir, progress, cts.Token);
-                long freedDelta = Math.Max(0, GetFreeSpaceSafe() - freeBefore);
+                long freedDelta = Math.Max(0, GetFreeSpaceSafe(freedDriveRoot) - freeBefore);
 
                 var summary = $"清理完成：成功 {result.Success} 项，失败 {result.Fail} 项";
                 if (method is CleanupMethod.PermanentDelete or CleanupMethod.Compress)
@@ -1359,9 +1371,13 @@ namespace CdiskClean
             notifyIcon1.ShowBalloonTip(3000, "清理完成", msg, ToolTipIcon.Info);
         }
 
-        private long GetFreeSpaceSafe()
+        private long GetFreeSpaceSafe(string? driveRoot = null)
         {
-            try { return _diskSpaceService.GetDriveInfo("C:").FreeSpaceBytes; }
+            try
+            {
+                var drive = string.IsNullOrEmpty(driveRoot) ? "C:" : driveRoot;
+                return _diskSpaceService.GetDriveInfo(drive).FreeSpaceBytes;
+            }
             catch { return 0; }
         }
 
@@ -1495,8 +1511,8 @@ namespace CdiskClean
 
         private void closeButton_Click(object? sender, EventArgs e)
         {
+            // 关闭 = 隐藏到托盘（退出请使用托盘菜单「退出」）
             this.Hide();
-            closeApplication();
         }
 
         // ==================== 工具方法 ====================
@@ -1569,9 +1585,13 @@ namespace CdiskClean
         {
             this.WindowState = FormWindowState.Minimized;
         }
-
+        /// <summary>
+        /// 实现下边框和右边框拓展窗体
+        /// </summary>
+        /// <param name="m"></param>
         protected override void WndProc(ref Message m)
         {
+            // 处理系统消息
             const int WM_NCHITTEST = 0x84;
             const int HTLEFT = 10;
             const int HTRIGHT = 11;
@@ -1661,7 +1681,7 @@ namespace CdiskClean
 
             // 提醒记录来自数据库，与右下角提示展示逻辑相互独立
             var notifications = _databaseService.GetProcessNotifications();
-            var form4 = new Form4(snapshot, notifications);
+            var form4 = new StatisticForm(snapshot, notifications);
             form4.ShowDialog();
         }
 
@@ -1809,14 +1829,49 @@ namespace CdiskClean
 
         private void betterDirAddButton_Click(object sender, EventArgs e)
         {
-            //TODO 添加监控目录可以以一个目录为基础，在新窗口中勾选子路径 [树状列表]
-            LogHelper.showDefaultToDoMessage("添加监控目录可以以一个目录为基础，在新窗口中勾选子路径");
+            using var form = new BetterDirAddForm();
+            if (form.ShowDialog() != DialogResult.OK) return;
+
+            var addedCount = 0;
+            foreach (var path in form.SelectedPaths)
+            {
+                // 已在监视列表中（非删除状态）的路径跳过
+                if (_monitorService.WatchDirectories.Any(d =>
+                        string.Equals(d.Path, path, StringComparison.OrdinalIgnoreCase) &&
+                        d.Status != RecordStatusEnum.DELETED))
+                    continue;
+
+                try
+                {
+                    _databaseService.SaveWatchDirectory(new WatchingDirectory(path, true));
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"保存监测目录失败: {ex.Message}", "错误",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    continue;
+                }
+
+                var dir = _monitorService.AddDirectoryToEtwArr(path, true);
+                _monitorService.SetDirectoryStatus(dir.Path, RecordStatusEnum.USING);
+                addedCount++;
+            }
+
+            PopulateDirListView();
+            if (addedCount == 0)
+            {
+                MessageBox.Show("所选路径已在监测列表中。", "提示",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
 
         private void betterProcessAddButton_Click(object sender, EventArgs e)
         {
-            //TODO 任务管理器中选择进程，添加到忽略列表
-           LogHelper.showDefaultToDoMessage("任务管理器中选择进程，添加到忽略列表");
+            using var form = new ProcessPickForm();
+            if (form.ShowDialog() != DialogResult.OK) return;
+
+            foreach (var name in form.SelectedProcessNames)
+                AddIgnoreProcessInternal(name);
         }
     }
 }

@@ -134,7 +134,7 @@
             TabPageControl1.Location = new Point(0, 53);
             TabPageControl1.Name = "TabPageControl1";
             TabPageControl1.SelectedIndex = 0;
-            TabPageControl1.Size = new Size(1437, 687);
+            TabPageControl1.Size = new Size(1437, 693);
             TabPageControl1.TabIndex = 0;
             // 
             // totalReviewPage
@@ -149,7 +149,7 @@
             totalReviewPage.Location = new Point(4, 33);
             totalReviewPage.Name = "totalReviewPage";
             totalReviewPage.Padding = new Padding(3);
-            totalReviewPage.Size = new Size(1429, 650);
+            totalReviewPage.Size = new Size(1429, 656);
             totalReviewPage.TabIndex = 0;
             totalReviewPage.Text = "概览";
             totalReviewPage.UseVisualStyleBackColor = true;
@@ -234,7 +234,7 @@
             watcherPage.Location = new Point(4, 33);
             watcherPage.Name = "watcherPage";
             watcherPage.Padding = new Padding(3);
-            watcherPage.Size = new Size(1429, 650);
+            watcherPage.Size = new Size(1429, 656);
             watcherPage.TabIndex = 1;
             watcherPage.Text = "实时监测";
             watcherPage.UseVisualStyleBackColor = true;
@@ -528,7 +528,7 @@
             folderAnalyzerPage.Controls.Add(selectedPathTextBox);
             folderAnalyzerPage.Location = new Point(4, 33);
             folderAnalyzerPage.Name = "folderAnalyzerPage";
-            folderAnalyzerPage.Size = new Size(1429, 650);
+            folderAnalyzerPage.Size = new Size(1429, 656);
             folderAnalyzerPage.TabIndex = 2;
             folderAnalyzerPage.Text = "文件夹分析";
             folderAnalyzerPage.UseVisualStyleBackColor = true;
@@ -602,13 +602,14 @@
             diskCleanPage.Location = new Point(4, 33);
             diskCleanPage.Name = "diskCleanPage";
             diskCleanPage.Padding = new Padding(3);
-            diskCleanPage.Size = new Size(1429, 650);
+            diskCleanPage.Size = new Size(1429, 656);
             diskCleanPage.TabIndex = 3;
             diskCleanPage.Text = "磁盘清理";
             diskCleanPage.UseVisualStyleBackColor = true;
             // 
             // cleanHistoryBox
             // 
+            cleanHistoryBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             cleanHistoryBox.Controls.Add(cleanHistoryGrid);
             cleanHistoryBox.Location = new Point(8, 490);
             cleanHistoryBox.Name = "cleanHistoryBox";
@@ -622,6 +623,7 @@
             cleanHistoryGrid.AllowUserToAddRows = false;
             cleanHistoryGrid.AllowUserToDeleteRows = false;
             cleanHistoryGrid.AllowUserToResizeRows = false;
+            cleanHistoryGrid.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             cleanHistoryGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             cleanHistoryGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             cleanHistoryGrid.Location = new Point(14, 28);
@@ -636,6 +638,7 @@
             // 
             // cleanMethodBox
             // 
+            cleanMethodBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             cleanMethodBox.Controls.Add(cleanRecycleRadio);
             cleanMethodBox.Controls.Add(cleanPermanentRadio);
             cleanMethodBox.Controls.Add(cleanMoveRadio);
@@ -751,6 +754,7 @@
             // 
             // cleanTreeBox
             // 
+            cleanTreeBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             cleanTreeBox.Controls.Add(cleanTreeView);
             cleanTreeBox.Controls.Add(cleanSelectAllBtn);
             cleanTreeBox.Controls.Add(cleanSelectNoneBtn);
@@ -764,6 +768,7 @@
             // 
             // cleanTreeView
             // 
+            cleanTreeView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             cleanTreeView.CheckBoxes = true;
             cleanTreeView.Location = new Point(14, 28);
             cleanTreeView.Name = "cleanTreeView";
@@ -836,6 +841,7 @@
             // 
             // cleanRefreshFrequentBtn
             // 
+            cleanRefreshFrequentBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             cleanRefreshFrequentBtn.Location = new Point(1210, 8);
             cleanRefreshFrequentBtn.Name = "cleanRefreshFrequentBtn";
             cleanRefreshFrequentBtn.Size = new Size(100, 30);
@@ -846,6 +852,7 @@
             // 
             // cleanScanProgressBar
             // 
+            cleanScanProgressBar.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             cleanScanProgressBar.Location = new Point(582, 8);
             cleanScanProgressBar.Name = "cleanScanProgressBar";
             cleanScanProgressBar.Size = new Size(620, 23);
@@ -886,7 +893,7 @@
             statusStrip1.Dock = DockStyle.None;
             statusStrip1.ImageScalingSize = new Size(24, 24);
             statusStrip1.Items.AddRange(new ToolStripItem[] { watchStatusLabel, writedRecordStatusLabel, timeStatusLabel, NoticeIcon });
-            statusStrip1.Location = new Point(0, 743);
+            statusStrip1.Location = new Point(0, 749);
             statusStrip1.Name = "statusStrip1";
             statusStrip1.Size = new Size(1437, 30);
             statusStrip1.TabIndex = 4;
@@ -937,7 +944,7 @@
             // closeButton
             // 
             closeButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            closeButton.Location = new Point(540, 6);
+            closeButton.Location = new Point(539, 6);
             closeButton.Name = "closeButton";
             closeButton.Size = new Size(40, 33);
             closeButton.TabIndex = 1;
@@ -948,7 +955,7 @@
             // BiggerButton
             // 
             BiggerButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            BiggerButton.Location = new Point(494, 6);
+            BiggerButton.Location = new Point(493, 6);
             BiggerButton.Name = "BiggerButton";
             BiggerButton.Size = new Size(40, 33);
             BiggerButton.TabIndex = 2;
@@ -959,7 +966,7 @@
             // button1
             // 
             button1.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            button1.Location = new Point(448, 6);
+            button1.Location = new Point(447, 6);
             button1.Name = "button1";
             button1.Size = new Size(40, 33);
             button1.TabIndex = 3;
@@ -1019,7 +1026,7 @@
             panelTitle.Panel2.Controls.Add(BiggerButton);
             panelTitle.Panel2.Controls.Add(closeButton);
             panelTitle.Size = new Size(1440, 47);
-            panelTitle.SplitterDistance = 853;
+            panelTitle.SplitterDistance = 854;
             panelTitle.TabIndex = 5;
             // 
             // label1
@@ -1040,13 +1047,13 @@
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.Control;
             BackgroundImageLayout = ImageLayout.Zoom;
-            ClientSize = new Size(1440, 774);
+            ClientSize = new Size(1440, 780);
             Controls.Add(panelTitle);
             Controls.Add(statusStrip1);
             Controls.Add(TabPageControl1);
             FormBorderStyle = FormBorderStyle.None;
             Icon = (Icon)resources.GetObject("$this.Icon");
-            MinimumSize = new Size(1440, 650);
+            MinimumSize = new Size(1440, 780);
             Name = "Form1";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "C盘监测工具";

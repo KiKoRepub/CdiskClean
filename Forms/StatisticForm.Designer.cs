@@ -1,6 +1,6 @@
 namespace CdiskClean
 {
-    partial class Form4
+    partial class StatisticForm
     {
         private System.ComponentModel.IContainer components = null;
 

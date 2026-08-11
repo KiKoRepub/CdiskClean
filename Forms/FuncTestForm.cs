@@ -13,9 +13,9 @@ using System.Windows.Forms;
 
 namespace CdiskClean
 {
-    public partial class Form2 : Form
+    public partial class FuncTestForm : Form
     {
-        public Form2()
+        public FuncTestForm()
         {
             InitializeComponent();
             _cts = new CancellationTokenSource();

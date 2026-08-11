@@ -1,4 +1,5 @@
 using CdiskClean.Helpers;
+using System.Security.Principal;
 
 namespace CdiskClean
 {
@@ -14,7 +15,12 @@ namespace CdiskClean
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
             ConfigureExceptionHandling();
-            Application.Run(new Form1());
+            if (!IsElevated())
+            {
+                MessageBox.Show("此程序需要管理员权限才能正常运行。", "权限不足", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            Application.Run(new Form1("管理员身份运行中..."));
         }
 
         private static void ConfigureExceptionHandling()
@@ -45,5 +51,12 @@ namespace CdiskClean
                 e.SetObserved();
             };
         }
+        public static bool IsElevated()
+        {
+            WindowsIdentity identity = WindowsIdentity.GetCurrent();
+            WindowsPrincipal principal = new WindowsPrincipal(identity);
+            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
     }
 }

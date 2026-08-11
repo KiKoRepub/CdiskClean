@@ -32,31 +32,33 @@ public class EtwMonitorService : IDisposable
     
     public bool IsRunning { get; private set; }
 
-    public void Start()
+    /// <summary>同步创建 ETW 会话，成功返回 true；事件处理在后台线程运行</summary>
+    public bool Start()
     {
-        if (IsRunning) return;
+        if (IsRunning) return true;
 
-        _cts = new CancellationTokenSource();
-        var token = _cts.Token;
-
-        Task.Run(() =>
+        try
         {
-            try
+            var sessionName = "CdiskCleanEtwSession";
+            try { TraceEventSession.GetActiveSession(sessionName)?.Dispose(); } catch { }
+
+            var session = new TraceEventSession(sessionName);
+            session.EnableKernelProvider(KernelTraceEventParser.Keywords.FileIOInit);
+
+            var source = session.Source;
+            source.Kernel.FileIOCreate += d => BufferEvent(d.FileName, d.ProcessName);
+            source.Kernel.FileIOWrite += d => BufferEvent(d.FileName, d.ProcessName);
+            source.Kernel.FileIODelete += d => BufferEvent(d.FileName, d.ProcessName);
+
+            _session = session;
+            IsRunning = true;
+            _cts = new CancellationTokenSource();
+            var token = _cts.Token;
+
+            Task.Run(() =>
             {
-                var sessionName = "CdiskCleanEtwSession";
-                try { TraceEventSession.GetActiveSession(sessionName)?.Dispose(); } catch { }
-
-                using (_session = new TraceEventSession(sessionName))
+                try
                 {
-                    _session.EnableKernelProvider(KernelTraceEventParser.Keywords.FileIOInit);
-
-                    var source = _session.Source;
-                    source.Kernel.FileIOCreate += d => BufferEvent(d.FileName, d.ProcessName);
-                    source.Kernel.FileIOWrite += d => BufferEvent(d.FileName, d.ProcessName);
-                    source.Kernel.FileIODelete += d => BufferEvent(d.FileName, d.ProcessName);
-
-                    IsRunning = true;
-
                     using var cleanupTimer = new System.Timers.Timer(10000);
                     cleanupTimer.Elapsed += (_, _) => CleanupBuffer();
                     cleanupTimer.Start();
@@ -67,12 +69,21 @@ public class EtwMonitorService : IDisposable
                     }
                     catch (OperationCanceledException) { }
                 }
-            }
-            catch (Exception)
-            {
-                IsRunning = false;
-            }
-        }, token);
+                catch (Exception) { }
+                finally
+                {
+                    try { session.Dispose(); } catch { }
+                    IsRunning = false;
+                }
+            }, token);
+
+            return true;
+        }
+        catch (Exception)
+        {
+            IsRunning = false;
+            return false;
+        }
     }
 
     #region WatchDirectoryArray 相关操作

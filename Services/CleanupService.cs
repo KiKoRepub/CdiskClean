@@ -1,9 +1,8 @@
-using System.Collections.Concurrent;
+using CdiskClean.Helpers;
+using CdiskClean.Models;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
-using CdiskClean.Helpers;
-using CdiskClean.Models;
 
 namespace CdiskClean.Services;
 
@@ -407,6 +406,8 @@ public class CleanupService
         if (entry.IsDirectory)
         {
             // 目录使用联接（junction /J），无需管理员权限且支持跨卷
+
+            //LogHelper.showDefaultToDoMessage(full + " -> " + dest);
             MoveWithRetry(full, dest, true);
             if (!RunCmd($"mklink /J \"{full}\" \"{dest}\""))
                 throw RollbackAfterLinkFailure(dest, full, true, "创建目录联接失败");
@@ -445,16 +446,34 @@ public class CleanupService
             try
             {
                 if (isDirectory)
-                    Directory.Move(source, destination);
+                {
+                    // 检查是否跨卷
+                    bool sameVolume = string.Equals(
+                        Path.GetPathRoot(source),
+                        Path.GetPathRoot(destination),
+                        StringComparison.OrdinalIgnoreCase);
+
+                    if (sameVolume)
+                    {
+                        Directory.Move(source, destination);
+                    }
+                    else
+                    {
+                        // 跨卷：复制整个目录树，然后删除源
+                        CopyDirectory(source, destination);
+                        // 删除 源
+                        DeleteDirectoryWithRetry(source);
+                    }
+                }
                 else
+                {
                     File.Move(source, destination);
+                }
                 return;
             }
             catch (IOException ex) when (attempt < maxAttempts)
             {
                 lastError = ex;
-                // 移动前先回收本程序可能滞留的句柄（如压缩/扫描遗留流），
-                // 再等待瞬时占用（杀毒扫描、搜索索引等）自动释放后重试
                 ReleaseFileLocks();
                 Thread.Sleep(500 * attempt);
             }
@@ -465,11 +484,97 @@ public class CleanupService
         }
 
         throw new IOException(
-            $"文件被占用或移动失败，重试 {maxAttempts} 次（约 14 秒）后仍未成功。" +
-            $"文件可能正被编辑器/播放器/下载器/杀毒软件/搜索索引等程序使用，请关闭后重试。{lastError?.Message}",
+            $"文件或目录被占用或移动失败，重试 {maxAttempts} 次（约 14 秒）后仍未成功。" +
+            $"可能被编辑器/杀毒软件/搜索索引等占用，请关闭后重试。{lastError?.Message}",
             lastError);
     }
 
+
+    private static void CopyDirectory(string sourceDir, string destDir)
+    {
+        // 创建目标目录（包括所有子目录结构）
+        Directory.CreateDirectory(destDir);
+
+        // 复制所有文件
+        foreach (string filePath in Directory.GetFiles(sourceDir, "*", SearchOption.TopDirectoryOnly))
+        {
+            string fileName = Path.GetFileName(filePath);
+            string destFilePath = Path.Combine(destDir, fileName);
+            File.Copy(filePath, destFilePath, overwrite: true);
+        }
+
+        // 递归复制子目录
+        foreach (string subDir in Directory.GetDirectories(sourceDir, "*", SearchOption.TopDirectoryOnly))
+        {
+            string dirName = Path.GetFileName(subDir);
+            string destSubDir = Path.Combine(destDir, dirName);
+            CopyDirectory(subDir, destSubDir);
+        }
+    }
+
+    private static void DeleteDirectoryWithRetry(string path, int maxAttempts = 8)
+    {
+        if (!Directory.Exists(path))
+            return;
+
+        IOException? lastError = null;
+
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                // 清空只读、系统等属性，并递归删除
+                ForceDeleteDirectory(path);
+                return;
+            }
+            catch (IOException ex) when (attempt < maxAttempts)
+            {
+                lastError = ex;
+                // 释放可能占用的句柄（与之前相同）
+                ReleaseFileLocks();
+                Thread.Sleep(500 * attempt);
+            }
+            catch (IOException ex)
+            {
+                lastError = ex;
+            }
+            catch (UnauthorizedAccessException ex) when (attempt < maxAttempts)
+            {
+                // 权限问题也可能在删除时触发，重试
+                lastError = new IOException("权限不足", ex);
+                Thread.Sleep(500 * attempt);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                lastError = new IOException("权限不足", ex);
+            }
+        }
+
+        throw new IOException(
+            $"删除源目录失败，重试 {maxAttempts} 次后仍未成功。请手动清理残留目录: {path}。{lastError?.Message}",
+            lastError);
+    }
+
+    /// <summary>强制删除目录（会先清除只读/系统属性）</summary>
+    private static void ForceDeleteDirectory(string path)
+    {
+        // 删除所有子目录（先递归，确保子目录内容先清空）
+        foreach (string subDir in Directory.GetDirectories(path))
+        {
+            ForceDeleteDirectory(subDir);
+        }
+
+        // 删除所有文件（清除属性后再删除）
+        foreach (string file in Directory.GetFiles(path))
+        {
+            // 移除只读、系统、隐藏等属性
+            File.SetAttributes(file, FileAttributes.Normal);
+            File.Delete(file);
+        }
+
+        // 最后删除空目录
+        Directory.Delete(path, false);
+    }
     /// <summary>回收本程序可能滞留的文件句柄（垃圾回收并等待终结器）</summary>
     private static void ReleaseFileLocks()
     {
@@ -511,6 +616,7 @@ public class CleanupService
     {
         try
         {
+            // 启动命令行进程
             var psi = new ProcessStartInfo("cmd.exe", "/c " + arguments)
             {
                 CreateNoWindow = true,
