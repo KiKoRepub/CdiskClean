@@ -26,7 +26,7 @@
             freeSpaceLabel = new Label();
             usedSpaceLabel = new Label();
             totalSpaceLabel = new Label();
-            usageProgressBar = new ProgressBar();
+            usageProgressBar = new CdiskClean.Helpers.ThemedProgressBar();
             dashboardTitleLabel = new Label();
             watcherPage = new TabPage();
             ignoreProcessBox = new GroupBox();

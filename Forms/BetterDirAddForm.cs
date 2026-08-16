@@ -1,3 +1,5 @@
+using CdiskClean.Helpers;
+
 namespace CdiskClean.Forms
 {
     /// <summary>
@@ -11,6 +13,7 @@ namespace CdiskClean.Forms
         public BetterDirAddForm()
         {
             InitializeComponent();
+            UiTheme.Apply(this);
         }
 
         private void browseBtn_Click(object? sender, EventArgs e)

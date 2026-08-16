@@ -105,6 +105,8 @@ namespace CdiskClean
             // 低空间警告可点击跳转磁盘清理 Tab
             warningLabel.Cursor = Cursors.Hand;
             warningLabel.Click += warningLabel_Click;
+
+            UiTheme.Apply(this);
         }
 
 
@@ -113,6 +115,7 @@ namespace CdiskClean
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            timer1_Tick(sender, e);
             timer1.Start();
             diskRefreshTimer.Start();
             RefreshDiskInfo();
@@ -1395,6 +1398,17 @@ namespace CdiskClean
                 foreach (DataGridViewColumn col in cleanHistoryGrid.Columns)
                 {
                     col.Visible = col.Name is not ("Id" or "SizeBytes" or "Success");
+                    col.HeaderText = col.Name switch
+                    {
+                        "CleanupTime" => "清理时间",
+                        "FullPath" => "原始路径",
+                        "FileName" => "文件名",
+                        "Method" => "清理方式",
+                        "Message" => "处理结果",
+                        "SizeText" => "文件大小",
+                        "ResultText" => "状态",
+                        _ => col.HeaderText
+                    };
                     col.FillWeight = col.Name switch
                     {
                         "FullPath" => 30,

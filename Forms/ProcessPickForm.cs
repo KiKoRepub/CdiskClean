@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using CdiskClean.Helpers;
 
 namespace CdiskClean.Forms
 {
@@ -15,6 +16,7 @@ namespace CdiskClean.Forms
         public ProcessPickForm()
         {
             InitializeComponent();
+            UiTheme.Apply(this);
             LoadProcesses();
         }
 

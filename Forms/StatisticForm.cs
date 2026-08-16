@@ -12,6 +12,7 @@ namespace CdiskClean
         public StatisticForm(List<FileChangeRecord> records, List<ProcessNotificationRecord> notifications)
         {
             InitializeComponent();
+            UiTheme.Apply(this);
             LoadNotifications(notifications);
             LoadProcessStats(records);
             LoadDetailRecords(records);
