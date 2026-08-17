@@ -29,13 +29,13 @@ namespace CdiskClean.Forms
         private void InitializeComponent()
         {
             basePathLabel = new System.Windows.Forms.Label();
-            basePathTextBox = new System.Windows.Forms.TextBox();
-            browseBtn = new System.Windows.Forms.Button();
+            basePathTextBox = new AntdUI.Input();
+            browseBtn = new AntdUI.Button();
             dirTreeView = new System.Windows.Forms.TreeView();
-            selectAllBtn = new System.Windows.Forms.Button();
-            selectNoneBtn = new System.Windows.Forms.Button();
-            okBtn = new System.Windows.Forms.Button();
-            cancelBtn = new System.Windows.Forms.Button();
+            selectAllBtn = new AntdUI.Button();
+            selectNoneBtn = new AntdUI.Button();
+            okBtn = new AntdUI.Button();
+            cancelBtn = new AntdUI.Button();
             hintLabel = new System.Windows.Forms.Label();
             SuspendLayout();
             //
@@ -66,7 +66,6 @@ namespace CdiskClean.Forms
             browseBtn.Size = new System.Drawing.Size(100, 34);
             browseBtn.TabIndex = 2;
             browseBtn.Text = "浏览...";
-            browseBtn.UseVisualStyleBackColor = true;
             browseBtn.Click += browseBtn_Click;
             //
             // dirTreeView
@@ -88,7 +87,6 @@ namespace CdiskClean.Forms
             selectAllBtn.Size = new System.Drawing.Size(90, 36);
             selectAllBtn.TabIndex = 4;
             selectAllBtn.Text = "全选";
-            selectAllBtn.UseVisualStyleBackColor = true;
             selectAllBtn.Click += selectAllBtn_Click;
             //
             // selectNoneBtn
@@ -99,7 +97,6 @@ namespace CdiskClean.Forms
             selectNoneBtn.Size = new System.Drawing.Size(90, 36);
             selectNoneBtn.TabIndex = 5;
             selectNoneBtn.Text = "全不选";
-            selectNoneBtn.UseVisualStyleBackColor = true;
             selectNoneBtn.Click += selectNoneBtn_Click;
             //
             // okBtn
@@ -110,7 +107,6 @@ namespace CdiskClean.Forms
             okBtn.Size = new System.Drawing.Size(80, 36);
             okBtn.TabIndex = 6;
             okBtn.Text = "确定";
-            okBtn.UseVisualStyleBackColor = true;
             okBtn.Click += okBtn_Click;
             //
             // cancelBtn
@@ -121,7 +117,6 @@ namespace CdiskClean.Forms
             cancelBtn.Size = new System.Drawing.Size(80, 36);
             cancelBtn.TabIndex = 7;
             cancelBtn.Text = "取消";
-            cancelBtn.UseVisualStyleBackColor = true;
             cancelBtn.Click += cancelBtn_Click;
             //
             // hintLabel
@@ -162,13 +157,13 @@ namespace CdiskClean.Forms
         #endregion
 
         private System.Windows.Forms.Label basePathLabel;
-        private System.Windows.Forms.TextBox basePathTextBox;
-        private System.Windows.Forms.Button browseBtn;
+        private AntdUI.Input basePathTextBox;
+        private AntdUI.Button browseBtn;
         private System.Windows.Forms.TreeView dirTreeView;
-        private System.Windows.Forms.Button selectAllBtn;
-        private System.Windows.Forms.Button selectNoneBtn;
-        private System.Windows.Forms.Button okBtn;
-        private System.Windows.Forms.Button cancelBtn;
+        private AntdUI.Button selectAllBtn;
+        private AntdUI.Button selectNoneBtn;
+        private AntdUI.Button okBtn;
+        private AntdUI.Button cancelBtn;
         private System.Windows.Forms.Label hintLabel;
     }
 }

@@ -38,7 +38,7 @@ namespace CdiskClean
             DetailDirColumn = new DataGridViewTextBoxColumn();
             DetailFileColumn = new DataGridViewTextBoxColumn();
             titleLabel = new Label();
-            closeBtn = new Button();
+            closeBtn = new AntdUI.Button();
             mainTabControl.SuspendLayout();
             notificationTabPage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)notificationGrid).BeginInit();
@@ -285,7 +285,6 @@ namespace CdiskClean
             closeBtn.Size = new Size(84, 34);
             closeBtn.TabIndex = 2;
             closeBtn.Text = "关闭";
-            closeBtn.UseVisualStyleBackColor = true;
             closeBtn.Click += closeBtn_Click;
             //
             // Form4
@@ -336,6 +335,6 @@ namespace CdiskClean
         private DataGridViewTextBoxColumn DetailDirColumn;
         private DataGridViewTextBoxColumn DetailFileColumn;
         private Label titleLabel;
-        private Button closeBtn;
+        private AntdUI.Button closeBtn;
     }
 }

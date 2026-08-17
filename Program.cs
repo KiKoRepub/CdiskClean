@@ -14,6 +14,7 @@ namespace CdiskClean
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
+            AntdUI.Config.TextRenderingHighQuality = true;
             ConfigureExceptionHandling();
 #if DEBUG
             if (TryRunUiPreview(args))
@@ -47,6 +48,12 @@ namespace CdiskClean
                 case "--preview-clean":
                     ShowMainPreview(3);
                     return true;
+                case "--preview-rules":
+                    ShowMainPreview(4);
+                    return true;
+                case "--preview-records":
+                    ShowMainPreview(5);
+                    return true;
                 case "--preview-directories":
                     Application.Run(new Forms.BetterDirAddForm());
                     return true;
@@ -68,6 +75,7 @@ namespace CdiskClean
             var form = new Form1("界面预览");
             if (form.Controls.Find("TabPageControl1", true).FirstOrDefault() is TabControl tabs)
                 tabs.SelectedIndex = selectedIndex;
+            form.ShowWorkspacePage(selectedIndex);
             Application.Run(form);
         }
 

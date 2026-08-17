@@ -390,6 +390,9 @@ namespace CdiskClean.Helpers
 
         private static void ConfigureMainWindow(Form form)
         {
+            if (FindControl<Control>(form, "workspaceRoot") != null)
+                return;
+
             if (FindControl<SplitContainer>(form, "panelTitle") is SplitContainer title)
             {
                 title.BackColor = TitleBar;

@@ -7,11 +7,12 @@ namespace CdiskClean
     /// <summary>
     /// 统计窗口
     /// </summary>
-    public partial class StatisticForm : Form
+    public partial class StatisticForm : AntdUI.Window
     {
         public StatisticForm(List<FileChangeRecord> records, List<ProcessNotificationRecord> notifications)
         {
             InitializeComponent();
+            BuildDialogShell();
             UiTheme.Apply(this);
             LoadNotifications(notifications);
             LoadProcessStats(records);

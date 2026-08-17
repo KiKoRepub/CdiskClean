@@ -1191,11 +1191,6 @@
         private Button cleanBtn;
         private GroupBox cleanHistoryBox;
         private DataGridView cleanHistoryGrid;
-        private DataGridViewTextBoxColumn CleanTimeColumn;
-        private DataGridViewTextBoxColumn CleanPathColumn;
-        private DataGridViewTextBoxColumn CleanSizeColumn;
-        private DataGridViewTextBoxColumn CleanMethodColumn;
-        private DataGridViewTextBoxColumn CleanResultColumn;
         private ProgressBar progressBar1;
     }
 }

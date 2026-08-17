@@ -9,7 +9,7 @@ using System.Windows.Forms;
 
 namespace CdiskClean
 {
-    public partial class Form1 : Form
+    public partial class Form1 : AntdUI.Window
     {
         private readonly IDatabaseService _databaseService;
         private readonly EtwMonitorService _etwService;
@@ -102,6 +102,9 @@ namespace CdiskClean
             // 初始化磁盘清理页
             SetupCleanPage();
 
+            // 重建展示层：服务与业务事件仍由 Form1 持有，页面由工作区壳统一承载。
+            BuildWorkspaceShell();
+
             // 低空间警告可点击跳转磁盘清理 Tab
             warningLabel.Cursor = Cursors.Hand;
             warningLabel.Click += warningLabel_Click;
@@ -150,7 +153,7 @@ namespace CdiskClean
             watcherDirListView.Items.Clear();
 
             _monitorService.WatchDirectories.ForEach(addWatchingToListView);
-
+            RefreshDashboardMetrics();
         }
         private void addWatchingToListView(WatchingDirectory dir)
         {
@@ -222,6 +225,7 @@ namespace CdiskClean
                 StyleHelper.ApplyRecordStatusStyle(item, proc.Status);
                 ignoreProcessView.Items.Add(item);
             }
+            RefreshDashboardMetrics();
         }
 
         private void ignoreProcessView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
@@ -385,7 +389,7 @@ namespace CdiskClean
         /// <summary>低空间警告可点击跳转磁盘清理 Tab</summary>
         private void warningLabel_Click(object? sender, EventArgs e)
         {
-            TabPageControl1.SelectedIndex = 3; // diskCleanPage
+            ShowWorkspacePage(3);
         }
 
         private void RefreshDiskInfo()
@@ -424,6 +428,7 @@ namespace CdiskClean
                 usageProgressBar.ForeColor = Color.LimeGreen;
 
             warningLabel.Visible = info.IsLowSpace;
+            UpdateWorkspaceDiskStatus(info);
         }
 
         private void diskRefreshTimer_Tick(object? sender, EventArgs e)
@@ -460,6 +465,19 @@ namespace CdiskClean
                 watchStatusLabel.ForeColor = Color.Gray;
                 notifyIcon1.Text = "C盘管理工具\r\n已暂停";
             }
+
+            if (_workspaceMonitorToggleButton != null)
+            {
+                _workspaceMonitorToggleButton.Text = _monitorService.IsRunning ? "暂停监测" : "开始监测";
+                _workspaceMonitorToggleButton.IconSvg = _monitorService.IsRunning
+                    ? "PauseOutlined"
+                    : "PlayCircleOutlined";
+                _workspaceMonitorToggleButton.Type = _monitorService.IsRunning
+                    ? AntdUI.TTypeMini.Error
+                    : AntdUI.TTypeMini.Primary;
+            }
+            RefreshWorkspaceStatus();
+            RefreshDashboardMetrics();
         }
 
         private void clearBtn_Click(object? sender, EventArgs e)
@@ -469,6 +487,7 @@ namespace CdiskClean
                 _records.Clear();
             }
             UpdateRecordCount();
+            RefreshDashboardMetrics();
         }
 
         private void exportBtn_Click(object? sender, EventArgs e)
@@ -526,7 +545,9 @@ namespace CdiskClean
         private void ApplyFilter()
         {
             var filterIndex = typeFilterCombo.SelectedIndex;
-            if (filterIndex <= 0)
+            var searchText = _recordSearchInput?.Text.Trim();
+            var hasSearch = !string.IsNullOrWhiteSpace(searchText);
+            if (filterIndex <= 0 && !hasSearch)
             {
                 // 已绑定 _records 时无需重新赋值，避免网格滚动/选择位置被重置
                 if (!_gridBoundToRecords)
@@ -546,9 +567,19 @@ namespace CdiskClean
                 _ => (ChangeType?)null
             };
 
-            var filtered = _records.Where(r => r.ChangeType == targetType).ToList();
+            IEnumerable<FileChangeRecord> filtered = _records;
+            if (targetType.HasValue)
+                filtered = filtered.Where(r => r.ChangeType == targetType.Value);
+            if (hasSearch)
+            {
+                filtered = filtered.Where(r =>
+                    r.FileName.Contains(searchText!, StringComparison.OrdinalIgnoreCase) ||
+                    r.FullPath.Contains(searchText!, StringComparison.OrdinalIgnoreCase) ||
+                    (r.SourceProcess?.Contains(searchText!, StringComparison.OrdinalIgnoreCase) ?? false));
+            }
+
             changesDataGrid.DataSource = new BindingList<FileChangeRecord>(
-                new List<FileChangeRecord>(filtered));
+                filtered.ToList());
             _gridBoundToRecords = false;
         }
 
@@ -580,8 +611,11 @@ namespace CdiskClean
                 UpdateRecordCount();
 
                 // 过滤模式下重建过滤快照以包含新记录；全部模式下 BindingList 自动通知网格
-                if (typeFilterCombo.SelectedIndex > 0)
+                if (typeFilterCombo.SelectedIndex > 0 ||
+                    !string.IsNullOrWhiteSpace(_recordSearchInput?.Text))
                     ApplyFilter();
+
+                RefreshDashboardMetrics();
             });
         }
 
@@ -590,6 +624,11 @@ namespace CdiskClean
             BeginInvoke(() =>
             {
                 writedRecordStatusLabel.Text = message;
+                if (_workspaceRecordStatus != null)
+                {
+                    _workspaceRecordStatus.Text = message;
+                    _workspaceRecordStatus.ForeColor = UiTheme.Danger;
+                }
             });
         }
 
@@ -619,6 +658,11 @@ namespace CdiskClean
         private void UpdateRecordCount()
         {
             writedRecordStatusLabel.Text = $"已记录 {_records.Count} 条";
+            if (_workspaceRecordStatus != null)
+            {
+                _workspaceRecordStatus.Text = $"当前记录 {_records.Count:N0} 条";
+                _workspaceRecordStatus.ForeColor = UiTheme.TextSecondary;
+            }
         }
 
         // ==================== 文件夹分析 ====================
@@ -711,7 +755,7 @@ namespace CdiskClean
         private static TreeNode CreateTreeNode(FolderSizeInfo info)
         {
             var displayText = $"{info.Name}  [{FormatBytes(info.SizeBytes)}, {info.FileCount} 个文件]";
-            var node = new TreeNode(displayText);
+            var node = new TreeNode(displayText) { Tag = info };
 
             foreach (var sub in info.SubFolders.OrderByDescending(s => s.SizeBytes))
             {
@@ -984,6 +1028,7 @@ namespace CdiskClean
             cleanTreeView.Nodes.Add(rootNode);
             rootNode.Expand();
             cleanTreeView.EndUpdate();
+            UpdateCleanupSelectionSummary();
         }
 
         /// <summary>
@@ -1106,6 +1151,7 @@ namespace CdiskClean
             {
                 _treeUpdating = false;
             }
+            UpdateCleanupSelectionSummary();
         }
 
         private static void SetNodeCheckedRecursive(TreeNode node, bool check)
@@ -1174,6 +1220,7 @@ namespace CdiskClean
             {
                 _treeUpdating = false;
             }
+            UpdateCleanupSelectionSummary();
         }
 
         private void cleanTargetSelectBtn_Click(object? sender, EventArgs e)
@@ -1498,7 +1545,7 @@ namespace CdiskClean
 
         private void watchStatusLabel_Click(object? sender, EventArgs e)
         {
-            TabPageControl1.SelectedIndex = 1;
+            ShowWorkspacePage(1);
         }
 
         // ==================== 时钟 ====================
@@ -1507,6 +1554,8 @@ namespace CdiskClean
         {
             timeStatusLabel.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             timeStatusLabel.Size = new Size(150, 24);
+            if (_workspaceClockStatus != null)
+                _workspaceClockStatus.Text = timeStatusLabel.Text;
         }
 
         // ==================== 右上角 ====================
@@ -1587,6 +1636,7 @@ namespace CdiskClean
 
         public void closeApplication()
         {
+            _isExiting = true;
             _monitorService.Dispose();
             _etwService.Dispose();
             _notificationService.Dispose();
@@ -1605,18 +1655,18 @@ namespace CdiskClean
         /// <param name="m"></param>
         protected override void WndProc(ref Message m)
         {
+            if (Controls.Find("workspaceRoot", false).Length > 0)
+            {
+                base.WndProc(ref m);
+                return;
+            }
+
             // 处理系统消息
             const int WM_NCHITTEST = 0x84;
-            const int HTLEFT = 10;
             const int HTRIGHT = 11;
-            const int HTTOP = 12;
-            const int HTTOPLEFT = 13;
-            const int HTTOPRIGHT = 14;
             const int HTBOTTOM = 15;
-            const int HTBOTTOMLEFT = 16;
             const int HTBOTTOMRIGHT = 17;
             const int HTCAPTION = 2;
-            const int HTCLIENT = 1;
 
             if (m.Msg == WM_NCHITTEST)
             {
@@ -1653,7 +1703,7 @@ namespace CdiskClean
         }
 
 
-        private void dirAddButton_Click(object sender, EventArgs e)
+        private void dirAddButton_Click(object? sender, EventArgs e)
         {
 
             DialogResult result = ImportFolderDialog.ShowDialog();
@@ -1841,7 +1891,7 @@ namespace CdiskClean
             }
         }
 
-        private void betterDirAddButton_Click(object sender, EventArgs e)
+        private void betterDirAddButton_Click(object? sender, EventArgs e)
         {
             using var form = new BetterDirAddForm();
             if (form.ShowDialog() != DialogResult.OK) return;
@@ -1879,7 +1929,7 @@ namespace CdiskClean
             }
         }
 
-        private void betterProcessAddButton_Click(object sender, EventArgs e)
+        private void betterProcessAddButton_Click(object? sender, EventArgs e)
         {
             using var form = new ProcessPickForm();
             if (form.ShowDialog() != DialogResult.OK) return;
