@@ -30,8 +30,6 @@ public class CleanupService
     private volatile string[] _activePathSnapshot = Array.Empty<string>();
     private volatile string? _activeTargetDir;
 
-    public bool IsCleaning => _activePathSnapshot.Length > 0;
-
     public CleanupService(IDatabaseService databaseService)
     {
         _databaseService = databaseService;
@@ -66,21 +64,13 @@ public class CleanupService
         if (string.IsNullOrEmpty(path)) return false;
 
         var target = _activeTargetDir;
-        if (target != null && IsPathInside(path, target)) return true;
+        if (target != null && PathHelper.IsPathInside(path, target)) return true;
 
         foreach (var p in _activePathSnapshot)
         {
-            if (IsPathInside(path, p)) return true;
+            if (PathHelper.IsPathInside(path, p)) return true;
         }
         return false;
-    }
-
-    private static bool IsPathInside(string path, string parent)
-    {
-        var full = path.TrimEnd('\\');
-        var root = parent.TrimEnd('\\');
-        if (full.Equals(root, StringComparison.OrdinalIgnoreCase)) return true;
-        return full.StartsWith(root + "\\", StringComparison.OrdinalIgnoreCase);
     }
 
     #endregion
@@ -93,7 +83,6 @@ public class CleanupService
     /// </summary>
     public async Task<List<CleanupFileEntry>> ScanDirectoryAsync(
         string rootPath,
-        IProgress<int>? progress = null,
         CancellationToken cancellationToken = default)
     {
         var root = new DirectoryInfo(rootPath);
@@ -101,23 +90,17 @@ public class CleanupService
             throw new DirectoryNotFoundException($"目录不存在: {rootPath}");
 
         var entries = new List<CleanupFileEntry>();
-        var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-        await Task.Run(() => ScanRecursive(root, entries, progress, cts.Token), cts.Token);
+        await Task.Run(() => ScanRecursive(root, entries, cancellationToken), cancellationToken);
         return entries;
     }
+
     /// <summary>
     /// 递归扫描目录，返回全部文件与目录条目（目录条目在文件之前，父目录先于子目录）。
     /// </summary>
-    /// <param name="dir"></param>
-    /// <param name="entries"></param>
-    /// <param name="progress"></param>
-    /// <param name="ct"></param>
-    /// <returns></returns>
     private static CleanupFileEntry ScanRecursive(
         DirectoryInfo dir,
         List<CleanupFileEntry> entries,
-        IProgress<int>? progress,
         CancellationToken ct)
     {
         if (ct.IsCancellationRequested)
@@ -175,7 +158,7 @@ public class CleanupService
 
                 try
                 {
-                    dirEntry.SizeBytes += ScanRecursive(subDir, entries, progress, ct).SizeBytes;
+                    dirEntry.SizeBytes += ScanRecursive(subDir, entries, ct).SizeBytes;
                 }
                 catch { continue; }
             }
@@ -183,7 +166,6 @@ public class CleanupService
         catch (UnauthorizedAccessException) { }
         catch (DirectoryNotFoundException) { }
 
-        progress?.Report(0);
         return dirEntry;
     }
 
@@ -406,8 +388,6 @@ public class CleanupService
         if (entry.IsDirectory)
         {
             // 目录使用联接（junction /J），无需管理员权限且支持跨卷
-
-            //LogHelper.showDefaultToDoMessage(full + " -> " + dest);
             MoveWithRetry(full, dest, true);
             if (!RunCmd($"mklink /J \"{full}\" \"{dest}\""))
                 throw RollbackAfterLinkFailure(dest, full, true, "创建目录联接失败");

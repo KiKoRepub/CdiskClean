@@ -25,7 +25,7 @@ namespace CdiskClean
                 MessageBox.Show("此程序需要管理员权限才能正常运行。", "权限不足", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            Application.Run(new Form1("管理员身份运行中..."));
+            Application.Run(new Form1());
         }
 
 #if DEBUG
@@ -60,11 +60,6 @@ namespace CdiskClean
                 case "--preview-processes":
                     Application.Run(new Forms.ProcessPickForm());
                     return true;
-                case "--preview-statistics":
-                    Application.Run(new StatisticForm(
-                        CreatePreviewRecords(),
-                        new List<Models.ProcessNotificationRecord>()));
-                    return true;
                 default:
                     return false;
             }
@@ -72,37 +67,9 @@ namespace CdiskClean
 
         private static void ShowMainPreview(int selectedIndex)
         {
-            var form = new Form1("界面预览");
-            if (form.Controls.Find("TabPageControl1", true).FirstOrDefault() is TabControl tabs)
-                tabs.SelectedIndex = selectedIndex;
+            var form = new Form1();
             form.ShowWorkspacePage(selectedIndex);
             Application.Run(form);
-        }
-
-        private static List<Models.FileChangeRecord> CreatePreviewRecords()
-        {
-            var now = DateTime.Now;
-            return new List<Models.FileChangeRecord>
-            {
-                new()
-                {
-                    SourceProcess = "explorer",
-                    Timestamp = now.AddMinutes(-8),
-                    ChangeType = Models.ChangeType.Created,
-                    FullPath = @"C:\Users\Public\Documents\report.docx",
-                    Directory = @"C:\Users\Public\Documents",
-                    FileName = "report.docx"
-                },
-                new()
-                {
-                    SourceProcess = "Code",
-                    Timestamp = now.AddMinutes(-3),
-                    ChangeType = Models.ChangeType.Changed,
-                    FullPath = @"C:\workspace\project\settings.json",
-                    Directory = @"C:\workspace\project",
-                    FileName = "settings.json"
-                }
-            };
         }
 #endif
 

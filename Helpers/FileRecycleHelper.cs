@@ -79,35 +79,6 @@ namespace CdiskClean.Helpers
         }
 
 
-        /// <summary>
-        /// 批量删除多个文件到回收站
-        /// </summary>
-        /// <param name="paths">路径数组</param>
-        /// <param name="showConfirmDialog">弹窗确认</param>
-        /// <returns></returns>
-        public static bool SendFilesToRecycleBin(string[] paths, bool showConfirmDialog = true)
-        {
-            if (paths == null || paths.Length == 0)
-                return false;
-
-            SHFILEOPSTRUCT op = new SHFILEOPSTRUCT();
-            op.hwnd = IntPtr.Zero;
-            op.wFunc = FO_DELETE;
-            // 多个路径使用 \0 分隔，末尾必须双\0
-            op.pFrom = string.Join("\0", paths) + "\0";
-
-            ushort flags = FOF_ALLOWUNDO;
-            if (!showConfirmDialog)
-                flags |= FOF_NOCONFIRMATION;
-
-            op.fFlags = flags;
-
-            int ret = SHFileOperation(ref op);
-            return ret == 0;
-        }
     }
-
-    //public static struct 
-
 }
 

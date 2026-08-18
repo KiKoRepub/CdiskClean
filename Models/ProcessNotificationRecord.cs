@@ -10,7 +10,7 @@ public class ProcessNotificationRecord
 
     public DateTime TriggerTime { get; set; }
 
-    public static string getCreateSQL()
+    public static string GetCreateSQL()
     {
         return @"CREATE TABLE IF NOT EXISTS ProcessNotifications (
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,

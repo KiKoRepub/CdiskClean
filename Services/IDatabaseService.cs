@@ -13,17 +13,15 @@ public interface IDatabaseService
     #region FileChangeRecord
     void SaveChangeRecord(FileChangeRecord record);
     List<FileChangeRecord> GetChangeRecords(int limit = 1000);
-    void ClearChangeRecords();
     #endregion
     #region ProcessNotificationRecord
     void SaveProcessNotification(ProcessNotificationRecord record);
     List<ProcessNotificationRecord> GetProcessNotifications(int limit = 200);
     #endregion
     #region IgnoreProcessRecord
-     void SaveIgnoreProcessRecord(IgnoreProcessRecord record);
+    void SaveIgnoreProcessRecord(IgnoreProcessRecord record);
     List<IgnoreProcessRecord> GetIgnoreProcessRecords(int limit = 200);
     void DeleteIgnoreProcessRecord(string processName);
-    void UpdateIgnoreProcessRecordStatus(string processName, RecordStatusEnum status);
     #endregion
     #region CleanupRecord
     void SaveCleanupRecord(CleanupRecord record);

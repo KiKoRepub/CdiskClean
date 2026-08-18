@@ -18,7 +18,7 @@ public class IgnoreProcessRecord
         Status = RecordStatusEnum.USING;
     }
 
-    public static string getCreateSQL()
+    public static string GetCreateSQL()
     {
         return @"CREATE TABLE IF NOT EXISTS IgnoreProcessRecord (
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -28,7 +28,7 @@ public class IgnoreProcessRecord
             );";
     }
 
-    public static List<IgnoreProcessRecord> getDefaultRecords()
+    public static List<IgnoreProcessRecord> GetDefaultRecords()
     {
         return new List<IgnoreProcessRecord>
         {

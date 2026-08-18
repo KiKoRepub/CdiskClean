@@ -23,22 +23,27 @@ namespace CdiskClean
         private readonly object _recordsLock = new();
         private const int MaxRecords = 5000;
 
+        /// <summary>等待批量刷入网格的变更记录（UI 线程队列，由 _recordFlushTimer 触发合并）</summary>
+        private readonly List<FileChangeRecord> _pendingRecords = new();
+        private System.Windows.Forms.Timer _recordFlushTimer;
+
         /// <summary>变更网格当前是否直接绑定 _records（false=过滤快照）</summary>
         private bool _gridBoundToRecords;
 
-        public Form1(string roleLabelText)
+        public Form1()
         {
             InitializeComponent();
 
-
-            label1.Text += $" —— {roleLabelText}";
+            // 记录批量刷新定时器：合并 150ms 内到达的变更记录，避免高频事件逐条刷新网格
+            _recordFlushTimer = new System.Windows.Forms.Timer { Interval = 150 };
+            _recordFlushTimer.Tick += (_, _) => FlushPendingRecords();
 
             // 初始化 ETW 监控
             _etwService = new EtwMonitorService();
 
             // 初始化数据库
             var dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CdiskClean.db");
-            _databaseService = new SqlLiteDatabaseService(dbPath);
+            _databaseService = new SqliteDatabaseService(dbPath);
             _databaseService.Initialize();
 
             // 清理服务（清理期间监控联动过滤自身动作）
@@ -62,7 +67,7 @@ namespace CdiskClean
                 _monitorService.LoadIgnoreProcesses(savedProcs);
             else
             {
-                var defaultProcesses = IgnoreProcessRecord.getDefaultRecords();
+                var defaultProcesses = IgnoreProcessRecord.GetDefaultRecords();
                 _monitorService.LoadIgnoreProcesses(defaultProcesses);
                 foreach (var process in defaultProcesses)
                     _databaseService.SaveIgnoreProcessRecord(process);
@@ -104,10 +109,6 @@ namespace CdiskClean
 
             // 重建展示层：服务与业务事件仍由 Form1 持有，页面由工作区壳统一承载。
             BuildWorkspaceShell();
-
-            // 低空间警告可点击跳转磁盘清理 Tab
-            warningLabel.Cursor = Cursors.Hand;
-            warningLabel.Click += warningLabel_Click;
 
             UiTheme.Apply(this);
         }
@@ -174,12 +175,7 @@ namespace CdiskClean
 
         private void watcherDirListView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
-            if (watcherDirListView.SelectedItems.Count > 0)
-            {
-                ListViewItem item = watcherDirListView.SelectedItems[0];
-                //MessageBox.Show(item.Text);
-                dirSelectedTextBox.Text = item.Text;
-            }
+            // 仅保留选中状态（原"选中目录为"提示框已随旧界面移除）
         }
 
         private void watcherDirListView_Resize(object sender, EventArgs e)
@@ -230,12 +226,7 @@ namespace CdiskClean
 
         private void ignoreProcessView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
-            if (ignoreProcessView.SelectedItems.Count > 0)
-            {
-                ListViewItem item = ignoreProcessView.SelectedItems[0];
-
-                procSelectedTextBox.Text = item.Text;
-            }
+            // 仅保留选中状态（原"选中进程为"提示框已随旧界面移除）
         }
 
 
@@ -264,32 +255,14 @@ namespace CdiskClean
         /// <param name="e"></param>
         private void watcherDirListView_MouseClick(object? sender, MouseEventArgs e)
         {
-
-            // 前置判断
             if (e.Button != MouseButtons.Right) return;
 
             var item = watcherDirListView.GetItemAt(e.X, e.Y);
             if (item?.Tag is not WatchingDirectory dir) return;
-
             if (dir.Status == RecordStatusEnum.DELETED) return;
 
-            var menu = new ContextMenuStrip();
-
-            if (dir.Status == RecordStatusEnum.USING)
-            {
-                var disableItem = menu.Items.Add("禁用监测");
-                disableItem.Click += (s, ev) => ChangeDirStatus(dir, RecordStatusEnum.FORBIDDEN);
-            }
-            else if (dir.Status == RecordStatusEnum.FORBIDDEN)
-            {
-                var enableItem = menu.Items.Add("启用监测");
-                enableItem.Click += (s, ev) => ChangeDirStatus(dir, RecordStatusEnum.USING);
-            }
-
-            var deleteItem = menu.Items.Add("从列表删除");
-            deleteItem.Click += (s, ev) => ChangeDirStatus(dir, RecordStatusEnum.DELETED);
-
-            menu.Show(watcherDirListView, e.Location);
+            BuildStatusContextMenu(dir.Status, status => ChangeDirStatus(dir, status))
+                .Show(watcherDirListView, e.Location);
         }
 
         private void ChangeDirStatus(WatchingDirectory dir, RecordStatusEnum newStatus)
@@ -333,26 +306,26 @@ namespace CdiskClean
 
             var item = ignoreProcessView.GetItemAt(e.X, e.Y);
             if (item?.Tag is not IgnoreProcessRecord proc) return;
-
             if (proc.Status == RecordStatusEnum.DELETED) return;
 
+            BuildStatusContextMenu(proc.Status, status => ChangeProcessStatus(proc, status))
+                .Show(ignoreProcessView, e.Location);
+        }
+
+        /// <summary>按记录状态构建统一的"禁用/启用/删除"右键菜单</summary>
+        private static ContextMenuStrip BuildStatusContextMenu(
+            RecordStatusEnum status,
+            Action<RecordStatusEnum> changeStatus)
+        {
             var menu = new ContextMenuStrip();
 
-            if (proc.Status == RecordStatusEnum.USING)
-            {
-                var disableItem = menu.Items.Add("禁用监测");
-                disableItem.Click += (s, ev) => ChangeProcessStatus(proc, RecordStatusEnum.FORBIDDEN);
-            }
-            else if (proc.Status == RecordStatusEnum.FORBIDDEN)
-            {
-                var enableItem = menu.Items.Add("启用监测");
-                enableItem.Click += (s, ev) => ChangeProcessStatus(proc, RecordStatusEnum.USING);
-            }
+            if (status == RecordStatusEnum.USING)
+                menu.Items.Add("禁用监测").Click += (_, _) => changeStatus(RecordStatusEnum.FORBIDDEN);
+            else if (status == RecordStatusEnum.FORBIDDEN)
+                menu.Items.Add("启用监测").Click += (_, _) => changeStatus(RecordStatusEnum.USING);
 
-            var deleteItem = menu.Items.Add("从列表删除");
-            deleteItem.Click += (s, ev) => ChangeProcessStatus(proc, RecordStatusEnum.DELETED);
-
-            menu.Show(ignoreProcessView, e.Location);
+            menu.Items.Add("从列表删除").Click += (_, _) => changeStatus(RecordStatusEnum.DELETED);
+            return menu;
         }
 
         private void ChangeProcessStatus(IgnoreProcessRecord proc, RecordStatusEnum newStatus)
@@ -386,12 +359,6 @@ namespace CdiskClean
 
         // ==================== 磁盘概览 ====================
 
-        /// <summary>低空间警告可点击跳转磁盘清理 Tab</summary>
-        private void warningLabel_Click(object? sender, EventArgs e)
-        {
-            ShowWorkspacePage(3);
-        }
-
         private void RefreshDiskInfo()
         {
             try
@@ -414,20 +381,6 @@ namespace CdiskClean
                 return;
             }
 
-            totalSpaceLabel.Text = $"总容量: {FormatBytes(info.TotalSizeBytes)}";
-            usedSpaceLabel.Text = $"已用: {FormatBytes(info.UsedSpaceBytes)}";
-            freeSpaceLabel.Text = $"剩余: {FormatBytes(info.FreeSpaceBytes)}";
-
-            usageProgressBar.Value = (int)Math.Min(info.UsagePercent, 100);
-
-            if (info.UsagePercent > 90)
-                usageProgressBar.ForeColor = Color.Red;
-            else if (info.UsagePercent > 70)
-                usageProgressBar.ForeColor = Color.Orange;
-            else
-                usageProgressBar.ForeColor = Color.LimeGreen;
-
-            warningLabel.Visible = info.IsLowSpace;
             UpdateWorkspaceDiskStatus(info);
         }
 
@@ -451,8 +404,6 @@ namespace CdiskClean
                 _monitorService.Start();
                 _notificationService.Start();
                 pauseBtn.Text = "暂停";
-                watchStatusLabel.Text = "监测中";
-                watchStatusLabel.ForeColor = Color.Green;
                 notifyIcon1.Text = "C盘管理工具\r\n监测中";
             }
             else
@@ -461,8 +412,6 @@ namespace CdiskClean
                 _etwService.Stop();
                 _notificationService.Stop();
                 pauseBtn.Text = "开始监测";
-                watchStatusLabel.Text = "已暂停";
-                watchStatusLabel.ForeColor = Color.Gray;
                 notifyIcon1.Text = "C盘管理工具\r\n已暂停";
             }
 
@@ -482,8 +431,10 @@ namespace CdiskClean
 
         private void clearBtn_Click(object? sender, EventArgs e)
         {
+            _recordFlushTimer.Stop();
             lock (_recordsLock)
             {
+                _pendingRecords.Clear();
                 _records.Clear();
             }
             UpdateRecordCount();
@@ -501,6 +452,8 @@ namespace CdiskClean
 
             if (dialog.ShowDialog() != DialogResult.OK) return;
 
+            // 先取出文件路径再释放对话框，避免后台任务访问已释放对象
+            var exportPath = dialog.FileName;
             Task.Run(() =>
             {
                 try
@@ -511,7 +464,7 @@ namespace CdiskClean
                         snapshot = _records.ToList();
                     }
 
-                    using var writer = new StreamWriter(dialog.FileName, false, System.Text.Encoding.UTF8);
+                    using var writer = new StreamWriter(exportPath, false, System.Text.Encoding.UTF8);
                     writer.WriteLine("时间,类型,文件名,路径,大小,来源进程");
                     foreach (var r in snapshot)
                     {
@@ -523,7 +476,7 @@ namespace CdiskClean
                     }
 
                     BeginInvoke(() =>
-                        MessageBox.Show($"已导出 {snapshot.Count} 条记录到:\n{dialog.FileName}",
+                        MessageBox.Show($"已导出 {snapshot.Count} 条记录到:\n{exportPath}",
                             "导出成功", MessageBoxButtons.OK, MessageBoxIcon.Information));
                 }
                 catch (Exception ex)
@@ -601,29 +554,48 @@ namespace CdiskClean
             BeginInvoke(() =>
             {
                 lock (_recordsLock)
+                    _pendingRecords.Add(record);
+                _recordFlushTimer.Start();
+            });
+        }
+
+        /// <summary>把 150ms 窗口内到达的记录批量刷入网格，避免高频事件逐条刷新导致 UI 卡顿</summary>
+        private void FlushPendingRecords()
+        {
+            _recordFlushTimer.Stop();
+
+            List<FileChangeRecord> batch;
+            lock (_recordsLock)
+            {
+                if (_pendingRecords.Count == 0) return;
+                batch = new List<FileChangeRecord>(_pendingRecords);
+                _pendingRecords.Clear();
+            }
+
+            lock (_recordsLock)
+            {
+                foreach (var record in batch)
                 {
                     _records.Insert(0, record);
-
                     while (_records.Count > MaxRecords)
                         _records.RemoveAt(_records.Count - 1);
                 }
+            }
 
-                UpdateRecordCount();
+            UpdateRecordCount();
 
-                // 过滤模式下重建过滤快照以包含新记录；全部模式下 BindingList 自动通知网格
-                if (typeFilterCombo.SelectedIndex > 0 ||
-                    !string.IsNullOrWhiteSpace(_recordSearchInput?.Text))
-                    ApplyFilter();
+            // 过滤模式下重建过滤快照以包含新记录；全部模式下 BindingList 自动通知网格
+            if (typeFilterCombo.SelectedIndex > 0 ||
+                !string.IsNullOrWhiteSpace(_recordSearchInput?.Text))
+                ApplyFilter();
 
-                RefreshDashboardMetrics();
-            });
+            RefreshDashboardMetrics();
         }
 
         private void OnMonitorError(string message)
         {
             BeginInvoke(() =>
             {
-                writedRecordStatusLabel.Text = message;
                 if (_workspaceRecordStatus != null)
                 {
                     _workspaceRecordStatus.Text = message;
@@ -657,7 +629,6 @@ namespace CdiskClean
 
         private void UpdateRecordCount()
         {
-            writedRecordStatusLabel.Text = $"已记录 {_records.Count} 条";
             if (_workspaceRecordStatus != null)
             {
                 _workspaceRecordStatus.Text = $"当前记录 {_records.Count:N0} 条";
@@ -706,18 +677,16 @@ namespace CdiskClean
 
             try
             {
-                var progress = new Progress<int>(_ => { });
-
                 var cts = new CancellationTokenSource();
                 stopBtn.Tag = cts;
 
-                var result = await _folderAnalyzer.ScanFolderAsync(path, progress, cts.Token);
+                var result = await _folderAnalyzer.ScanFolderAsync(path, cts.Token);
 
                 PopulateTreeView(result);
             }
             catch (OperationCanceledException)
             {
-                writedRecordStatusLabel.Text = "扫描已取消";
+                scanProgressBar.Style = ProgressBarStyle.Blocks;
             }
             catch (Exception ex)
             {
@@ -737,7 +706,7 @@ namespace CdiskClean
 
         private void stopBtn_Click(object? sender, EventArgs e)
         {
-            _folderAnalyzer.CancelScan();
+            // 扫描协程持有的 CancellationTokenSource 与 FolderSizeAnalyzer 内部为同一链接 token，取消一次即可
             if (stopBtn.Tag is CancellationTokenSource cts)
             {
                 cts.Cancel();
@@ -754,7 +723,7 @@ namespace CdiskClean
 
         private static TreeNode CreateTreeNode(FolderSizeInfo info)
         {
-            var displayText = $"{info.Name}  [{FormatBytes(info.SizeBytes)}, {info.FileCount} 个文件]";
+            var displayText = $"{info.Name}  [{FormatHelper.FormatBytes(info.SizeBytes)}, {info.FileCount} 个文件]";
             var node = new TreeNode(displayText) { Tag = info };
 
             foreach (var sub in info.SubFolders.OrderByDescending(s => s.SizeBytes))
@@ -772,6 +741,9 @@ namespace CdiskClean
         private bool _treeUpdating;
         private Label? _cleanHistoryEmptyLabel;
 
+        /// <summary>清理方式单选按钮与枚举映射（初始化于 SetupCleanPage）</summary>
+        private (RadioButton Radio, CleanupMethod Method)[] _cleanupMethodRadios = Array.Empty<(RadioButton, CleanupMethod)>();
+
         /// <summary>树节点数量上限，超过则仅显示目录节点（文件通过勾选目录整体清理）</summary>
         private const int MaxCleanTreeNodes = 50000;
 
@@ -782,6 +754,14 @@ namespace CdiskClean
 
         private void SetupCleanPage()
         {
+            _cleanupMethodRadios = new[]
+            {
+                (cleanRecycleRadio, CleanupMethod.RecycleBin),
+                (cleanPermanentRadio, CleanupMethod.PermanentDelete),
+                (cleanMoveRadio, CleanupMethod.Move),
+                (cleanCompressRadio, CleanupMethod.Compress),
+                (cleanMklinkRadio, CleanupMethod.Mklink)
+            };
             SetupFrequentListView();
             SetupTreeStateImages();
             SetupCleanHistoryGrid();
@@ -856,35 +836,56 @@ namespace CdiskClean
                 null, frequentPathListView, new object[] { true });
         }
 
-        /// <summary>从变更记录中统计高频修改目录，展示在左侧参考列表</summary>
-        private void RefreshFrequentPaths()
+        /// <summary>从变更记录中统计高频修改目录，展示在左侧参考列表（历史记录读取在后台执行，避免卡 UI）</summary>
+        private async void RefreshFrequentPaths()
         {
-            frequentPathListView.BeginUpdate();
-            frequentPathListView.Items.Clear();
-
             List<FileChangeRecord> snapshot;
             lock (_recordsLock)
             {
                 snapshot = _records.ToList();
             }
 
+            List<FileChangeRecord> dbRecords;
             try
             {
-                var seen = new HashSet<string>(
-                    snapshot.Select(GetChangeRecordKey),
-                    StringComparer.OrdinalIgnoreCase);
-                foreach (var record in _databaseService.GetChangeRecords(5000))
-                {
-                    if (seen.Add(GetChangeRecordKey(record)))
-                        snapshot.Add(record);
-                }
+                dbRecords = await Task.Run(() => _databaseService.GetChangeRecords(5000));
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"读取历史变更记录失败: {ex.Message}");
+                dbRecords = new List<FileChangeRecord>();
+            }
+
+            var seen = new HashSet<string>(
+                snapshot.Select(GetChangeRecordKey),
+                StringComparer.OrdinalIgnoreCase);
+            foreach (var record in dbRecords)
+            {
+                if (seen.Add(GetChangeRecordKey(record)))
+                    snapshot.Add(record);
             }
 
             var paths = CleanupService.GetFrequentPaths(snapshot, 30);
+            ApplyFrequentPaths(paths);
+        }
+
+        private void ApplyFrequentPaths(List<FrequentPathInfo> paths)
+        {
+            if (IsDisposed) return;
+            // 句柄尚未创建（构造期异步完成时）挂到 Load 后执行；非 UI 线程则回传 UI 线程
+            if (!IsHandleCreated)
+            {
+                Load += (_, _) => ApplyFrequentPaths(paths);
+                return;
+            }
+            if (InvokeRequired)
+            {
+                BeginInvoke(() => ApplyFrequentPaths(paths));
+                return;
+            }
+
+            frequentPathListView.BeginUpdate();
+            frequentPathListView.Items.Clear();
             if (paths.Count == 0)
             {
                 frequentPathListView.Items.Add(new ListViewItem("暂无变更记录"));
@@ -899,7 +900,6 @@ namespace CdiskClean
                     frequentPathListView.Items.Add(item);
                 }
             }
-
             frequentPathListView.EndUpdate();
         }
 
@@ -973,8 +973,7 @@ namespace CdiskClean
 
             try
             {
-                var progress = new Progress<int>(_ => { });
-                var entries = await _cleanupService.ScanDirectoryAsync(path, progress, cts.Token);
+                var entries = await _cleanupService.ScanDirectoryAsync(path, cts.Token);
                 if (cts.IsCancellationRequested) return;
 
                 // 根目录条目（首个目录）已递归汇总全部子项大小，直接取它避免重复累加
@@ -990,8 +989,8 @@ namespace CdiskClean
                 await BuildCleanTreeAsync(entries, path, totalSize, dirOnly, cts.Token);
 
                 cleanStatusLabel.Text = dirOnly
-                    ? $"扫描完成：{fileCount} 个文件，共 {FormatBytes(totalSize)}（文件过多仅显示目录，可勾选目录整体清理）"
-                    : $"扫描完成：{fileCount} 个文件，共 {FormatBytes(totalSize)}";
+                    ? $"扫描完成：{fileCount} 个文件，共 {FormatHelper.FormatBytes(totalSize)}（文件过多仅显示目录，可勾选目录整体清理）"
+                    : $"扫描完成：{fileCount} 个文件，共 {FormatHelper.FormatBytes(totalSize)}";
             }
             catch (OperationCanceledException)
             {
@@ -1042,7 +1041,7 @@ namespace CdiskClean
             bool dirOnly)
         {
             var rootName = Path.GetFileName(rootFull);
-            var rootNode = new TreeNode($"{rootName}  [{FormatBytes(totalSize)}]")
+            var rootNode = new TreeNode($"{rootName}  [{FormatHelper.FormatBytes(totalSize)}]")
             {
                 Tag = null,
                 StateImageIndex = -1
@@ -1060,7 +1059,7 @@ namespace CdiskClean
                 if (string.Equals(entryFull, rootFull, StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                var node = new TreeNode($"{entry.Name}  [{FormatBytes(entry.SizeBytes)}]")
+                var node = new TreeNode($"{entry.Name}  [{FormatHelper.FormatBytes(entry.SizeBytes)}]")
                 {
                     Tag = entry,
                     StateImageIndex = 0
@@ -1079,7 +1078,7 @@ namespace CdiskClean
                 // 文件节点
                 foreach (var entry in entries.Where(e => !e.IsDirectory))
                 {
-                    var node = new TreeNode($"{entry.Name}  [{FormatBytes(entry.SizeBytes)}, {entry.LastWriteTime:yyyy-MM-dd HH:mm}]")
+                    var node = new TreeNode($"{entry.Name}  [{FormatHelper.FormatBytes(entry.SizeBytes)}, {entry.LastWriteTime:yyyy-MM-dd HH:mm}]")
                     {
                         Tag = entry,
                         StateImageIndex = 0
@@ -1251,10 +1250,10 @@ namespace CdiskClean
 
         private CleanupMethod GetSelectedMethod()
         {
-            if (cleanPermanentRadio.Checked) return CleanupMethod.PermanentDelete;
-            if (cleanMoveRadio.Checked) return CleanupMethod.Move;
-            if (cleanCompressRadio.Checked) return CleanupMethod.Compress;
-            if (cleanMklinkRadio.Checked) return CleanupMethod.Mklink;
+            foreach (var (radio, method) in _cleanupMethodRadios)
+            {
+                if (radio.Checked) return method;
+            }
             return CleanupMethod.RecycleBin;
         }
 
@@ -1310,7 +1309,7 @@ namespace CdiskClean
                 }
 
                 var basePath = cleanPathTextBox.Text.Trim();
-                if (!string.IsNullOrEmpty(basePath) && IsPathUnder(basePath, targetDir))
+                if (!string.IsNullOrEmpty(basePath) && PathHelper.IsPathInside(targetDir, basePath))
                 {
                     MessageBox.Show("目标目录不能位于待清理的目录内部。", "提示",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -1323,15 +1322,15 @@ namespace CdiskClean
             var confirmText = method switch
             {
                 CleanupMethod.RecycleBin =>
-                    $"确定要将选中的 {entries.Count} 项（共 {FormatBytes(totalSize)}）移入回收站吗？",
+                    $"确定要将选中的 {entries.Count} 项（共 {FormatHelper.FormatBytes(totalSize)}）移入回收站吗？",
                 CleanupMethod.PermanentDelete =>
-                    $"确定要永久删除选中的 {entries.Count} 项（共 {FormatBytes(totalSize)}）吗？\n\n此操作不可恢复！",
+                    $"确定要永久删除选中的 {entries.Count} 项（共 {FormatHelper.FormatBytes(totalSize)}）吗？\n\n此操作不可恢复！",
                 CleanupMethod.Move =>
-                    $"确定要将选中的 {entries.Count} 项（共 {FormatBytes(totalSize)}）移动到：\n{targetDir}\n\n吗？",
+                    $"确定要将选中的 {entries.Count} 项（共 {FormatHelper.FormatBytes(totalSize)}）移动到：\n{targetDir}\n\n吗？",
                 CleanupMethod.Compress =>
-                    $"确定要将选中的 {entries.Count} 项（共 {FormatBytes(totalSize)}）压缩到：\n{targetDir}\n\n并删除原文件吗？",
+                    $"确定要将选中的 {entries.Count} 项（共 {FormatHelper.FormatBytes(totalSize)}）压缩到：\n{targetDir}\n\n并删除原文件吗？",
                 CleanupMethod.Mklink =>
-                    $"确定要将选中的 {entries.Count} 项（共 {FormatBytes(totalSize)}）迁移到：\n{targetDir}\n\n并在原位置创建软链接吗？",
+                    $"确定要将选中的 {entries.Count} 项（共 {FormatHelper.FormatBytes(totalSize)}）迁移到：\n{targetDir}\n\n并在原位置创建软链接吗？",
                 _ => $"确定要清理选中的 {entries.Count} 项吗？"
             };
 
@@ -1359,7 +1358,7 @@ namespace CdiskClean
 
                 var summary = $"清理完成：成功 {result.Success} 项，失败 {result.Fail} 项";
                 if (method is CleanupMethod.PermanentDelete or CleanupMethod.Compress)
-                    summary += $"\n释放空间约 {FormatBytes(freedDelta)}";
+                    summary += $"\n释放空间约 {FormatHelper.FormatBytes(freedDelta)}";
                 MessageBox.Show(summary, "清理完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 ShowCleanupBalloon(method, result, freedDelta, totalSize);
@@ -1392,14 +1391,6 @@ namespace CdiskClean
             }
         }
 
-        private static bool IsPathUnder(string basePath, string path)
-        {
-            var full = Path.GetFullPath(path).TrimEnd('\\');
-            var root = Path.GetFullPath(basePath).TrimEnd('\\');
-            return full.Equals(root, StringComparison.OrdinalIgnoreCase) ||
-                   full.StartsWith(root + "\\", StringComparison.OrdinalIgnoreCase);
-        }
-
         private void ShowCleanupBalloon(
             CleanupMethod method,
             CleanupResult result,
@@ -1409,10 +1400,10 @@ namespace CdiskClean
             var msg = method switch
             {
                 CleanupMethod.RecycleBin => $"已将 {result.Success} 项移入回收站（可在回收站恢复）",
-                CleanupMethod.PermanentDelete => $"已永久删除 {result.Success} 项，释放约 {FormatBytes(freedDelta)}",
+                CleanupMethod.PermanentDelete => $"已永久删除 {result.Success} 项，释放约 {FormatHelper.FormatBytes(freedDelta)}",
                 CleanupMethod.Move => $"已将 {result.Success} 项移动到目标目录",
                 CleanupMethod.Compress =>
-                    $"已压缩 {result.Success} 项到目标目录，选中文件总大小 {FormatBytes(selectedTotalSize)}",
+                    $"已压缩 {result.Success} 项到目标目录，选中文件总大小 {FormatHelper.FormatBytes(selectedTotalSize)}",
                 CleanupMethod.Mklink => $"已将 {result.Success} 项迁移至目标目录并创建软链接",
                 _ => $"清理完成，成功 {result.Success} 项"
             };
@@ -1476,19 +1467,16 @@ namespace CdiskClean
         {
             cleanHistoryGrid.CellContextMenuStripNeeded += cleanHistoryGrid_CellContextMenuStripNeeded;
 
-            // 空状态提示标签（覆盖在表格上方）
+            // 空状态提示标签（覆盖在表格上方；由记录中心页挂载到清理历史视图）
             _cleanHistoryEmptyLabel = new Label
             {
                 Text = "暂无清理记录",
                 TextAlign = ContentAlignment.MiddleCenter,
                 ForeColor = Color.Gray,
                 BackColor = Color.White,
-                Visible = false,
-                Bounds = cleanHistoryGrid.Bounds,
-                Anchor = cleanHistoryGrid.Anchor
+                Dock = DockStyle.Fill,
+                Visible = false
             };
-            cleanHistoryGrid.Parent!.Controls.Add(_cleanHistoryEmptyLabel);
-            _cleanHistoryEmptyLabel.BringToFront();
         }
 
         private void cleanHistoryGrid_CellContextMenuStripNeeded(
@@ -1535,63 +1523,15 @@ namespace CdiskClean
             }
         }
 
-        // ==================== 状态栏交互 ====================
-
-        private void WritedRecordStatusLabel_Click(object? sender, EventArgs e)
-        {
-            MessageBox.Show($"当前共记录 {_records.Count} 条文件变化。", "记录统计",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
-
-        private void watchStatusLabel_Click(object? sender, EventArgs e)
-        {
-            ShowWorkspacePage(1);
-        }
-
         // ==================== 时钟 ====================
 
         private void timer1_Tick(object? sender, EventArgs e)
         {
-            timeStatusLabel.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            timeStatusLabel.Size = new Size(150, 24);
             if (_workspaceClockStatus != null)
-                _workspaceClockStatus.Text = timeStatusLabel.Text;
-        }
-
-        // ==================== 右上角 ====================
-
-        private void BiggerButton_Click(object sender, EventArgs e)
-        {
-            if (this.WindowState == FormWindowState.Normal)
-            {
-                this.WindowState = FormWindowState.Maximized;
-            }
-            else if (this.WindowState == FormWindowState.Maximized)
-            {
-                this.WindowState = FormWindowState.Normal;
-            }
-        }
-
-        private void closeButton_Click(object? sender, EventArgs e)
-        {
-            // 关闭 = 隐藏到托盘（退出请使用托盘菜单「退出」）
-            this.Hide();
+                _workspaceClockStatus.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         }
 
         // ==================== 工具方法 ====================
-
-        private static string FormatBytes(long bytes)
-        {
-            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
-            double len = bytes;
-            int order = 0;
-            while (len >= 1024 && order < sizes.Length - 1)
-            {
-                order++;
-                len /= 1024;
-            }
-            return $"{len:0.##} {sizes[order]}";
-        }
 
         private static string GetChangeRecordKey(FileChangeRecord record) =>
             $"{record.Timestamp.Ticks}|{record.ChangeType}|{record.FullPath}";
@@ -1602,25 +1542,6 @@ namespace CdiskClean
             return quote + (value ?? string.Empty).Replace(
                 quote.ToString(),
                 new string(quote, 2)) + quote;
-        }
-
-        private Point mouseDownPoint;
-        private void splitContainer1_MouseDown(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-            {
-                mouseDownPoint = new Point(e.X, e.Y);
-            }
-        }
-
-        private void panelTitle_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-            {
-                this.Location = new Point(
-                    this.Location.X + e.X - mouseDownPoint.X,
-                    this.Location.Y + e.Y - mouseDownPoint.Y);
-            }
         }
 
         private void notifyIcon1_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -1644,64 +1565,6 @@ namespace CdiskClean
             timer1.Stop();
             Application.Exit();
         }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            this.WindowState = FormWindowState.Minimized;
-        }
-        /// <summary>
-        /// 实现下边框和右边框拓展窗体
-        /// </summary>
-        /// <param name="m"></param>
-        protected override void WndProc(ref Message m)
-        {
-            if (Controls.Find("workspaceRoot", false).Length > 0)
-            {
-                base.WndProc(ref m);
-                return;
-            }
-
-            // 处理系统消息
-            const int WM_NCHITTEST = 0x84;
-            const int HTRIGHT = 11;
-            const int HTBOTTOM = 15;
-            const int HTBOTTOMRIGHT = 17;
-            const int HTCAPTION = 2;
-
-            if (m.Msg == WM_NCHITTEST)
-            {
-                Point screenPoint = new Point(m.LParam.ToInt32());
-                Point clientPoint = this.PointToClient(screenPoint);
-
-                int resizeBorderWidth = 10;
-
-                if (clientPoint.X >= this.ClientSize.Width - resizeBorderWidth &&
-                    clientPoint.Y >= this.ClientSize.Height - resizeBorderWidth)
-                {
-                    m.Result = (IntPtr)HTBOTTOMRIGHT;
-                    return;
-                }
-                else if (clientPoint.Y >= this.ClientSize.Height - resizeBorderWidth)
-                {
-                    m.Result = (IntPtr)HTBOTTOM;
-                    return;
-                }
-                else if (clientPoint.X >= this.ClientSize.Width - resizeBorderWidth)
-                {
-                    m.Result = (IntPtr)HTRIGHT;
-                    return;
-                }
-
-                if (panelTitle.RectangleToScreen(panelTitle.ClientRectangle).Contains(screenPoint))
-                {
-                    m.Result = (IntPtr)HTCAPTION;
-                    return;
-                }
-            }
-
-            base.WndProc(ref m);
-        }
-
 
         private void dirAddButton_Click(object? sender, EventArgs e)
         {
@@ -1729,38 +1592,7 @@ namespace CdiskClean
             }
         }
 
-        private void statisticButton_Click(object sender, EventArgs e)
-        {
-            List<FileChangeRecord> snapshot;
-            lock (_recordsLock)
-            {
-                snapshot = _records.ToList();
-            }
 
-            if (snapshot.Count == 0)
-            {
-                MessageBox.Show("暂无变更记录。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
-
-            // 提醒记录来自数据库，与右下角提示展示逻辑相互独立
-            var notifications = _databaseService.GetProcessNotifications();
-            var form4 = new StatisticForm(snapshot, notifications);
-            form4.ShowDialog();
-        }
-
-
-
-
-
-        private void ProcessAddButton_Click(object sender, EventArgs e)
-        {
-            var input = Microsoft.VisualBasic.Interaction.InputBox("请输入进程名:", "添加忽略进程", "");
-            var name = input?.Trim();
-            if (string.IsNullOrEmpty(name)) return;
-
-            AddIgnoreProcessInternal(name);
-        }
 
         // ==================== 拖拽：监视记录 → 忽略进程列表 ====================
 

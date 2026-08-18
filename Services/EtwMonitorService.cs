@@ -1,20 +1,19 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using CdiskClean.Helpers;
 using Microsoft.Diagnostics.Tracing.Parsers;
 using Microsoft.Diagnostics.Tracing.Parsers.Kernel;
 using Microsoft.Diagnostics.Tracing.Session;
 
 namespace CdiskClean.Services;
 
-/*
- public enum EtwWatchType
+/// <summary>ETW 白名单/黑名单的列表操作类型</summary>
+public enum EtwListOperation
 {
-    None = 0,
-    WATCH_DIRECTORY = 1,
-    IGNORE_PROCESS = 2
-
+    Add = 1,
+    Remove = 2
 }
-*/
+
 public class EtwMonitorService : IDisposable
 {
     private TraceEventSession? _session;
@@ -87,15 +86,15 @@ public class EtwMonitorService : IDisposable
     }
 
     #region WatchDirectoryArray 相关操作
-    public void OperateWriteFolderArr(string path, int type)
+    public void OperateWriteFolderArr(string path, EtwListOperation operation)
     {
         // TODO 用户添加目录时(需要添加订阅,目前直接在目标位置进行调用)
         // 生成新数组，替换旧数组
         var list = _watchDirectoryArray.ToList();
 
-        if (type == 1)
+        if (operation == EtwListOperation.Add)
             list.Add(path);
-        if (type == 2)
+        if (operation == EtwListOperation.Remove)
             list.Remove(path);
 
         _watchDirectoryArray = list.Distinct().ToArray();
@@ -107,12 +106,12 @@ public class EtwMonitorService : IDisposable
     #endregion
 
     #region IgnoreProcessArray 相关操作
-    public void OperateIgnoreProcessArr(string processName, int type)
+    public void OperateIgnoreProcessArr(string processName, EtwListOperation operation)
     {
         var list = _ignoreProcessArray.ToList();
-        if (type == 1)
+        if (operation == EtwListOperation.Add)
             list.Add(processName);
-        if (type == 2)
+        if (operation == EtwListOperation.Remove)
             list.RemoveAll(p => string.Equals(p, processName, StringComparison.OrdinalIgnoreCase));
         _ignoreProcessArray = list.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
     }
@@ -143,7 +142,7 @@ public class EtwMonitorService : IDisposable
 
             foreach (var dir in dirs)
             {
-                if (IsPathInside(fileName, dir))
+                if (PathHelper.IsPathInside(fileName, dir))
                 {
                     // 匹配成功
                     var normalized = NormalizePath(fileName);
@@ -223,31 +222,6 @@ public class EtwMonitorService : IDisposable
         return null;
     }
 
-    /// <summary>
-    /// 同步重试查询进程名（保留原方法签名，内部委托给异步版本）。
-    /// </summary>
-    public string? TryGetProcess(string filePath)
-    {
-        if (!IsRunning || string.IsNullOrEmpty(filePath)) return null;
-
-        var normalized = NormalizePath(filePath);
-
-        for (int i = 0; i < 10; i++)
-        {
-            if (_eventBuffer.TryGetValue(normalized, out var entry))
-            {
-                if (DateTime.Now - entry.Timestamp <= _bufferTtl)
-                {
-                    return entry.ProcessName;
-                }
-            }
-
-            Thread.Sleep(20);
-        }
-
-        return "未知进程";
-    }
-
     private void CleanupBuffer()
     {
         var cutoff = DateTime.Now - _bufferTtl;
@@ -260,14 +234,6 @@ public class EtwMonitorService : IDisposable
 
     private static string NormalizePath(string path) =>
         path.Replace('/', '\\').TrimEnd('\\');
-
-    private static bool IsPathInside(string path, string parent)
-    {
-        var full = NormalizePath(path);
-        var root = NormalizePath(parent);
-        return full.Equals(root, StringComparison.OrdinalIgnoreCase) ||
-               full.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
-    }
 
     public void Stop()
     {

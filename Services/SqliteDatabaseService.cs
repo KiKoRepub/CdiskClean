@@ -4,11 +4,11 @@ using System.Data.Common;
 
 namespace CdiskClean.Services;
 
-public class SqlLiteDatabaseService : IDatabaseService
+public class SqliteDatabaseService : IDatabaseService
 {
     private readonly string _connectionString;
 
-    public SqlLiteDatabaseService(string dbPath)
+    public SqliteDatabaseService(string dbPath)
     {
         _connectionString = new SqliteConnectionStringBuilder
         {
@@ -28,15 +28,15 @@ public class SqlLiteDatabaseService : IDatabaseService
         // Id , CreatedAt 可以 使用 AUTOINCREMENT 和 DEFAULT CURRENT_TIMESTAMP 来自动生成和设置时间戳
         cmd.CommandText =(@"PRAGMA journal_mode=WAL; " +
 
-            WatchingDirectory.getCreateSQL() +
+            WatchingDirectory.GetCreateSQL() +
 
-            FileChangeRecord.getCreateSQL() +
+            FileChangeRecord.GetCreateSQL() +
 
-            ProcessNotificationRecord.getCreateSQL() +
+            ProcessNotificationRecord.GetCreateSQL() +
 
-            IgnoreProcessRecord.getCreateSQL() +
+            IgnoreProcessRecord.GetCreateSQL() +
 
-            CleanupRecord.getCreateSQL());
+            CleanupRecord.GetCreateSQL());
 
         cmd.ExecuteNonQuery();
         TrimHistoryTables(connection);
@@ -175,15 +175,6 @@ public class SqlLiteDatabaseService : IDatabaseService
         return list;
     }
 
-    public void ClearChangeRecords()
-    {
-        using var connection = new SqliteConnection(_connectionString);
-        connection.Open();
-
-        using var cmd = connection.CreateCommand();
-        cmd.CommandText = "DELETE FROM ChangeRecords;";
-        cmd.ExecuteNonQuery();
-    }
     #endregion
     #region ProcessNotifications 表的操作
 
@@ -284,17 +275,6 @@ public class SqlLiteDatabaseService : IDatabaseService
         using var cmd = connection.CreateCommand();
         cmd.CommandText = @"DELETE FROM IgnoreProcessRecord WHERE ProcessName = @Name;";
         cmd.Parameters.AddWithValue("@Name", processName);
-        cmd.ExecuteNonQuery();
-    }
-
-    public void UpdateIgnoreProcessRecordStatus(string processName, RecordStatusEnum status)
-    {
-        using var connection = new SqliteConnection(_connectionString);
-        connection.Open();
-        using var cmd = connection.CreateCommand();
-        cmd.CommandText = @"UPDATE IgnoreProcessRecord SET Status = @Status WHERE ProcessName = @Name;";
-        cmd.Parameters.AddWithValue("@Name", processName);
-        cmd.Parameters.AddWithValue("@Status", status.ToString());
         cmd.ExecuteNonQuery();
     }
     #endregion

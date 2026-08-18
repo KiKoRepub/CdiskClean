@@ -1,3 +1,5 @@
+using CdiskClean.Helpers;
+
 namespace CdiskClean.Models;
 
 /// <summary>
@@ -22,24 +24,11 @@ public class CleanupRecord
 
     public string? Message { get; set; }
 
-    public string SizeText => SizeBytes.HasValue ? FormatSize(SizeBytes.Value) : "-";
+    public string SizeText => SizeBytes.HasValue ? FormatHelper.FormatBytes(SizeBytes.Value) : "-";
 
     public string ResultText => Success ? "成功" : "失败";
 
-    private static string FormatSize(long bytes)
-    {
-        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
-        double len = bytes;
-        int order = 0;
-        while (len >= 1024 && order < sizes.Length - 1)
-        {
-            order++;
-            len /= 1024;
-        }
-        return $"{len:0.##} {sizes[order]}";
-    }
-
-    public static string getCreateSQL()
+    public static string GetCreateSQL()
     {
         return @"CREATE TABLE IF NOT EXISTS CleanupRecords (
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,

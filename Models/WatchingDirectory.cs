@@ -30,7 +30,7 @@ namespace CdiskClean.Models
             Status = RecordStatusEnum.USING;
         }
 
-        public static string getCreateSQL()
+        public static string GetCreateSQL()
         {
             return @"CREATE TABLE IF NOT EXISTS WatchDirectories (
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,7 +42,7 @@ namespace CdiskClean.Models
             );";
         }
 
-        internal static IEnumerable<WatchingDirectory> getDefaultDirectories()
+        internal static IEnumerable<WatchingDirectory> GetDefaultDirectories()
         {
             return new List<WatchingDirectory>
             {

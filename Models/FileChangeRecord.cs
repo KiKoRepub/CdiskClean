@@ -71,7 +71,7 @@ public class FileChangeRecord : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
-    public static string getCreateSQL()
+    public static string GetCreateSQL()
     {
         return @"CREATE TABLE IF NOT EXISTS ChangeRecords (
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -4,17 +4,10 @@ namespace CdiskClean.Services;
 
 public class FolderSizeAnalyzer
 {
-    private CancellationTokenSource? _cts;
-
-    public bool IsScanning => _cts != null && !_cts.IsCancellationRequested;
-
     public async Task<FolderSizeInfo> ScanFolderAsync(
         string rootPath,
-        IProgress<int>? progress = null,
         CancellationToken cancellationToken = default)
     {
-        _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-
         var root = new DirectoryInfo(rootPath);
         if (!root.Exists)
             throw new DirectoryNotFoundException($"目录不存在: {rootPath}");
@@ -25,20 +18,14 @@ public class FolderSizeAnalyzer
             Name = root.Name
         };
 
-        await Task.Run(() => ScanRecursive(root, result, progress, _cts.Token), _cts.Token);
+        await Task.Run(() => ScanRecursive(root, result, cancellationToken), cancellationToken);
 
         return result;
     }
 
-    public void CancelScan()
-    {
-        _cts?.Cancel();
-    }
-
-    private void ScanRecursive(
+    private static void ScanRecursive(
         DirectoryInfo dir,
         FolderSizeInfo info,
-        IProgress<int>? progress,
         CancellationToken ct)
     {
         if (ct.IsCancellationRequested) return;
@@ -86,7 +73,7 @@ public class FolderSizeAnalyzer
 
                 try
                 {
-                    ScanRecursive(subDir, subInfo, progress, ct);
+                    ScanRecursive(subDir, subInfo, ct);
                 }
                 catch { continue; }
 
@@ -97,7 +84,5 @@ public class FolderSizeAnalyzer
         }
         catch (UnauthorizedAccessException) { }
         catch (DirectoryNotFoundException) { }
-
-        progress?.Report(0); // 每完成一个文件夹报告一次
     }
 }

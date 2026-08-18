@@ -27,7 +27,12 @@
       "Bash(cygpath *)",
       "Bash(iconv -f UTF-8 -t GBK docs/p010-summary-utf8.md -o docs/p010-summary.md)",
       "Bash(iconv -f GBK -t UTF-8 docs/p010-summary.md)",
-      "Bash(iconv -f UTF-8 -t GBK docs/p010-summary-utf8.md)"
+      "Bash(iconv -f UTF-8 -t GBK docs/p010-summary-utf8.md)",
+      "Bash(sed -i 's/getCreateSQL/GetCreateSQL/g' Models/*.cs Services/DatabaseService.cs)",
+      "Bash(sed -i 's/getDefaultDirectories/GetDefaultDirectories/g' Models/WatchingDirectory.cs Services/DiskMonitorService.cs)",
+      "Bash(./bin/Debug/net8.0-windows/CdiskClean.exe --preview-main)",
+      "Bash(tasklist //FI \"IMAGENAME eq CdiskClean.exe\")",
+      "Bash(taskkill //F //IM CdiskClean.exe)"
     ]
   }
 }

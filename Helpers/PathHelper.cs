@@ -19,6 +19,15 @@ namespace CdiskClean.Helpers
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Temp");
         }
 
+        /// <summary>判断 path 是否位于 parent 之内（含相等）</summary>
+        public static bool IsPathInside(string path, string parent)
+        {
+            var full = path.TrimEnd('\\');
+            var root = parent.TrimEnd('\\');
+            if (full.Equals(root, StringComparison.OrdinalIgnoreCase)) return true;
+            return full.StartsWith(root + "\\", StringComparison.OrdinalIgnoreCase);
+        }
+
 
     }
 }

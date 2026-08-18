@@ -12,7 +12,6 @@ public class DiskMonitorService : IDisposable
 
     private readonly object _lock = new();
     private readonly object _ignoreProcessLock = new();
-    private volatile bool _paused;
 
     public event Action<FileChangeRecord>? FileChanged;
     public event Action<string>? MonitorError;
@@ -45,9 +44,6 @@ public class DiskMonitorService : IDisposable
         _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
     }
 
-    public bool HasDirectory(string path) =>
-        _watcherMap.ContainsKey(path);
-
     /// <summary>用外部目录列表（如数据库）初始化，替代默认列表</summary>
     public void LoadDirectories(List<WatchingDirectory> dirs)
     {
@@ -66,7 +62,7 @@ public class DiskMonitorService : IDisposable
     public void LoadDefaults()
     {
         WatchDirectories.Clear();
-        WatchDirectories.AddRange(WatchingDirectory.getDefaultDirectories());
+        WatchDirectories.AddRange(WatchingDirectory.GetDefaultDirectories());
         _etwService.OperateWriteFolderArr(WatchDirectories.Select(d => d.Path).ToArray());
     }
 
@@ -107,32 +103,6 @@ public class DiskMonitorService : IDisposable
             }
             _watchers.Clear();
             _watcherMap.Clear();
-        }
-    }
-
-    public void Pause()
-    {
-        _paused = true;
-        lock (_lock)
-        {
-            foreach (var w in _watchers)
-                w.EnableRaisingEvents = false;
-        }
-    }
-
-    public void Resume()
-    {
-        _paused = false;
-        lock (_lock)
-        {
-            foreach (var w in _watchers)
-            {
-                var dir = w.Path;
-                var item = WatchDirectories.FirstOrDefault(d =>
-                    string.Equals(d.Path, dir, StringComparison.OrdinalIgnoreCase));
-                if (item?.Status == RecordStatusEnum.USING)
-                    w.EnableRaisingEvents = true;
-            }
         }
     }
 
@@ -191,7 +161,7 @@ public class DiskMonitorService : IDisposable
         if (existing != null) return existing;
         
         WatchDirectories.Add(dir);
-        _etwService.OperateWriteFolderArr(dir.Path, 1);
+        _etwService.OperateWriteFolderArr(dir.Path, EtwListOperation.Add);
 
         if (IsRunning)
             StartDirectory(path, includeSubdirs);
@@ -228,7 +198,7 @@ public class DiskMonitorService : IDisposable
             record = new IgnoreProcessRecord(processName);
             IgnoreProcessRecords.Add(record);
         }
-        _etwService.OperateIgnoreProcessArr(record.ProcessName, 1);
+        _etwService.OperateIgnoreProcessArr(record.ProcessName, EtwListOperation.Add);
         return record;
     }
 
@@ -249,7 +219,7 @@ public class DiskMonitorService : IDisposable
         }
 
         _etwService.OperateIgnoreProcessArr(processName,
-            status == RecordStatusEnum.USING ? 1 : 2);
+            status == RecordStatusEnum.USING ? EtwListOperation.Add : EtwListOperation.Remove);
     }
     #endregion
 
@@ -286,8 +256,6 @@ public class DiskMonitorService : IDisposable
 
     private void OnFileEvent(object sender, FileSystemEventArgs e)
     {
-        if (_paused) return;
-
         // 清理功能产生的文件操作不应被记录（避免自己监听到自己）
         if (_cleanupService?.ShouldIgnoreEvent(e.FullPath) == true) return;
 
@@ -341,8 +309,6 @@ public class DiskMonitorService : IDisposable
 
     private void OnRenamed(object sender, RenamedEventArgs e)
     {
-        if (_paused) return;
-
         // 移动/软链接操作会产生 Renamed 事件：新路径可能落在目标目录，
         // 旧路径一定位于清理的原路径集合内，两者都需过滤
         if (_cleanupService != null &&
