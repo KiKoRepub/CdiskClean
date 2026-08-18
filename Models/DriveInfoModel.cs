@@ -1,3 +1,5 @@
+using System.Configuration;
+
 namespace CdiskClean.Models;
 
 public class DriveInfoModel

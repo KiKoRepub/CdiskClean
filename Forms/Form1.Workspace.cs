@@ -462,9 +462,9 @@ public partial class Form1
         {
             Text = text,
             IconSvg = icon,
-            Radius = 5,
+            Radius = 1,
             Height = 36,
-            Width = string.IsNullOrEmpty(text) ? 36 : Math.Max(84, text.Length * 18 + 42),
+            Width = string.IsNullOrEmpty(text) ? 36 : Math.Max(84, text.Length * 25 + 42),
             Padding = string.IsNullOrEmpty(text) ? new Padding(8) : new Padding(12, 0, 12, 0),
             Margin = new Padding(0, 4, 8, 0),
             Font = new Font("Microsoft YaHei UI", 9.5F)
