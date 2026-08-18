@@ -32,7 +32,26 @@
       "Bash(sed -i 's/getDefaultDirectories/GetDefaultDirectories/g' Models/WatchingDirectory.cs Services/DiskMonitorService.cs)",
       "Bash(./bin/Debug/net8.0-windows/CdiskClean.exe --preview-main)",
       "Bash(tasklist //FI \"IMAGENAME eq CdiskClean.exe\")",
-      "Bash(taskkill //F //IM CdiskClean.exe)"
+      "Bash(taskkill //F //IM CdiskClean.exe)",
+      "Bash(dotnet --version)",
+      "Bash(where dotnet *)",
+      "Read(//c/Program Files \\\\\\(x86\\\\\\)/**)",
+      "Read(//c/Program Files/**)",
+      "Bash(dotnet tool *)",
+      "Bash(\"/c/Program Files \\(x86\\)/Microsoft Visual Studio/Installer/vswhere.exe\" -latest -products '*' -format json)",
+      "Read(//f/VS/Common7/IDE/CommonExtensions/Microsoft/**)",
+      "Read(//f/VS/**)",
+      "Bash(dotnet publish *)",
+      "Bash(rm \"D:/university/CSharp/projects/CdiskClean/publish/win-x64/TestForDisk.exe\")",
+      "Bash(./CdiskClean.exe)",
+      "Bash(curl -skL \"https://jrsoftware.org/isdl.php\")",
+      "Bash(powershell -Command \"[guid]::NewGuid\\(\\).ToString\\(\\).ToUpper\\(\\)\")",
+      "Bash(curl -skL \"https://api.github.com/repos/jrsoftware/issrc/contents/Files/Languages/Unofficial\")",
+      "Bash(curl -skL \"https://api.github.com/repos/jrsoftware/issrc/git/trees/is-6_7_3?recursive=1\")",
+      "Bash(xxd \"D:/university/CSharp/projects/CdiskClean/hfGrandTheatre.ico\")",
+      "Bash(\"./publish/CdiskClean-Setup-1.0.0.exe\" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=\"C:\\\\Users\\\\qazxc\\\\.claude\\\\jobs\\\\9db62608\\\\tmp\\\\testinstall\" /LOG=\"C:\\\\Users\\\\qazxc\\\\.claude\\\\jobs\\\\9db62608\\\\tmp\\\\setup-test.log\")",
+      "Bash(echo \"installer exit=$?\")",
+      "Bash(awk '{print $5, $9, $10, $11, $12}')"
     ]
   }
 }

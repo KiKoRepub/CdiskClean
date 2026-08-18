@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.37411.7
+# Visual Studio Version 18
+VisualStudioVersion = 18.8.12023.21 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CdiskClean", "CdiskClean.csproj", "{5709EC92-9B9F-4822-A2F4-E16D60832BB0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestForDisk", "..\TestForDisk\TestForDisk.csproj", "{A24E030A-B765-4309-939C-B498569A6339}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "CDiskCleanSetup", "..\CDiskCleanSetup\CDiskCleanSetup.vdproj", "{433E78CD-6D1C-8019-FC64-AAA030001713}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,9 +20,10 @@ Global
 		{5709EC92-9B9F-4822-A2F4-E16D60832BB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5709EC92-9B9F-4822-A2F4-E16D60832BB0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A24E030A-B765-4309-939C-B498569A6339}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A24E030A-B765-4309-939C-B498569A6339}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A24E030A-B765-4309-939C-B498569A6339}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A24E030A-B765-4309-939C-B498569A6339}.Release|Any CPU.Build.0 = Release|Any CPU
+		{433E78CD-6D1C-8019-FC64-AAA030001713}.Debug|Any CPU.ActiveCfg = Debug
+		{433E78CD-6D1C-8019-FC64-AAA030001713}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
