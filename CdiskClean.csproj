@@ -21,10 +21,6 @@
     <EmbeddedResource Remove="claude-prompt.txt" />
   </ItemGroup>
 
- <ItemGroup>
-   <Content Include="hfGrandTheatre.ico" />
- </ItemGroup>
-
 
   <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">
