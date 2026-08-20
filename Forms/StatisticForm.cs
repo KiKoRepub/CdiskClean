@@ -7,7 +7,7 @@ namespace CdiskClean
     /// <summary>
     /// 统计窗口
     /// </summary>
-    public partial class StatisticForm : Form
+    public partial class StatisticForm : Sunny.UI.UIForm
     {
         public StatisticForm(List<FileChangeRecord> records, List<ProcessNotificationRecord> notifications)
         {

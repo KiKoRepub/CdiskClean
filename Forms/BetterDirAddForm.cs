@@ -3,7 +3,7 @@ namespace CdiskClean.Forms
     /// <summary>
     /// 高级添加监测目录：以基础目录为根，树状展示子路径，勾选后作为监测目录返回。
     /// </summary>
-    public partial class BetterDirAddForm : Form
+    public partial class BetterDirAddForm : Sunny.UI.UIForm
     {
         /// <summary>确认后返回的勾选路径列表（含基础目录本身）</summary>
         public List<string> SelectedPaths { get; private set; } = new();

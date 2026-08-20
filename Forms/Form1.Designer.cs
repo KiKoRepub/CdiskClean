@@ -1047,13 +1047,13 @@
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.Control;
             BackgroundImageLayout = ImageLayout.Zoom;
-            ClientSize = new Size(1440, 780);
+            ClientSize = new Size(1440, 860);
             Controls.Add(panelTitle);
             Controls.Add(statusStrip1);
             Controls.Add(TabPageControl1);
             FormBorderStyle = FormBorderStyle.None;
             Icon = (Icon)resources.GetObject("$this.Icon");
-            MinimumSize = new Size(1440, 780);
+            MinimumSize = new Size(1180, 720);
             Name = "Form1";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "C盘监测工具";

@@ -5,7 +5,7 @@ namespace CdiskClean.Forms
     /// <summary>
     /// 高级添加忽略进程：列出当前系统运行的进程，支持搜索与多选。
     /// </summary>
-    public partial class ProcessPickForm : Form
+    public partial class ProcessPickForm : Sunny.UI.UIForm
     {
         private List<(string Name, int Pid, string Title)> _allProcesses = new();
 
