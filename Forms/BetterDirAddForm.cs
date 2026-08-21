@@ -1,9 +1,11 @@
+using Sunny.UI;
+
 namespace CdiskClean.Forms
 {
     /// <summary>
     /// 高级添加监测目录：以基础目录为根，树状展示子路径，勾选后作为监测目录返回。
     /// </summary>
-    public partial class BetterDirAddForm : Sunny.UI.UIForm
+    public partial class BetterDirAddForm : UIForm
     {
         /// <summary>确认后返回的勾选路径列表（含基础目录本身）</summary>
         public List<string> SelectedPaths { get; private set; } = new();
@@ -11,6 +13,118 @@ namespace CdiskClean.Forms
         public BetterDirAddForm()
         {
             InitializeComponent();
+#if DEBUG
+            ApplyDebugLayout();
+#endif
+        }
+
+        private void ApplyDebugLayout()
+        {
+            ShowTitle = true;
+            ControlBox = true;
+            TitleHeight = 42;
+            Text = "添加监控目录";
+            ClientSize = new Size(760, 620);
+            MinimumSize = new Size(640, 520);
+            BackColor = Color.FromArgb(244, 246, 249);
+
+            Controls.Clear();
+            var root = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(244, 246, 249),
+                ColumnCount = 1,
+                RowCount = 3,
+                Padding = new Padding(16)
+            };
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 46));
+            root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 50));
+
+            var pathBar = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.White,
+                ColumnCount = 3,
+                RowCount = 1,
+                Padding = new Padding(10, 6, 10, 6),
+                Margin = new Padding(0, 0, 0, 10)
+            };
+            pathBar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 82));
+            pathBar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            pathBar.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 104));
+            basePathLabel.Text = "基础目录";
+            basePathLabel.Dock = DockStyle.Fill;
+            basePathLabel.TextAlign = ContentAlignment.MiddleLeft;
+            basePathLabel.Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Bold);
+            basePathTextBox.Dock = DockStyle.Fill;
+            basePathTextBox.Margin = new Padding(0, 0, 8, 0);
+            browseBtn.Dock = DockStyle.Fill;
+            ConfigureDialogButton(browseBtn);
+            pathBar.Controls.Add(basePathLabel, 0, 0);
+            pathBar.Controls.Add(basePathTextBox, 1, 0);
+            pathBar.Controls.Add(browseBtn, 2, 0);
+
+            dirTreeView.Dock = DockStyle.Fill;
+            dirTreeView.Margin = new Padding(0);
+            dirTreeView.BorderStyle = BorderStyle.None;
+            dirTreeView.BackColor = Color.White;
+            dirTreeView.Font = new Font("Microsoft YaHei UI", 9F);
+            dirTreeView.ItemHeight = 27;
+
+            var actions = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.Transparent,
+                ColumnCount = 5,
+                RowCount = 1,
+                Padding = new Padding(0, 10, 0, 0)
+            };
+            actions.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 92));
+            actions.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
+            actions.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            actions.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 96));
+            actions.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 96));
+            foreach (var button in new[] { selectAllBtn, selectNoneBtn, okBtn, cancelBtn })
+            {
+                ConfigureDialogButton(button);
+                button.Dock = DockStyle.Fill;
+                button.Margin = new Padding(0, 0, 8, 0);
+            }
+            ConfigurePrimaryDialogButton(okBtn);
+            hintLabel.Visible = false;
+            actions.Controls.Add(selectAllBtn, 0, 0);
+            actions.Controls.Add(selectNoneBtn, 1, 0);
+            actions.Controls.Add(okBtn, 3, 0);
+            actions.Controls.Add(cancelBtn, 4, 0);
+
+            root.Controls.Add(pathBar, 0, 0);
+            root.Controls.Add(dirTreeView, 0, 1);
+            root.Controls.Add(actions, 0, 2);
+            Controls.Add(root);
+        }
+
+        private static void ConfigureDialogButton(UIButton button)
+        {
+            button.Style = UIStyle.Custom;
+            button.StyleCustomMode = true;
+            button.Radius = 4;
+            button.Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Bold);
+            button.FillColor = Color.White;
+            button.RectColor = Color.FromArgb(199, 207, 217);
+            button.ForeColor = Color.FromArgb(49, 61, 76);
+            button.FillHoverColor = Color.FromArgb(239, 246, 252);
+            button.ForeHoverColor = Color.FromArgb(27, 111, 181);
+        }
+
+        private static void ConfigurePrimaryDialogButton(UIButton button)
+        {
+            var blue = Color.FromArgb(27, 111, 181);
+            button.FillColor = blue;
+            button.RectColor = blue;
+            button.ForeColor = Color.White;
+            button.FillHoverColor = ControlPaint.Light(blue, 0.12F);
+            button.ForeHoverColor = Color.White;
         }
 
         private void browseBtn_Click(object? sender, EventArgs e)
@@ -113,8 +227,7 @@ namespace CdiskClean.Forms
             CollectCheckedPaths(dirTreeView.Nodes, paths);
             if (paths.Count == 0)
             {
-                MessageBox.Show("请至少勾选一个目录路径。", "提示",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                UIMessageBox.ShowInfo("请至少勾选一个目录路径。");
                 return;
             }
 

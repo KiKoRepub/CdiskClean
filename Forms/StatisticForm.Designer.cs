@@ -1,3 +1,5 @@
+using Sunny.UI;
+
 namespace CdiskClean
 {
     partial class StatisticForm
@@ -17,28 +19,27 @@ namespace CdiskClean
 
         private void InitializeComponent()
         {
-            mainTabControl = new TabControl();
+            mainTabControl = new UITabControl();
             notificationTabPage = new TabPage();
-            notificationGrid = new DataGridView();
+            notificationGrid = new UIDataGridView();
             ProcessNameColumn = new DataGridViewTextBoxColumn();
             OpCountColumn = new DataGridViewTextBoxColumn();
             DurationColumn = new DataGridViewTextBoxColumn();
             TriggerTimeColumn = new DataGridViewTextBoxColumn();
             statsTabPage = new TabPage();
-            statsGrid = new DataGridView();
+            statsGrid = new UIDataGridView();
             StatsAppColumn = new DataGridViewTextBoxColumn();
             StatsCountColumn = new DataGridViewTextBoxColumn();
             StatsFirstTimeColumn = new DataGridViewTextBoxColumn();
             StatsLastTimeColumn = new DataGridViewTextBoxColumn();
             detailTabPage = new TabPage();
-            detailDataGrid = new DataGridView();
+            detailDataGrid = new UIDataGridView();
             DetailAppColumn = new DataGridViewTextBoxColumn();
             DetailTimeColumn = new DataGridViewTextBoxColumn();
             DetailTypeColumn = new DataGridViewTextBoxColumn();
             DetailDirColumn = new DataGridViewTextBoxColumn();
             DetailFileColumn = new DataGridViewTextBoxColumn();
-            titleLabel = new Label();
-            closeBtn = new Button();
+            titleLabel = new UILabel();
             mainTabControl.SuspendLayout();
             notificationTabPage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)notificationGrid).BeginInit();
@@ -277,26 +278,13 @@ namespace CdiskClean
             titleLabel.TabIndex = 1;
             titleLabel.Text = "统计与提醒记录";
             //
-            // closeBtn
-            //
-            closeBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            closeBtn.Location = new Point(1004, 9);
-            closeBtn.Name = "closeBtn";
-            closeBtn.Size = new Size(84, 34);
-            closeBtn.TabIndex = 2;
-            closeBtn.Text = "关闭";
-            closeBtn.UseVisualStyleBackColor = true;
-            closeBtn.Click += closeBtn_Click;
-            //
             // Form4
             //
             AutoScaleDimensions = new SizeF(11F, 24F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1100, 651);
-            Controls.Add(closeBtn);
             Controls.Add(titleLabel);
             Controls.Add(mainTabControl);
-            FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "Form4";
@@ -315,13 +303,13 @@ namespace CdiskClean
 
         #endregion
 
-        private TabControl mainTabControl;
+        private UITabControl mainTabControl;
         private TabPage notificationTabPage;
         private TabPage statsTabPage;
         private TabPage detailTabPage;
-        private DataGridView notificationGrid;
-        private DataGridView statsGrid;
-        private DataGridView detailDataGrid;
+        private UIDataGridView notificationGrid;
+        private UIDataGridView statsGrid;
+        private UIDataGridView detailDataGrid;
         private DataGridViewTextBoxColumn ProcessNameColumn;
         private DataGridViewTextBoxColumn OpCountColumn;
         private DataGridViewTextBoxColumn DurationColumn;
@@ -335,7 +323,6 @@ namespace CdiskClean
         private DataGridViewTextBoxColumn DetailTypeColumn;
         private DataGridViewTextBoxColumn DetailDirColumn;
         private DataGridViewTextBoxColumn DetailFileColumn;
-        private Label titleLabel;
-        private Button closeBtn;
+        private UILabel titleLabel;
     }
 }

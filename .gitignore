@@ -10,6 +10,7 @@ publish/
 codex-prompt.txt
 claude-prompt.txt
 docs/
+scripts/
 # User-specific files
 *.rsuser
 *.suo

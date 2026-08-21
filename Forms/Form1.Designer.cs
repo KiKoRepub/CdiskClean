@@ -1,3 +1,5 @@
+using Sunny.UI;
+
     namespace CdiskClean
 {
     partial class Form1
@@ -19,35 +21,35 @@
         {
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
-            TabPageControl1 = new TabControl();
+            TabPageControl1 = new UITabControl();
             totalReviewPage = new TabPage();
-            progressBar1 = new ProgressBar();
-            warningLabel = new Label();
-            freeSpaceLabel = new Label();
-            usedSpaceLabel = new Label();
-            totalSpaceLabel = new Label();
-            usageProgressBar = new ProgressBar();
-            dashboardTitleLabel = new Label();
+            progressBar1 = new UIProcessBar();
+            warningLabel = new UILabel();
+            freeSpaceLabel = new UILabel();
+            usedSpaceLabel = new UILabel();
+            totalSpaceLabel = new UILabel();
+            usageProgressBar = new UIProcessBar();
+            dashboardTitleLabel = new UILabel();
             watcherPage = new TabPage();
-            ignoreProcessBox = new GroupBox();
-            betterProcessAddButton = new Button();
-            processAddButton = new Button();
-            procSelectedTextBox = new TextBox();
-            label3 = new Label();
-            ignoreProcessView = new ListView();
-            statisticButton = new Button();
-            WatcherDirectoryBox = new GroupBox();
-            betterDirAddButton = new Button();
-            dirSelectedTextBox = new TextBox();
-            watcherDirListView = new ListView();
-            label2 = new Label();
-            dirAddButton = new Button();
-            exportBtn = new Button();
-            typeFilterCombo = new ComboBox();
-            typeFilterLabel = new Label();
-            clearBtn = new Button();
-            pauseBtn = new Button();
-            changesDataGrid = new DataGridView();
+            ignoreProcessBox = new UIGroupBox();
+            betterProcessAddButton = new UIButton();
+            processAddButton = new UIButton();
+            procSelectedTextBox = new UITextBox();
+            label3 = new UILabel();
+            ignoreProcessView = new UIDataGridView();
+            statisticButton = new UIButton();
+            WatcherDirectoryBox = new UIGroupBox();
+            betterDirAddButton = new UIButton();
+            dirSelectedTextBox = new UITextBox();
+            watcherDirListView = new UIDataGridView();
+            label2 = new UILabel();
+            dirAddButton = new UIButton();
+            exportBtn = new UIButton();
+            typeFilterCombo = new UIComboBox();
+            typeFilterLabel = new UILabel();
+            clearBtn = new UIButton();
+            pauseBtn = new UIButton();
+            changesDataGrid = new UIDataGridView();
             TimeColumn = new DataGridViewTextBoxColumn();
             TypeColumn = new DataGridViewTextBoxColumn();
             FileNameColumn = new DataGridViewTextBoxColumn();
@@ -55,53 +57,53 @@
             SizeColumn = new DataGridViewTextBoxColumn();
             SourceColumn = new DataGridViewTextBoxColumn();
             folderAnalyzerPage = new TabPage();
-            folderTreeView = new TreeView();
-            scanProgressBar = new ProgressBar();
-            stopBtn = new Button();
-            scanBtn = new Button();
-            selectDirBtn = new Button();
-            selectedPathTextBox = new TextBox();
+            folderTreeView = new UITreeView();
+            scanProgressBar = new UIWaitingBar();
+            stopBtn = new UIButton();
+            scanBtn = new UIButton();
+            selectDirBtn = new UIButton();
+            selectedPathTextBox = new UITextBox();
             diskCleanPage = new TabPage();
-            cleanHistoryBox = new GroupBox();
-            cleanHistoryGrid = new DataGridView();
-            cleanMethodBox = new GroupBox();
-            cleanRecycleRadio = new RadioButton();
-            cleanPermanentRadio = new RadioButton();
-            cleanMoveRadio = new RadioButton();
-            cleanCompressRadio = new RadioButton();
-            cleanMklinkRadio = new RadioButton();
-            cleanTargetLabel = new Label();
-            cleanTargetTextBox = new TextBox();
-            cleanTargetSelectBtn = new Button();
-            cleanBtn = new Button();
-            cleanTreeBox = new GroupBox();
+            cleanHistoryBox = new UIGroupBox();
+            cleanHistoryGrid = new UIDataGridView();
+            cleanMethodBox = new UIGroupBox();
+            cleanRecycleRadio = new UIRadioButton();
+            cleanRecycleRadio.GroupIndex = 1;
+            cleanPermanentRadio = new UIRadioButton();
+            cleanPermanentRadio.GroupIndex = 1;
+            cleanMoveRadio = new UIRadioButton();
+            cleanMoveRadio.GroupIndex = 1;
+            cleanCompressRadio = new UIRadioButton();
+            cleanCompressRadio.GroupIndex = 1;
+            cleanMklinkRadio = new UIRadioButton();
+            cleanMklinkRadio.GroupIndex = 1;
+            cleanTargetLabel = new UILabel();
+            cleanTargetTextBox = new UITextBox();
+            cleanTargetSelectBtn = new UIButton();
+            cleanBtn = new UIButton();
+            cleanTreeBox = new UIGroupBox();
             cleanTreeView = new TreeView();
-            cleanSelectAllBtn = new Button();
-            cleanSelectNoneBtn = new Button();
-            cleanStatusLabel = new Label();
-            frequentPathBox = new GroupBox();
-            frequentPathListView = new ListView();
-            frequentHintLabel = new Label();
-            cleanRefreshFrequentBtn = new Button();
-            cleanScanProgressBar = new ProgressBar();
-            cleanScanBtn = new Button();
-            cleanSelectDirBtn = new Button();
-            cleanPathTextBox = new TextBox();
-            statusStrip1 = new StatusStrip();
-            watchStatusLabel = new ToolStripStatusLabel();
-            writedRecordStatusLabel = new ToolStripStatusLabel();
-            timeStatusLabel = new ToolStripStatusLabel();
-            NoticeIcon = new ToolStripStatusLabel();
-            closeButton = new Button();
-            BiggerButton = new Button();
-            button1 = new Button();
+            cleanSelectAllBtn = new UIButton();
+            cleanSelectNoneBtn = new UIButton();
+            cleanStatusLabel = new UILabel();
+            frequentPathBox = new UIGroupBox();
+            frequentPathListView = new UIDataGridView();
+            frequentHintLabel = new UILabel();
+            cleanRefreshFrequentBtn = new UIButton();
+            cleanScanProgressBar = new UIWaitingBar();
+            cleanScanBtn = new UIButton();
+            cleanSelectDirBtn = new UIButton();
+            cleanPathTextBox = new UITextBox();
+            closeButton = new UIButton();
+            BiggerButton = new UIButton();
+            button1 = new UIButton();
             timer1 = new System.Windows.Forms.Timer(components);
             diskRefreshTimer = new System.Windows.Forms.Timer(components);
             notifyIcon1 = new NotifyIcon(components);
-            notifyMenuStrip = new ContextMenuStrip(components);
+            notifyMenuStrip = new UIContextMenuStrip(components);
             exitToolStripMenuItem = new ToolStripMenuItem();
             panelTitle = new SplitContainer();
-            label1 = new Label();
+            label1 = new UILabel();
             ImportFolderDialog = new FolderBrowserDialog();
             TabPageControl1.SuspendLayout();
             totalReviewPage.SuspendLayout();
@@ -116,7 +118,6 @@
             cleanMethodBox.SuspendLayout();
             cleanTreeBox.SuspendLayout();
             frequentPathBox.SuspendLayout();
-            statusStrip1.SuspendLayout();
             notifyMenuStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)panelTitle).BeginInit();
             panelTitle.Panel1.SuspendLayout();
@@ -152,7 +153,6 @@
             totalReviewPage.Size = new Size(1429, 656);
             totalReviewPage.TabIndex = 0;
             totalReviewPage.Text = "概览";
-            totalReviewPage.UseVisualStyleBackColor = true;
             // 
             // progressBar1
             // 
@@ -237,7 +237,6 @@
             watcherPage.Size = new Size(1429, 656);
             watcherPage.TabIndex = 1;
             watcherPage.Text = "实时监测";
-            watcherPage.UseVisualStyleBackColor = true;
             // 
             // ignoreProcessBox
             // 
@@ -261,7 +260,6 @@
             betterProcessAddButton.Size = new Size(115, 44);
             betterProcessAddButton.TabIndex = 11;
             betterProcessAddButton.Text = "高级添加";
-            betterProcessAddButton.UseVisualStyleBackColor = true;
             betterProcessAddButton.Click += betterProcessAddButton_Click;
             // 
             // processAddButton
@@ -272,7 +270,6 @@
             processAddButton.Size = new Size(159, 43);
             processAddButton.TabIndex = 3;
             processAddButton.Text = "添加忽略进程";
-            processAddButton.UseVisualStyleBackColor = true;
             processAddButton.Click += ProcessAddButton_Click;
             // 
             // procSelectedTextBox
@@ -304,8 +301,7 @@
             ignoreProcessView.Name = "ignoreProcessView";
             ignoreProcessView.Size = new Size(521, 159);
             ignoreProcessView.TabIndex = 0;
-            ignoreProcessView.UseCompatibleStateImageBehavior = false;
-            ignoreProcessView.ItemSelectionChanged += ignoreProcessView_ItemSelectionChanged;
+            ignoreProcessView.SelectionChanged += ignoreProcessView_ItemSelectionChanged;
             ignoreProcessView.DragDrop += ignoreProcessView_DragDrop;
             ignoreProcessView.DragEnter += ignoreProcessView_DragEnter;
             ignoreProcessView.Resize += ignoreProcessView_Resize;
@@ -318,7 +314,6 @@
             statisticButton.Size = new Size(139, 47);
             statisticButton.TabIndex = 11;
             statisticButton.Text = "查看详情记录";
-            statisticButton.UseVisualStyleBackColor = true;
             statisticButton.Click += statisticButton_Click;
             // 
             // WatcherDirectoryBox
@@ -344,7 +339,6 @@
             betterDirAddButton.Size = new Size(115, 46);
             betterDirAddButton.TabIndex = 10;
             betterDirAddButton.Text = "高级添加";
-            betterDirAddButton.UseVisualStyleBackColor = true;
             betterDirAddButton.Click += betterDirAddButton_Click;
             // 
             // dirSelectedTextBox
@@ -364,9 +358,7 @@
             watcherDirListView.Name = "watcherDirListView";
             watcherDirListView.Size = new Size(505, 138);
             watcherDirListView.TabIndex = 6;
-            watcherDirListView.UseCompatibleStateImageBehavior = false;
-            watcherDirListView.View = View.Tile;
-            watcherDirListView.ItemSelectionChanged += watcherDirListView_ItemSelectionChanged;
+            watcherDirListView.SelectionChanged += watcherDirListView_ItemSelectionChanged;
             watcherDirListView.Resize += watcherDirListView_Resize;
             // 
             // label2
@@ -388,7 +380,6 @@
             dirAddButton.Size = new Size(112, 46);
             dirAddButton.TabIndex = 11;
             dirAddButton.Text = "添加目录";
-            dirAddButton.UseVisualStyleBackColor = true;
             dirAddButton.Click += dirAddButton_Click;
             // 
             // exportBtn
@@ -398,12 +389,11 @@
             exportBtn.Size = new Size(80, 30);
             exportBtn.TabIndex = 2;
             exportBtn.Text = "导出";
-            exportBtn.UseVisualStyleBackColor = true;
             exportBtn.Click += exportBtn_Click;
             // 
             // typeFilterCombo
             // 
-            typeFilterCombo.DropDownStyle = ComboBoxStyle.DropDownList;
+            typeFilterCombo.DropDownStyle = UIDropDownStyle.DropDownList;
             typeFilterCombo.FormattingEnabled = true;
             typeFilterCombo.Items.AddRange(new object[] { "全部", "创建", "修改", "删除", "重命名" });
             typeFilterCombo.Location = new Point(567, 8);
@@ -429,7 +419,6 @@
             clearBtn.Size = new Size(80, 30);
             clearBtn.TabIndex = 1;
             clearBtn.Text = "清空";
-            clearBtn.UseVisualStyleBackColor = true;
             clearBtn.Click += clearBtn_Click;
             // 
             // pauseBtn
@@ -439,7 +428,6 @@
             pauseBtn.Size = new Size(115, 30);
             pauseBtn.TabIndex = 0;
             pauseBtn.Text = "开始监测";
-            pauseBtn.UseVisualStyleBackColor = true;
             pauseBtn.Click += pauseBtn_Click;
             // 
             // changesDataGrid
@@ -531,7 +519,6 @@
             folderAnalyzerPage.Size = new Size(1429, 656);
             folderAnalyzerPage.TabIndex = 2;
             folderAnalyzerPage.Text = "文件夹分析";
-            folderAnalyzerPage.UseVisualStyleBackColor = true;
             // 
             // folderTreeView
             // 
@@ -557,7 +544,6 @@
             stopBtn.Size = new Size(80, 30);
             stopBtn.TabIndex = 3;
             stopBtn.Text = "停止";
-            stopBtn.UseVisualStyleBackColor = true;
             stopBtn.Click += stopBtn_Click;
             // 
             // scanBtn
@@ -567,7 +553,6 @@
             scanBtn.Size = new Size(100, 30);
             scanBtn.TabIndex = 2;
             scanBtn.Text = "开始扫描";
-            scanBtn.UseVisualStyleBackColor = true;
             scanBtn.Click += scanBtn_Click;
             // 
             // selectDirBtn
@@ -577,7 +562,6 @@
             selectDirBtn.Size = new Size(100, 30);
             selectDirBtn.TabIndex = 1;
             selectDirBtn.Text = "选择目录";
-            selectDirBtn.UseVisualStyleBackColor = true;
             selectDirBtn.Click += selectDirBtn_Click;
             // 
             // selectedPathTextBox
@@ -605,7 +589,6 @@
             diskCleanPage.Size = new Size(1429, 656);
             diskCleanPage.TabIndex = 3;
             diskCleanPage.Text = "磁盘清理";
-            diskCleanPage.UseVisualStyleBackColor = true;
             // 
             // cleanHistoryBox
             // 
@@ -665,7 +648,6 @@
             cleanRecycleRadio.TabIndex = 0;
             cleanRecycleRadio.TabStop = true;
             cleanRecycleRadio.Text = "回收站删除（可恢复）";
-            cleanRecycleRadio.UseVisualStyleBackColor = true;
             cleanRecycleRadio.CheckedChanged += cleanMethodRadio_CheckedChanged;
             // 
             // cleanPermanentRadio
@@ -677,7 +659,6 @@
             cleanPermanentRadio.TabIndex = 1;
             cleanPermanentRadio.TabStop = true;
             cleanPermanentRadio.Text = "永久删除";
-            cleanPermanentRadio.UseVisualStyleBackColor = true;
             cleanPermanentRadio.CheckedChanged += cleanMethodRadio_CheckedChanged;
             // 
             // cleanMoveRadio
@@ -689,7 +670,6 @@
             cleanMoveRadio.TabIndex = 2;
             cleanMoveRadio.TabStop = true;
             cleanMoveRadio.Text = "移动到";
-            cleanMoveRadio.UseVisualStyleBackColor = true;
             cleanMoveRadio.CheckedChanged += cleanMethodRadio_CheckedChanged;
             // 
             // cleanCompressRadio
@@ -701,7 +681,6 @@
             cleanCompressRadio.TabIndex = 3;
             cleanCompressRadio.TabStop = true;
             cleanCompressRadio.Text = "压缩到";
-            cleanCompressRadio.UseVisualStyleBackColor = true;
             cleanCompressRadio.CheckedChanged += cleanMethodRadio_CheckedChanged;
             // 
             // cleanMklinkRadio
@@ -713,7 +692,6 @@
             cleanMklinkRadio.TabIndex = 4;
             cleanMklinkRadio.TabStop = true;
             cleanMklinkRadio.Text = "mkLink 软链接到";
-            cleanMklinkRadio.UseVisualStyleBackColor = true;
             cleanMklinkRadio.CheckedChanged += cleanMethodRadio_CheckedChanged;
             // 
             // cleanTargetLabel
@@ -739,7 +717,6 @@
             cleanTargetSelectBtn.Size = new Size(90, 30);
             cleanTargetSelectBtn.TabIndex = 7;
             cleanTargetSelectBtn.Text = "浏览";
-            cleanTargetSelectBtn.UseVisualStyleBackColor = true;
             cleanTargetSelectBtn.Click += cleanTargetSelectBtn_Click;
             // 
             // cleanBtn
@@ -749,7 +726,6 @@
             cleanBtn.Size = new Size(110, 58);
             cleanBtn.TabIndex = 8;
             cleanBtn.Text = "清理选中文件";
-            cleanBtn.UseVisualStyleBackColor = true;
             cleanBtn.Click += cleanBtn_Click;
             // 
             // cleanTreeBox
@@ -784,7 +760,6 @@
             cleanSelectAllBtn.Size = new Size(70, 30);
             cleanSelectAllBtn.TabIndex = 1;
             cleanSelectAllBtn.Text = "全选";
-            cleanSelectAllBtn.UseVisualStyleBackColor = true;
             cleanSelectAllBtn.Click += cleanSelectAllBtn_Click;
             // 
             // cleanSelectNoneBtn
@@ -794,7 +769,6 @@
             cleanSelectNoneBtn.Size = new Size(70, 30);
             cleanSelectNoneBtn.TabIndex = 2;
             cleanSelectNoneBtn.Text = "全不选";
-            cleanSelectNoneBtn.UseVisualStyleBackColor = true;
             cleanSelectNoneBtn.Click += cleanSelectNoneBtn_Click;
             // 
             // cleanStatusLabel
@@ -824,8 +798,7 @@
             frequentPathListView.Name = "frequentPathListView";
             frequentPathListView.Size = new Size(332, 255);
             frequentPathListView.TabIndex = 0;
-            frequentPathListView.UseCompatibleStateImageBehavior = false;
-            frequentPathListView.ItemSelectionChanged += frequentPathListView_ItemSelectionChanged;
+            frequentPathListView.SelectionChanged += frequentPathListView_ItemSelectionChanged;
             frequentPathListView.MouseDoubleClick += frequentPathListView_MouseDoubleClick;
             // 
             // frequentHintLabel
@@ -847,7 +820,6 @@
             cleanRefreshFrequentBtn.Size = new Size(100, 30);
             cleanRefreshFrequentBtn.TabIndex = 4;
             cleanRefreshFrequentBtn.Text = "刷新高频参考";
-            cleanRefreshFrequentBtn.UseVisualStyleBackColor = true;
             cleanRefreshFrequentBtn.Click += cleanRefreshFrequentBtn_Click;
             // 
             // cleanScanProgressBar
@@ -865,7 +837,6 @@
             cleanScanBtn.Size = new Size(100, 30);
             cleanScanBtn.TabIndex = 2;
             cleanScanBtn.Text = "开始扫描";
-            cleanScanBtn.UseVisualStyleBackColor = true;
             cleanScanBtn.Click += cleanScanBtn_Click;
             // 
             // cleanSelectDirBtn
@@ -875,7 +846,6 @@
             cleanSelectDirBtn.Size = new Size(100, 30);
             cleanSelectDirBtn.TabIndex = 1;
             cleanSelectDirBtn.Text = "选择目录";
-            cleanSelectDirBtn.UseVisualStyleBackColor = true;
             cleanSelectDirBtn.Click += cleanSelectDirBtn_Click;
             // 
             // cleanPathTextBox
@@ -885,61 +855,6 @@
             cleanPathTextBox.Size = new Size(350, 30);
             cleanPathTextBox.TabIndex = 0;
             // 
-            // statusStrip1
-            // 
-            statusStrip1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            statusStrip1.AutoSize = false;
-            statusStrip1.BackColor = SystemColors.Control;
-            statusStrip1.Dock = DockStyle.None;
-            statusStrip1.ImageScalingSize = new Size(24, 24);
-            statusStrip1.Items.AddRange(new ToolStripItem[] { watchStatusLabel, writedRecordStatusLabel, timeStatusLabel, NoticeIcon });
-            statusStrip1.Location = new Point(0, 749);
-            statusStrip1.Name = "statusStrip1";
-            statusStrip1.Size = new Size(1437, 30);
-            statusStrip1.TabIndex = 4;
-            statusStrip1.Text = "statusStrip1";
-            // 
-            // watchStatusLabel
-            // 
-            watchStatusLabel.BackColor = SystemColors.Control;
-            watchStatusLabel.Name = "watchStatusLabel";
-            watchStatusLabel.Size = new Size(100, 23);
-            watchStatusLabel.Text = "未开始监测";
-            watchStatusLabel.TextAlign = ContentAlignment.MiddleLeft;
-            watchStatusLabel.Click += watchStatusLabel_Click;
-            // 
-            // writedRecordStatusLabel
-            // 
-            writedRecordStatusLabel.BackColor = SystemColors.Control;
-            writedRecordStatusLabel.Margin = new Padding(80, 4, 0, 3);
-            writedRecordStatusLabel.Name = "writedRecordStatusLabel";
-            writedRecordStatusLabel.Padding = new Padding(100, 0, 0, 0);
-            writedRecordStatusLabel.Size = new Size(544, 23);
-            writedRecordStatusLabel.Spring = true;
-            writedRecordStatusLabel.Text = "已记录 0 条";
-            writedRecordStatusLabel.Click += WritedRecordStatusLabel_Click;
-            // 
-            // timeStatusLabel
-            // 
-            timeStatusLabel.Margin = new Padding(50, 4, 0, 3);
-            timeStatusLabel.Name = "timeStatusLabel";
-            timeStatusLabel.Overflow = ToolStripItemOverflow.Never;
-            timeStatusLabel.Size = new Size(574, 23);
-            timeStatusLabel.Spring = true;
-            timeStatusLabel.Text = "2005-02-05 03:14:15";
-            timeStatusLabel.TextAlign = ContentAlignment.MiddleLeft;
-            timeStatusLabel.TextImageRelation = TextImageRelation.Overlay;
-            // 
-            // NoticeIcon
-            // 
-            NoticeIcon.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            NoticeIcon.Image = Properties.Resources.通知;
-            NoticeIcon.Margin = new Padding(50, 4, 0, 3);
-            NoticeIcon.Name = "NoticeIcon";
-            NoticeIcon.Size = new Size(24, 23);
-            NoticeIcon.Text = " ";
-            NoticeIcon.TextAlign = ContentAlignment.MiddleRight;
-            NoticeIcon.TextImageRelation = TextImageRelation.Overlay;
             // 
             // closeButton
             // 
@@ -949,7 +864,6 @@
             closeButton.Size = new Size(40, 33);
             closeButton.TabIndex = 1;
             closeButton.Text = "X";
-            closeButton.UseVisualStyleBackColor = true;
             closeButton.Click += closeButton_Click;
             // 
             // BiggerButton
@@ -960,7 +874,6 @@
             BiggerButton.Size = new Size(40, 33);
             BiggerButton.TabIndex = 2;
             BiggerButton.Text = "口";
-            BiggerButton.UseVisualStyleBackColor = true;
             BiggerButton.Click += BiggerButton_Click;
             // 
             // button1
@@ -971,7 +884,6 @@
             button1.Size = new Size(40, 33);
             button1.TabIndex = 3;
             button1.Text = "——";
-            button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
             // 
             // timer1
@@ -1049,7 +961,6 @@
             BackgroundImageLayout = ImageLayout.Zoom;
             ClientSize = new Size(1440, 860);
             Controls.Add(panelTitle);
-            Controls.Add(statusStrip1);
             Controls.Add(TabPageControl1);
             FormBorderStyle = FormBorderStyle.None;
             Icon = (Icon)resources.GetObject("$this.Icon");
@@ -1078,8 +989,6 @@
             cleanMethodBox.PerformLayout();
             cleanTreeBox.ResumeLayout(false);
             frequentPathBox.ResumeLayout(false);
-            statusStrip1.ResumeLayout(false);
-            statusStrip1.PerformLayout();
             notifyMenuStrip.ResumeLayout(false);
             panelTitle.Panel1.ResumeLayout(false);
             panelTitle.Panel1.PerformLayout();
@@ -1092,110 +1001,99 @@
         #endregion
 
         // 主容器
-        private TabControl TabPageControl1;
+        private UITabControl TabPageControl1;
         private TabPage totalReviewPage;
         private TabPage watcherPage;
         private TabPage folderAnalyzerPage;
 
         // 概览 tab
-        private Label dashboardTitleLabel;
-        private ProgressBar usageProgressBar;
-        private Label totalSpaceLabel;
-        private Label usedSpaceLabel;
-        private Label freeSpaceLabel;
-        private Label warningLabel;
+        private UILabel dashboardTitleLabel;
+        private UIProcessBar usageProgressBar;
+        private UILabel totalSpaceLabel;
+        private UILabel usedSpaceLabel;
+        private UILabel freeSpaceLabel;
+        private UILabel warningLabel;
 
         // 文件夹分析 tab
-        private TextBox selectedPathTextBox;
-        private Button selectDirBtn;
-        private Button scanBtn;
-        private Button stopBtn;
-        private ProgressBar scanProgressBar;
-        private TreeView folderTreeView;
+        private UITextBox selectedPathTextBox;
+        private UIButton selectDirBtn;
+        private UIButton scanBtn;
+        private UIButton stopBtn;
+        private UIWaitingBar scanProgressBar;
+        private UITreeView folderTreeView;
 
         // 标题栏
-        private Button closeButton;
-        private Button BiggerButton;
-        private Button button1;
+        private UIButton closeButton;
+        private UIButton BiggerButton;
+        private UIButton button1;
 
-        // 状态栏
-        private StatusStrip statusStrip1;
-        private ToolStripStatusLabel watchStatusLabel;
-        private ToolStripStatusLabel writedRecordStatusLabel;
-        private ToolStripStatusLabel timeStatusLabel;
-        private ToolStripStatusLabel NoticeIcon;
 
         // 不可见的 组件
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.Timer diskRefreshTimer;
         private NotifyIcon notifyIcon1;
         private SplitContainer panelTitle;
-        private Label label1;
-        private ContextMenuStrip notifyMenuStrip;
+        private UILabel label1;
+        private UIContextMenuStrip notifyMenuStrip;
         private ToolStripMenuItem exitToolStripMenuItem;
-        private GroupBox WatcherDirectoryBox;
+        private UIGroupBox WatcherDirectoryBox;
         /// <summary>
         ///  <para>Text 存储 目录名</para>
         ///  Tag 存储 WatchingDirectory 对象
         /// </summary>
-        private ListView watcherDirListView; 
-        private Button exportBtn;
-        private ComboBox typeFilterCombo;
-        private Label typeFilterLabel;
-        private Button clearBtn;
-        private Button pauseBtn;
-        private DataGridView changesDataGrid;
+        private UIDataGridView watcherDirListView;
+        private UIButton exportBtn;
+        private UIComboBox typeFilterCombo;
+        private UILabel typeFilterLabel;
+        private UIButton clearBtn;
+        private UIButton pauseBtn;
+        private UIDataGridView changesDataGrid;
         private DataGridViewTextBoxColumn TimeColumn;
         private DataGridViewTextBoxColumn TypeColumn;
         private DataGridViewTextBoxColumn FileNameColumn;
         private DataGridViewTextBoxColumn PathColumn;
         private DataGridViewTextBoxColumn SizeColumn;
         private DataGridViewTextBoxColumn SourceColumn;
-        private TextBox dirSelectedTextBox;
-        private Label label2;
-        private Button dirAddButton;
+        private UITextBox dirSelectedTextBox;
+        private UILabel label2;
+        private UIButton dirAddButton;
         private FolderBrowserDialog ImportFolderDialog;
-        private Button statisticButton;
-        private GroupBox ignoreProcessBox;
-        private ListView ignoreProcessView;
-        private Label label3;
-        private TextBox procSelectedTextBox;
-        private Button processAddButton;
+        private UIButton statisticButton;
+        private UIGroupBox ignoreProcessBox;
+        private UIDataGridView ignoreProcessView;
+        private UILabel label3;
+        private UITextBox procSelectedTextBox;
+        private UIButton processAddButton;
         private TabPage diskCleanPage;
-        private Button betterDirAddButton;
-        private Button betterProcessAddButton;
+        private UIButton betterDirAddButton;
+        private UIButton betterProcessAddButton;
 
         // 磁盘清理 tab
-        private TextBox cleanPathTextBox;
-        private Button cleanSelectDirBtn;
-        private Button cleanScanBtn;
-        private ProgressBar cleanScanProgressBar;
-        private Button cleanRefreshFrequentBtn;
-        private GroupBox frequentPathBox;
-        private ListView frequentPathListView;
-        private Label frequentHintLabel;
-        private GroupBox cleanTreeBox;
+        private UITextBox cleanPathTextBox;
+        private UIButton cleanSelectDirBtn;
+        private UIButton cleanScanBtn;
+        private UIWaitingBar cleanScanProgressBar;
+        private UIButton cleanRefreshFrequentBtn;
+        private UIGroupBox frequentPathBox;
+        private UIDataGridView frequentPathListView;
+        private UILabel frequentHintLabel;
+        private UIGroupBox cleanTreeBox;
         private TreeView cleanTreeView;
-        private Button cleanSelectAllBtn;
-        private Button cleanSelectNoneBtn;
-        private Label cleanStatusLabel;
-        private GroupBox cleanMethodBox;
-        private RadioButton cleanRecycleRadio;
-        private RadioButton cleanPermanentRadio;
-        private RadioButton cleanMoveRadio;
-        private RadioButton cleanCompressRadio;
-        private RadioButton cleanMklinkRadio;
-        private Label cleanTargetLabel;
-        private TextBox cleanTargetTextBox;
-        private Button cleanTargetSelectBtn;
-        private Button cleanBtn;
-        private GroupBox cleanHistoryBox;
-        private DataGridView cleanHistoryGrid;
-        private DataGridViewTextBoxColumn CleanTimeColumn;
-        private DataGridViewTextBoxColumn CleanPathColumn;
-        private DataGridViewTextBoxColumn CleanSizeColumn;
-        private DataGridViewTextBoxColumn CleanMethodColumn;
-        private DataGridViewTextBoxColumn CleanResultColumn;
-        private ProgressBar progressBar1;
+        private UIButton cleanSelectAllBtn;
+        private UIButton cleanSelectNoneBtn;
+        private UILabel cleanStatusLabel;
+        private UIGroupBox cleanMethodBox;
+        private UIRadioButton cleanRecycleRadio;
+        private UIRadioButton cleanPermanentRadio;
+        private UIRadioButton cleanMoveRadio;
+        private UIRadioButton cleanCompressRadio;
+        private UIRadioButton cleanMklinkRadio;
+        private UILabel cleanTargetLabel;
+        private UITextBox cleanTargetTextBox;
+        private UIButton cleanTargetSelectBtn;
+        private UIButton cleanBtn;
+        private UIGroupBox cleanHistoryBox;
+        private UIDataGridView cleanHistoryGrid;
+        private UIProcessBar progressBar1;
     }
 }

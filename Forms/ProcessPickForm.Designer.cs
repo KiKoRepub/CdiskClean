@@ -1,3 +1,5 @@
+using Sunny.UI;
+
 namespace CdiskClean.Forms
 {
     partial class ProcessPickForm
@@ -28,16 +30,16 @@ namespace CdiskClean.Forms
         /// </summary>
         private void InitializeComponent()
         {
-            searchLabel = new System.Windows.Forms.Label();
-            searchTextBox = new System.Windows.Forms.TextBox();
-            refreshBtn = new System.Windows.Forms.Button();
-            procListView = new System.Windows.Forms.ListView();
-            nameColumn = new System.Windows.Forms.ColumnHeader();
-            pidColumn = new System.Windows.Forms.ColumnHeader();
-            titleColumn = new System.Windows.Forms.ColumnHeader();
-            okBtn = new System.Windows.Forms.Button();
-            cancelBtn = new System.Windows.Forms.Button();
-            hintLabel = new System.Windows.Forms.Label();
+            searchLabel = new UILabel();
+            searchTextBox = new UITextBox();
+            refreshBtn = new UIButton();
+            procListView = new UIDataGridView();
+            nameColumn = new DataGridViewTextBoxColumn();
+            pidColumn = new DataGridViewTextBoxColumn();
+            titleColumn = new DataGridViewTextBoxColumn();
+            okBtn = new UIButton();
+            cancelBtn = new UIButton();
+            hintLabel = new UILabel();
             SuspendLayout();
             //
             // searchLabel
@@ -67,40 +69,38 @@ namespace CdiskClean.Forms
             refreshBtn.Size = new System.Drawing.Size(80, 34);
             refreshBtn.TabIndex = 2;
             refreshBtn.Text = "刷新";
-            refreshBtn.UseVisualStyleBackColor = true;
             refreshBtn.Click += refreshBtn_Click;
             //
             // procListView
             //
-            procListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[]
+            procListView.Columns.AddRange(new DataGridViewTextBoxColumn[]
             {
                 nameColumn, pidColumn, titleColumn
             });
             procListView.Font = new System.Drawing.Font("Microsoft YaHei UI", 11F);
-            procListView.FullRowSelect = true;
-            procListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
-            procListView.HideSelection = false;
             procListView.Location = new System.Drawing.Point(12, 58);
             procListView.MultiSelect = true;
             procListView.Name = "procListView";
             procListView.Size = new System.Drawing.Size(640, 400);
             procListView.TabIndex = 3;
-            procListView.UseCompatibleStateImageBehavior = false;
-            procListView.View = System.Windows.Forms.View.Details;
+            procListView.RowHeadersVisible = false;
+            procListView.AllowUserToAddRows = false;
+            procListView.ReadOnly = true;
+            procListView.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             //
             // nameColumn
             //
-            nameColumn.Text = "进程名";
+            nameColumn.HeaderText = "进程名";
             nameColumn.Width = 170;
             //
             // pidColumn
             //
-            pidColumn.Text = "PID";
+            pidColumn.HeaderText = "PID";
             pidColumn.Width = 90;
             //
             // titleColumn
             //
-            titleColumn.Text = "窗口标题";
+            titleColumn.HeaderText = "窗口标题";
             titleColumn.Width = 370;
             //
             // okBtn
@@ -111,7 +111,6 @@ namespace CdiskClean.Forms
             okBtn.Size = new System.Drawing.Size(85, 36);
             okBtn.TabIndex = 4;
             okBtn.Text = "确定";
-            okBtn.UseVisualStyleBackColor = true;
             okBtn.Click += okBtn_Click;
             //
             // cancelBtn
@@ -122,7 +121,6 @@ namespace CdiskClean.Forms
             cancelBtn.Size = new System.Drawing.Size(85, 36);
             cancelBtn.TabIndex = 5;
             cancelBtn.Text = "取消";
-            cancelBtn.UseVisualStyleBackColor = true;
             cancelBtn.Click += cancelBtn_Click;
             //
             // hintLabel
@@ -148,7 +146,6 @@ namespace CdiskClean.Forms
             Controls.Add(refreshBtn);
             Controls.Add(searchTextBox);
             Controls.Add(searchLabel);
-            FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "ProcessPickForm";
@@ -160,15 +157,15 @@ namespace CdiskClean.Forms
 
         #endregion
 
-        private System.Windows.Forms.Label searchLabel;
-        private System.Windows.Forms.TextBox searchTextBox;
-        private System.Windows.Forms.Button refreshBtn;
-        private System.Windows.Forms.ListView procListView;
-        private System.Windows.Forms.ColumnHeader nameColumn;
-        private System.Windows.Forms.ColumnHeader pidColumn;
-        private System.Windows.Forms.ColumnHeader titleColumn;
-        private System.Windows.Forms.Button okBtn;
-        private System.Windows.Forms.Button cancelBtn;
-        private System.Windows.Forms.Label hintLabel;
+        private UILabel searchLabel;
+        private UITextBox searchTextBox;
+        private UIButton refreshBtn;
+        private UIDataGridView procListView;
+        private DataGridViewTextBoxColumn nameColumn;
+        private DataGridViewTextBoxColumn pidColumn;
+        private DataGridViewTextBoxColumn titleColumn;
+        private UIButton okBtn;
+        private UIButton cancelBtn;
+        private UILabel hintLabel;
     }
 }

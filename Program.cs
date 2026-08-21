@@ -1,4 +1,5 @@
 using CdiskClean.Helpers;
+using Sunny.UI;
 using System.Security.Principal;
 
 namespace CdiskClean
@@ -14,6 +15,7 @@ namespace CdiskClean
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
+            UIStyles.SetStyle(UIStyle.Gray);
             ConfigureExceptionHandling();
             if (!IsElevated())
             {

@@ -146,7 +146,7 @@ namespace CdiskClean
         private void panel1_DragEnter(object sender, DragEventArgs e)
         {
             // 判断是否存在我们传入的数据
-            if (e.Data.GetDataPresent(typeof(Person)))
+            if (e.Data?.GetDataPresent(typeof(Person)) == true)
             {
                 e.Effect = DragDropEffects.Move;
             }
@@ -154,7 +154,7 @@ namespace CdiskClean
 
         private void panel1_DragDrop(object sender, DragEventArgs e)
         {
-            Person person = e.Data.GetData(typeof(Person)) as Person;
+            Person? person = e.Data?.GetData(typeof(Person)) as Person;
             if (person != null)
             {
                 //处理对象

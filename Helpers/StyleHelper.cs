@@ -28,5 +28,25 @@ namespace CdiskClean.Helpers
                     break;
             }
         }
+
+        /// <summary>DataGridView 行版：与 ListViewItem 版保持相同配色语义。</summary>
+        public static void ApplyRecordStatusStyle(DataGridViewRow row, RecordStatusEnum status)
+        {
+            switch (status)
+            {
+                case RecordStatusEnum.USING:
+                    row.DefaultCellStyle.ForeColor = Color.Black;
+                    row.DefaultCellStyle.BackColor = Color.FromArgb(230, 255, 230);
+                    break;
+                case RecordStatusEnum.FORBIDDEN:
+                    row.DefaultCellStyle.ForeColor = Color.Gray;
+                    row.DefaultCellStyle.BackColor = Color.FromArgb(255, 255, 230);
+                    break;
+                case RecordStatusEnum.DELETED:
+                    row.DefaultCellStyle.ForeColor = Color.LightGray;
+                    row.DefaultCellStyle.BackColor = Color.White;
+                    break;
+            }
+        }
     }
 }

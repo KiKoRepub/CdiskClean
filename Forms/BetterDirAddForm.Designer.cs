@@ -1,3 +1,5 @@
+using Sunny.UI;
+
 namespace CdiskClean.Forms
 {
     partial class BetterDirAddForm
@@ -28,15 +30,15 @@ namespace CdiskClean.Forms
         /// </summary>
         private void InitializeComponent()
         {
-            basePathLabel = new System.Windows.Forms.Label();
-            basePathTextBox = new System.Windows.Forms.TextBox();
-            browseBtn = new System.Windows.Forms.Button();
+            basePathLabel = new UILabel();
+            basePathTextBox = new UITextBox();
+            browseBtn = new UIButton();
             dirTreeView = new System.Windows.Forms.TreeView();
-            selectAllBtn = new System.Windows.Forms.Button();
-            selectNoneBtn = new System.Windows.Forms.Button();
-            okBtn = new System.Windows.Forms.Button();
-            cancelBtn = new System.Windows.Forms.Button();
-            hintLabel = new System.Windows.Forms.Label();
+            selectAllBtn = new UIButton();
+            selectNoneBtn = new UIButton();
+            okBtn = new UIButton();
+            cancelBtn = new UIButton();
+            hintLabel = new UILabel();
             SuspendLayout();
             //
             // basePathLabel
@@ -66,7 +68,6 @@ namespace CdiskClean.Forms
             browseBtn.Size = new System.Drawing.Size(100, 34);
             browseBtn.TabIndex = 2;
             browseBtn.Text = "浏览...";
-            browseBtn.UseVisualStyleBackColor = true;
             browseBtn.Click += browseBtn_Click;
             //
             // dirTreeView
@@ -88,7 +89,6 @@ namespace CdiskClean.Forms
             selectAllBtn.Size = new System.Drawing.Size(90, 36);
             selectAllBtn.TabIndex = 4;
             selectAllBtn.Text = "全选";
-            selectAllBtn.UseVisualStyleBackColor = true;
             selectAllBtn.Click += selectAllBtn_Click;
             //
             // selectNoneBtn
@@ -99,7 +99,6 @@ namespace CdiskClean.Forms
             selectNoneBtn.Size = new System.Drawing.Size(90, 36);
             selectNoneBtn.TabIndex = 5;
             selectNoneBtn.Text = "全不选";
-            selectNoneBtn.UseVisualStyleBackColor = true;
             selectNoneBtn.Click += selectNoneBtn_Click;
             //
             // okBtn
@@ -110,7 +109,6 @@ namespace CdiskClean.Forms
             okBtn.Size = new System.Drawing.Size(80, 36);
             okBtn.TabIndex = 6;
             okBtn.Text = "确定";
-            okBtn.UseVisualStyleBackColor = true;
             okBtn.Click += okBtn_Click;
             //
             // cancelBtn
@@ -121,7 +119,6 @@ namespace CdiskClean.Forms
             cancelBtn.Size = new System.Drawing.Size(80, 36);
             cancelBtn.TabIndex = 7;
             cancelBtn.Text = "取消";
-            cancelBtn.UseVisualStyleBackColor = true;
             cancelBtn.Click += cancelBtn_Click;
             //
             // hintLabel
@@ -149,7 +146,6 @@ namespace CdiskClean.Forms
             Controls.Add(browseBtn);
             Controls.Add(basePathTextBox);
             Controls.Add(basePathLabel);
-            FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "BetterDirAddForm";
@@ -161,14 +157,14 @@ namespace CdiskClean.Forms
 
         #endregion
 
-        private System.Windows.Forms.Label basePathLabel;
-        private System.Windows.Forms.TextBox basePathTextBox;
-        private System.Windows.Forms.Button browseBtn;
+        private UILabel basePathLabel;
+        private UITextBox basePathTextBox;
+        private UIButton browseBtn;
         private System.Windows.Forms.TreeView dirTreeView;
-        private System.Windows.Forms.Button selectAllBtn;
-        private System.Windows.Forms.Button selectNoneBtn;
-        private System.Windows.Forms.Button okBtn;
-        private System.Windows.Forms.Button cancelBtn;
-        private System.Windows.Forms.Label hintLabel;
+        private UIButton selectAllBtn;
+        private UIButton selectNoneBtn;
+        private UIButton okBtn;
+        private UIButton cancelBtn;
+        private UILabel hintLabel;
     }
 }
