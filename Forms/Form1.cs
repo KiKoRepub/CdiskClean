@@ -107,10 +107,18 @@ namespace CdiskClean
             // 初始化磁盘清理页
             SetupCleanPage();
 
-            // 重建展示层：服务与业务事件仍由 Form1 持有，页面由工作区壳统一承载。
-            BuildWorkspaceShell();
-
+            // 统一外观：设计器布局 + 原生控件样式；关闭按钮保持危险色
             UiTheme.Apply(this);
+            closeButton.ForeColor = UiTheme.Danger;
+
+            // 运行时工作区初始化：隐藏 TabControl 标签头、初始页面与子视图（须在 Apply 之后，避免选中态颜色被覆盖）
+            workspaceTabControl.Appearance = TabAppearance.FlatButtons;
+            workspaceTabControl.SizeMode = TabSizeMode.Fixed;
+            workspaceTabControl.ItemSize = new Size(0, 1);
+            ShowWorkspacePage(DashboardPageId);
+            ShowRulesView(true);
+            ShowRecordView("notifications");
+            RefreshWorkspaceStatus();
         }
 
 
@@ -403,7 +411,6 @@ namespace CdiskClean
                 }
                 _monitorService.Start();
                 _notificationService.Start();
-                pauseBtn.Text = "暂停";
                 notifyIcon1.Text = "C盘管理工具\r\n监测中";
             }
             else
@@ -411,20 +418,13 @@ namespace CdiskClean
                 _monitorService.Stop();
                 _etwService.Stop();
                 _notificationService.Stop();
-                pauseBtn.Text = "开始监测";
                 notifyIcon1.Text = "C盘管理工具\r\n已暂停";
             }
 
-            if (_workspaceMonitorToggleButton != null)
-            {
-                _workspaceMonitorToggleButton.Text = _monitorService.IsRunning ? "暂停监测" : "开始监测";
-                _workspaceMonitorToggleButton.IconSvg = _monitorService.IsRunning
-                    ? "PauseOutlined"
-                    : "PlayCircleOutlined";
-                _workspaceMonitorToggleButton.Type = _monitorService.IsRunning
-                    ? AntdUI.TTypeMini.Error
-                    : AntdUI.TTypeMini.Primary;
-            }
+            workspaceMonitorToggleButton.Text = _monitorService.IsRunning ? "暂停监测" : "开始监测";
+            workspaceMonitorToggleButton.BackColor = _monitorService.IsRunning
+                ? UiTheme.Danger
+                : UiTheme.Primary;
             RefreshWorkspaceStatus();
             RefreshDashboardMetrics();
         }
@@ -498,7 +498,7 @@ namespace CdiskClean
         private void ApplyFilter()
         {
             var filterIndex = typeFilterCombo.SelectedIndex;
-            var searchText = _recordSearchInput?.Text.Trim();
+            var searchText = recordSearchBox.Text.Trim();
             var hasSearch = !string.IsNullOrWhiteSpace(searchText);
             if (filterIndex <= 0 && !hasSearch)
             {
@@ -586,7 +586,7 @@ namespace CdiskClean
 
             // 过滤模式下重建过滤快照以包含新记录；全部模式下 BindingList 自动通知网格
             if (typeFilterCombo.SelectedIndex > 0 ||
-                !string.IsNullOrWhiteSpace(_recordSearchInput?.Text))
+                !string.IsNullOrWhiteSpace(recordSearchBox.Text))
                 ApplyFilter();
 
             RefreshDashboardMetrics();
@@ -596,11 +596,8 @@ namespace CdiskClean
         {
             BeginInvoke(() =>
             {
-                if (_workspaceRecordStatus != null)
-                {
-                    _workspaceRecordStatus.Text = message;
-                    _workspaceRecordStatus.ForeColor = UiTheme.Danger;
-                }
+                workspaceRecordStatus.Text = message;
+                workspaceRecordStatus.ForeColor = UiTheme.Danger;
             });
         }
 
@@ -629,11 +626,8 @@ namespace CdiskClean
 
         private void UpdateRecordCount()
         {
-            if (_workspaceRecordStatus != null)
-            {
-                _workspaceRecordStatus.Text = $"当前记录 {_records.Count:N0} 条";
-                _workspaceRecordStatus.ForeColor = UiTheme.TextSecondary;
-            }
+            workspaceRecordStatus.Text = $"当前记录 {_records.Count:N0} 条";
+            workspaceRecordStatus.ForeColor = UiTheme.TextSecondary;
         }
 
         // ==================== 文件夹分析 ====================
@@ -739,10 +733,6 @@ namespace CdiskClean
         private CancellationTokenSource? _cleanScanCts;
         private CancellationTokenSource? _cleanExecCts;
         private bool _treeUpdating;
-        private Label? _cleanHistoryEmptyLabel;
-
-        /// <summary>清理方式单选按钮与枚举映射（初始化于 SetupCleanPage）</summary>
-        private (RadioButton Radio, CleanupMethod Method)[] _cleanupMethodRadios = Array.Empty<(RadioButton, CleanupMethod)>();
 
         /// <summary>树节点数量上限，超过则仅显示目录节点（文件通过勾选目录整体清理）</summary>
         private const int MaxCleanTreeNodes = 50000;
@@ -764,7 +754,7 @@ namespace CdiskClean
             };
             SetupFrequentListView();
             SetupTreeStateImages();
-            SetupCleanHistoryGrid();
+            LayoutCleanupMethodPanel(cleanupMethodPanel);
             UpdateTargetBoxState();
             RefreshFrequentPaths();
             RefreshCleanHistory();
@@ -1426,8 +1416,7 @@ namespace CdiskClean
         {
             var records = _databaseService.GetCleanupRecords(200);
             cleanHistoryGrid.DataSource = records;
-            if (_cleanHistoryEmptyLabel != null)
-                _cleanHistoryEmptyLabel.Visible = records.Count == 0;
+            cleanHistoryEmptyLabel.Visible = records.Count == 0;
 
             // 列配置（数据绑定后列才存在）：隐藏原始列，其余按比例分配宽度
             if (records.Count > 0 && cleanHistoryGrid.Columns.Count > 0)
@@ -1460,23 +1449,6 @@ namespace CdiskClean
                     };
                 }
             }
-        }
-
-        /// <summary>历史表格：隐藏原始列、设置列宽比例、右键菜单与空状态提示</summary>
-        private void SetupCleanHistoryGrid()
-        {
-            cleanHistoryGrid.CellContextMenuStripNeeded += cleanHistoryGrid_CellContextMenuStripNeeded;
-
-            // 空状态提示标签（覆盖在表格上方；由记录中心页挂载到清理历史视图）
-            _cleanHistoryEmptyLabel = new Label
-            {
-                Text = "暂无清理记录",
-                TextAlign = ContentAlignment.MiddleCenter,
-                ForeColor = Color.Gray,
-                BackColor = Color.White,
-                Dock = DockStyle.Fill,
-                Visible = false
-            };
         }
 
         private void cleanHistoryGrid_CellContextMenuStripNeeded(
@@ -1527,8 +1499,7 @@ namespace CdiskClean
 
         private void timer1_Tick(object? sender, EventArgs e)
         {
-            if (_workspaceClockStatus != null)
-                _workspaceClockStatus.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            workspaceClockStatus.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         }
 
         // ==================== 工具方法 ====================
@@ -1564,6 +1535,39 @@ namespace CdiskClean
             diskRefreshTimer.Stop();
             timer1.Stop();
             Application.Exit();
+        }
+
+        // ==================== 无边框窗口拖拽 ====================
+
+        /// <summary>无边框窗体：在标题栏区域（窗口按钮除外）按下可拖动/双击最大化</summary>
+        protected override void WndProc(ref Message m)
+        {
+            const int WM_NCHITTEST = 0x84;
+            const int HTCAPTION = 0x02;
+
+            if (m.Msg == WM_NCHITTEST)
+            {
+                var screenPos = new Point(
+                    (short)(m.LParam.ToInt64() & 0xFFFF),
+                    (short)((m.LParam.ToInt64() >> 16) & 0xFFFF));
+                var client = PointToClient(screenPos);
+                if (workspaceHeader.Bounds.Contains(client) && !IsHeaderButtonHit(client))
+                {
+                    m.Result = (IntPtr)HTCAPTION;
+                    return;
+                }
+            }
+            base.WndProc(ref m);
+        }
+
+        private bool IsHeaderButtonHit(Point client)
+        {
+            foreach (Control control in workspaceHeader.Controls)
+            {
+                if (control is Button && control.Bounds.Contains(client))
+                    return true;
+            }
+            return false;
         }
 
         private void dirAddButton_Click(object? sender, EventArgs e)

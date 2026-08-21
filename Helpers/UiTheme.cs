@@ -200,7 +200,8 @@ namespace CdiskClean.Helpers
         }
 
         private static bool IsPrimaryButton(Button button) =>
-            button.Name is "pauseBtn" or "scanBtn" or "cleanScanBtn" or "cleanBtn" or "dirAddButton";
+            button.Name is "pauseBtn" or "scanBtn" or "cleanScanBtn" or "cleanBtn" or "dirAddButton"
+                or "workspaceMonitorToggleButton" or "rulesProcessAddButton" or "analyzerUseForCleanupButton";
 
         private static bool IsDangerButton(Button button) =>
             button.Name is "stopBtn" or "clearBtn";
@@ -234,6 +235,8 @@ namespace CdiskClean.Helpers
                 "cleanPathTextBox" => "请选择需要扫描的目录",
                 "selectedPathTextBox" => "请选择需要分析的目录",
                 "cleanTargetTextBox" => "请选择目标目录",
+                "recordSearchBox" => "搜索文件、路径或来源进程",
+                "manualProcessInput" => "输入进程名",
                 _ => null
             };
 

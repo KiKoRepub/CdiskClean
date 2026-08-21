@@ -51,7 +51,11 @@
       "Bash(xxd \"D:/university/CSharp/projects/CdiskClean/hfGrandTheatre.ico\")",
       "Bash(\"./publish/CdiskClean-Setup-1.0.0.exe\" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=\"C:\\\\Users\\\\qazxc\\\\.claude\\\\jobs\\\\9db62608\\\\tmp\\\\testinstall\" /LOG=\"C:\\\\Users\\\\qazxc\\\\.claude\\\\jobs\\\\9db62608\\\\tmp\\\\setup-test.log\")",
       "Bash(echo \"installer exit=$?\")",
-      "Bash(awk '{print $5, $9, $10, $11, $12}')"
+      "Bash(awk '{print $5, $9, $10, $11, $12}')",
+      "Bash(taskkill //PID 40828 //F)",
+      "Bash(powershell -Command \"Get-Process CdiskClean | Select-Object Id, MainWindowTitle, Responding | Format-List\")",
+      "Bash(sed 's/ \\\\[.*//')",
+      "Bash(git -c safe.directory='*' show HEAD:Forms/Form1.Workspace.cs)"
     ]
   }
 }
