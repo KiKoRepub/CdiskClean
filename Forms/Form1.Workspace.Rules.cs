@@ -16,11 +16,10 @@ public partial class Form1
         SetTabActive(rulesProcessTab, !directories);
     }
 
-    /// <summary>子页签按钮选中态：激活为蓝底白字，否则白底</summary>
-    private static void SetTabActive(Button button, bool active)
+    /// <summary>子页签按钮选中态：激活为主题色，否则默认态</summary>
+    private static void SetTabActive(AntdUI.Button button, bool active)
     {
-        button.BackColor = active ? UiTheme.Primary : Color.White;
-        button.ForeColor = active ? Color.White : UiTheme.TextPrimary;
+        button.Type = active ? AntdUI.TTypeMini.Primary : AntdUI.TTypeMini.Default;
     }
 
     private void AddManualIgnoreProcess()

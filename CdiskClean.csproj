@@ -16,6 +16,12 @@
     <EmbeddedResource Remove="docs\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="cacheRefer\**" />
+    <EmbeddedResource Remove="cacheRefer\**" />
+    <None Remove="cacheRefer\**" />
+  </ItemGroup>
+
  <ItemGroup>
     <Compile Remove="claude-prompt.txt" />
     <EmbeddedResource Remove="claude-prompt.txt" />

@@ -69,44 +69,20 @@ public partial class Form1
             RefreshRecordsCenter();
     }
 
-    /// <summary>侧栏导航选中态：当前页高亮为浅蓝底蓝字</summary>
+    /// <summary>侧栏导航选中态：由 AntdUI.Menu 自身维护高亮</summary>
     private void SetNavigationSelection(string id)
     {
-        foreach (var (button, pageId) in new (Button, string)[]
-        {
-            (navDashboardButton, DashboardPageId),
-            (navActivityButton, ActivityPageId),
-            (navRulesButton, RulesPageId),
-            (navAnalyzerButton, AnalyzerPageId),
-            (navCleanupButton, CleanupPageId),
-            (navRecordsButton, RecordsPageId)
-        })
-        {
-            bool active = pageId == id;
-            button.BackColor = active ? UiTheme.PrimarySoft : Color.White;
-            button.ForeColor = active ? UiTheme.Primary : UiTheme.TextSecondary;
-        }
+        if (workspaceMenu.FindID(id) is AntdUI.MenuItem menuItem && !menuItem.Select)
+            workspaceMenu.Select(menuItem, true);
     }
 
     private void ToggleWorkspaceMenu()
     {
         _workspaceMenuCollapsed = !_workspaceMenuCollapsed;
+        workspaceMenu.Collapsed = _workspaceMenuCollapsed;
         workspaceBodyLayout.ColumnStyles[0].Width = _workspaceMenuCollapsed ? 64F : 208F;
         brandLabel.Visible = !_workspaceMenuCollapsed;
-        workspaceCollapseButton.Text = _workspaceMenuCollapsed ? "☰" : "折叠菜单";
-
-        foreach (var (button, text) in new (Button, string)[]
-        {
-            (navDashboardButton, "工作台"),
-            (navActivityButton, "实时活动"),
-            (navRulesButton, "监控规则"),
-            (navAnalyzerButton, "空间分析"),
-            (navCleanupButton, "清理中心"),
-            (navRecordsButton, "记录中心")
-        })
-        {
-            button.Text = _workspaceMenuCollapsed ? string.Empty : text;
-        }
+        workspaceCollapseButton.Text = _workspaceMenuCollapsed ? string.Empty : "折叠菜单";
     }
 
     private void UpdateCleanupSelectionSummary()
@@ -124,24 +100,15 @@ public partial class Form1
 
     // ==================== 事件包装方法（设计器绑定） ====================
 
-    private void navDashboardButton_Click(object? sender, EventArgs e) => ShowWorkspacePage(DashboardPageId);
-    private void navActivityButton_Click(object? sender, EventArgs e) => ShowWorkspacePage(ActivityPageId);
-    private void navRulesButton_Click(object? sender, EventArgs e) => ShowWorkspacePage(RulesPageId);
-    private void navAnalyzerButton_Click(object? sender, EventArgs e) => ShowWorkspacePage(AnalyzerPageId);
-    private void navCleanupButton_Click(object? sender, EventArgs e) => ShowWorkspacePage(CleanupPageId);
-    private void navRecordsButton_Click(object? sender, EventArgs e) => ShowWorkspacePage(RecordsPageId);
+    private void workspaceMenu_ItemClick(object? sender, AntdUI.MenuItemEventArgs e)
+    {
+        if (e.Item != null && !string.IsNullOrWhiteSpace(e.Item.ID))
+            ShowWorkspacePage(e.Item.ID);
+    }
+
     private void workspaceCollapseButton_Click(object? sender, EventArgs e) => ToggleWorkspaceMenu();
     private void activityRecordCenterButton_Click(object? sender, EventArgs e) => ShowWorkspacePage(RecordsPageId);
     private void recordSearchBox_TextChanged(object? sender, EventArgs e) => ApplyFilter();
-
-    private void minimizeButton_Click(object? sender, EventArgs e) => WindowState = FormWindowState.Minimized;
-
-    private void maximizeButton_Click(object? sender, EventArgs e) =>
-        WindowState = WindowState == FormWindowState.Maximized
-            ? FormWindowState.Normal
-            : FormWindowState.Maximized;
-
-    private void closeButton_Click(object? sender, EventArgs e) => closeApplication();
 
     private sealed class DashboardActivityRow
     {

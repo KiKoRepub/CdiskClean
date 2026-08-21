@@ -107,9 +107,8 @@ namespace CdiskClean
             // 初始化磁盘清理页
             SetupCleanPage();
 
-            // 统一外观：设计器布局 + 原生控件样式；关闭按钮保持危险色
+            // 统一外观：设计器布局 + 原生控件样式（AntdUI 控件样式由自身 Type 管理）
             UiTheme.Apply(this);
-            closeButton.ForeColor = UiTheme.Danger;
 
             // 运行时工作区初始化：隐藏 TabControl 标签头、初始页面与子视图（须在 Apply 之后，避免选中态颜色被覆盖）
             workspaceTabControl.Appearance = TabAppearance.FlatButtons;
@@ -422,9 +421,9 @@ namespace CdiskClean
             }
 
             workspaceMonitorToggleButton.Text = _monitorService.IsRunning ? "暂停监测" : "开始监测";
-            workspaceMonitorToggleButton.BackColor = _monitorService.IsRunning
-                ? UiTheme.Danger
-                : UiTheme.Primary;
+            workspaceMonitorToggleButton.Type = _monitorService.IsRunning
+                ? AntdUI.TTypeMini.Error
+                : AntdUI.TTypeMini.Primary;
             RefreshWorkspaceStatus();
             RefreshDashboardMetrics();
         }
@@ -1539,36 +1538,7 @@ namespace CdiskClean
 
         // ==================== 无边框窗口拖拽 ====================
 
-        /// <summary>无边框窗体：在标题栏区域（窗口按钮除外）按下可拖动/双击最大化</summary>
-        protected override void WndProc(ref Message m)
-        {
-            const int WM_NCHITTEST = 0x84;
-            const int HTCAPTION = 0x02;
-
-            if (m.Msg == WM_NCHITTEST)
-            {
-                var screenPos = new Point(
-                    (short)(m.LParam.ToInt64() & 0xFFFF),
-                    (short)((m.LParam.ToInt64() >> 16) & 0xFFFF));
-                var client = PointToClient(screenPos);
-                if (workspaceHeader.Bounds.Contains(client) && !IsHeaderButtonHit(client))
-                {
-                    m.Result = (IntPtr)HTCAPTION;
-                    return;
-                }
-            }
-            base.WndProc(ref m);
-        }
-
-        private bool IsHeaderButtonHit(Point client)
-        {
-            foreach (Control control in workspaceHeader.Controls)
-            {
-                if (control is Button && control.Bounds.Contains(client))
-                    return true;
-            }
-            return false;
-        }
+        // 无边框窗体的标题栏拖拽、最小化/最大化/关闭按钮由 AntdUI.Window + AntdUI.PageHeader(ShowButton) 原生提供
 
         private void dirAddButton_Click(object? sender, EventArgs e)
         {

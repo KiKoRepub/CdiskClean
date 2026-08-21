@@ -1,5 +1,3 @@
-using System.Windows.Forms.VisualStyles;
-
 namespace CdiskClean
 {
     partial class Form1
@@ -39,21 +37,12 @@ namespace CdiskClean
             exitToolStripMenuItem = new ToolStripMenuItem();
             ImportFolderDialog = new FolderBrowserDialog();
             workspaceRoot = new TableLayoutPanel();
-            workspaceHeader = new Panel();
-            headerTitleLabel = new Label();
-            minimizeButton = new Button();
-            maximizeButton = new Button();
-            closeButton = new Button();
+            workspaceHeader = new AntdUI.PageHeader();
             workspaceBodyLayout = new TableLayoutPanel();
-            workspaceNavigation = new Panel();
+            workspaceNavigation = new AntdUI.Panel();
             brandLabel = new Label();
-            navRecordsButton = new Button();
-            navCleanupButton = new Button();
-            navAnalyzerButton = new Button();
-            navRulesButton = new Button();
-            navActivityButton = new Button();
-            navDashboardButton = new Button();
-            workspaceCollapseButton = new Button();
+            workspaceMenu = new AntdUI.Menu();
+            workspaceCollapseButton = new AntdUI.Button();
             workspaceMain = new TableLayoutPanel();
             workspacePageHeader = new Panel();
             workspacePageTitle = new Label();
@@ -61,22 +50,22 @@ namespace CdiskClean
             workspaceTabControl = new TabControl();
             dashboardPage = new TabPage();
             dashboardLayout = new TableLayoutPanel();
-            dashboardCapacitySurface = new Panel();
+            dashboardCapacitySurface = new AntdUI.Panel();
             dashboardTitleLabel = new Label();
             dashboardUsageLabel = new Label();
-            dashboardDiskProgress = new ProgressBar();
+            dashboardDiskProgress = new AntdUI.Progress();
             dashboardCapacityLabel = new Label();
             dashboardMetrics = new TableLayoutPanel();
-            dashboardMonitorSurface = new Panel();
+            dashboardMonitorSurface = new AntdUI.Panel();
             dashboardMonitorTitle = new Label();
             dashboardMonitorMetric = new Label();
-            dashboardRecordSurface = new Panel();
+            dashboardRecordSurface = new AntdUI.Panel();
             dashboardRecordTitle = new Label();
             dashboardRecordMetric = new Label();
-            dashboardRuleSurface = new Panel();
+            dashboardRuleSurface = new AntdUI.Panel();
             dashboardRuleTitle = new Label();
             dashboardRuleMetric = new Label();
-            dashboardRecentSurface = new Panel();
+            dashboardRecentSurface = new AntdUI.Panel();
             dashboardRecentTitle = new Label();
             dashboardRecentGrid = new DataGridView();
             RecentTimestampColumn = new DataGridViewTextBoxColumn();
@@ -86,13 +75,13 @@ namespace CdiskClean
             RecentDirectoryColumn = new DataGridViewTextBoxColumn();
             activityPage = new TabPage();
             activityToolbar = new FlowLayoutPanel();
-            workspaceMonitorToggleButton = new Button();
+            workspaceMonitorToggleButton = new AntdUI.Button();
             typeFilterCombo = new ComboBox();
-            recordSearchBox = new TextBox();
-            exportBtn = new Button();
-            clearBtn = new Button();
-            activityRecordCenterButton = new Button();
-            activitySurface = new Panel();
+            recordSearchBox = new AntdUI.Input();
+            exportBtn = new AntdUI.Button();
+            clearBtn = new AntdUI.Button();
+            activityRecordCenterButton = new AntdUI.Button();
+            activitySurface = new AntdUI.Panel();
             changesDataGrid = new DataGridView();
             TimeColumn = new DataGridViewTextBoxColumn();
             TypeColumn = new DataGridViewTextBoxColumn();
@@ -102,19 +91,19 @@ namespace CdiskClean
             SourceColumn = new DataGridViewTextBoxColumn();
             rulesPage = new TabPage();
             rulesToolbar = new FlowLayoutPanel();
-            rulesDirectoryTab = new Button();
-            rulesProcessTab = new Button();
-            rulesSurface = new Panel();
+            rulesDirectoryTab = new AntdUI.Button();
+            rulesProcessTab = new AntdUI.Button();
+            rulesSurface = new AntdUI.Panel();
             rulesDirectoryView = new Panel();
             rulesDirToolbar = new FlowLayoutPanel();
-            dirAddButton = new Button();
-            betterDirAddButton = new Button();
+            dirAddButton = new AntdUI.Button();
+            betterDirAddButton = new AntdUI.Button();
             watcherDirListView = new ListView();
             rulesProcessView = new Panel();
             rulesProcToolbar = new FlowLayoutPanel();
-            manualProcessInput = new TextBox();
-            rulesProcessAddButton = new Button();
-            betterProcessAddButton = new Button();
+            manualProcessInput = new AntdUI.Input();
+            rulesProcessAddButton = new AntdUI.Button();
+            betterProcessAddButton = new AntdUI.Button();
             ignoreProcessView = new ListView();
             analyzerPage = new TabPage();
             analyzerToolbar = new TableLayoutPanel();
@@ -124,15 +113,15 @@ namespace CdiskClean
             stopBtn = new Button();
             scanProgressBar = new ProgressBar();
             analyzerContent = new TableLayoutPanel();
-            analyzerTreeSurface = new Panel();
+            analyzerTreeSurface = new AntdUI.Panel();
             folderTreeView = new TreeView();
-            analyzerDetailsSurface = new Panel();
+            analyzerDetailsSurface = new AntdUI.Panel();
             analyzerDetailsTitle = new Label();
             analyzerPathValue = new Label();
             analyzerSizeValue = new Label();
             analyzerFilesValue = new Label();
             analyzerFoldersValue = new Label();
-            analyzerUseForCleanupButton = new Button();
+            analyzerUseForCleanupButton = new AntdUI.Button();
             cleanupPage = new TabPage();
             cleanupToolbar = new TableLayoutPanel();
             cleanPathTextBox = new TextBox();
@@ -140,7 +129,7 @@ namespace CdiskClean
             cleanScanBtn = new Button();
             cleanScanProgressBar = new ProgressBar();
             cleanupContent = new TableLayoutPanel();
-            cleanupTreeSurface = new Panel();
+            cleanupTreeSurface = new AntdUI.Panel();
             cleanupTreeLayout = new TableLayoutPanel();
             cleanupSelectionBar = new FlowLayoutPanel();
             cleanSelectAllBtn = new Button();
@@ -148,10 +137,10 @@ namespace CdiskClean
             cleanupSelectionLabel = new Label();
             cleanTreeView = new TreeView();
             cleanStatusLabel = new Label();
-            cleanupActionSurface = new Panel();
+            cleanupActionSurface = new AntdUI.Panel();
             cleanupActionLayout = new TableLayoutPanel();
             cleanupFrequentPanel = new Panel();
-            frequentRefreshButton = new Button();
+            frequentRefreshButton = new AntdUI.Button();
             frequentPathListView = new ListView();
             frequentHintLabel = new Label();
             cleanupFrequentTitle = new Label();
@@ -168,12 +157,12 @@ namespace CdiskClean
             cleanBtn = new Button();
             recordsPage = new TabPage();
             recordsToolbar = new FlowLayoutPanel();
-            recordsNotificationTab = new Button();
-            recordsStatsTab = new Button();
-            recordsDetailsTab = new Button();
-            recordsCleanupTab = new Button();
-            recordsRefreshButton = new Button();
-            recordsSurface = new Panel();
+            recordsNotificationTab = new AntdUI.Button();
+            recordsStatsTab = new AntdUI.Button();
+            recordsDetailsTab = new AntdUI.Button();
+            recordsCleanupTab = new AntdUI.Button();
+            recordsRefreshButton = new AntdUI.Button();
+            recordsSurface = new AntdUI.Panel();
             recordViewHost = new Panel();
             cleanupRecordView = new Panel();
             cleanHistoryGrid = new DataGridView();
@@ -305,67 +294,20 @@ namespace CdiskClean
             workspaceRoot.TabIndex = 0;
             // 
             // workspaceHeader
-            // 
+            //
             workspaceHeader.BackColor = Color.White;
-            workspaceHeader.Controls.Add(headerTitleLabel);
-            workspaceHeader.Controls.Add(minimizeButton);
-            workspaceHeader.Controls.Add(maximizeButton);
-            workspaceHeader.Controls.Add(closeButton);
             workspaceHeader.Dock = DockStyle.Fill;
+            workspaceHeader.Font = new Font("Microsoft YaHei UI", 10.5F, FontStyle.Bold);
+            workspaceHeader.ForeColor = Color.FromArgb(31, 41, 55);
             workspaceHeader.Location = new Point(0, 0);
             workspaceHeader.Margin = new Padding(0);
             workspaceHeader.Name = "workspaceHeader";
+            workspaceHeader.ShowButton = true;
+            workspaceHeader.ShowIcon = false;
             workspaceHeader.Size = new Size(200, 48);
             workspaceHeader.TabIndex = 0;
-            // 
-            // headerTitleLabel
-            // 
-            headerTitleLabel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            headerTitleLabel.Font = new Font("Microsoft YaHei UI", 10.5F, FontStyle.Bold);
-            headerTitleLabel.ForeColor = Color.FromArgb(31, 41, 55);
-            headerTitleLabel.Location = new Point(18, 12);
-            headerTitleLabel.Name = "headerTitleLabel";
-            headerTitleLabel.Size = new Size(1280, 26);
-            headerTitleLabel.TabIndex = 0;
-            headerTitleLabel.Text = "CdiskClean  C盘监测与清理";
-            headerTitleLabel.TextAlign = ContentAlignment.MiddleLeft;
-            // 
-            // minimizeButton
-            // 
-            minimizeButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            minimizeButton.Location = new Point(1320, 8);
-            minimizeButton.Name = "minimizeButton";
-            minimizeButton.Size = new Size(36, 32);
-            minimizeButton.TabIndex = 1;
-            minimizeButton.TabStop = false;
-            minimizeButton.Text = "─";
-            minimizeButton.UseVisualStyleBackColor = true;
-            minimizeButton.Click += minimizeButton_Click;
-            // 
-            // maximizeButton
-            // 
-            maximizeButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            maximizeButton.Location = new Point(1358, 8);
-            maximizeButton.Name = "maximizeButton";
-            maximizeButton.Size = new Size(36, 32);
-            maximizeButton.TabIndex = 2;
-            maximizeButton.TabStop = false;
-            maximizeButton.Text = "□";
-            maximizeButton.UseVisualStyleBackColor = true;
-            maximizeButton.Click += maximizeButton_Click;
-            // 
-            // closeButton
-            // 
-            closeButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            closeButton.Location = new Point(1396, 8);
-            closeButton.Name = "closeButton";
-            closeButton.Size = new Size(36, 32);
-            closeButton.TabIndex = 3;
-            closeButton.TabStop = false;
-            closeButton.Text = "✕";
-            closeButton.UseVisualStyleBackColor = true;
-            closeButton.Click += closeButton_Click;
-            // 
+            workspaceHeader.Text = "CdiskClean  C盘监测与清理";
+            //
             // workspaceBodyLayout
             // 
             workspaceBodyLayout.ColumnCount = 2;
@@ -383,140 +325,64 @@ namespace CdiskClean
             workspaceBodyLayout.TabIndex = 1;
             // 
             // workspaceNavigation
-            // 
+            //
             workspaceNavigation.BackColor = Color.White;
             workspaceNavigation.Controls.Add(brandLabel);
-            workspaceNavigation.Controls.Add(navRecordsButton);
-            workspaceNavigation.Controls.Add(navCleanupButton);
-            workspaceNavigation.Controls.Add(navAnalyzerButton);
-            workspaceNavigation.Controls.Add(navRulesButton);
-            workspaceNavigation.Controls.Add(navActivityButton);
-            workspaceNavigation.Controls.Add(navDashboardButton);
+            workspaceNavigation.Controls.Add(workspaceMenu);
             workspaceNavigation.Controls.Add(workspaceCollapseButton);
             workspaceNavigation.Dock = DockStyle.Fill;
             workspaceNavigation.Location = new Point(0, 0);
             workspaceNavigation.Margin = new Padding(0);
             workspaceNavigation.Name = "workspaceNavigation";
             workspaceNavigation.Padding = new Padding(8, 12, 8, 8);
+            workspaceNavigation.Radius = 0;
             workspaceNavigation.Size = new Size(208, 22);
             workspaceNavigation.TabIndex = 0;
-            // 
+            //
             // brandLabel
-            // 
+            //
             brandLabel.BackColor = Color.White;
             brandLabel.Dock = DockStyle.Top;
             brandLabel.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             brandLabel.ForeColor = Color.FromArgb(31, 41, 55);
-            brandLabel.Location = new Point(8, 264);
+            brandLabel.Location = new Point(8, 0);
             brandLabel.Name = "brandLabel";
             brandLabel.Size = new Size(192, 48);
             brandLabel.TabIndex = 0;
             brandLabel.Text = "  CDISK CLEAN";
             brandLabel.TextAlign = ContentAlignment.MiddleLeft;
-            // 
-            // navRecordsButton
-            // 
-            navRecordsButton.Dock = DockStyle.Top;
-            navRecordsButton.FlatStyle = FlatStyle.Flat;
-            navRecordsButton.ForeColor = Color.FromArgb(102, 112, 133);
-            navRecordsButton.Location = new Point(8, 222);
-            navRecordsButton.Margin = new Padding(4, 2, 4, 2);
-            navRecordsButton.Name = "navRecordsButton";
-            navRecordsButton.Size = new Size(192, 42);
-            navRecordsButton.TabIndex = 6;
-            navRecordsButton.Text = "记录中心";
-            navRecordsButton.TextAlign = ContentAlignment.MiddleLeft;
-            navRecordsButton.UseVisualStyleBackColor = true;
-            navRecordsButton.Click += navRecordsButton_Click;
-            // 
-            // navCleanupButton
-            // 
-            navCleanupButton.Dock = DockStyle.Top;
-            navCleanupButton.FlatStyle = FlatStyle.Flat;
-            navCleanupButton.ForeColor = Color.FromArgb(102, 112, 133);
-            navCleanupButton.Location = new Point(8, 180);
-            navCleanupButton.Margin = new Padding(4, 2, 4, 2);
-            navCleanupButton.Name = "navCleanupButton";
-            navCleanupButton.Size = new Size(192, 42);
-            navCleanupButton.TabIndex = 5;
-            navCleanupButton.Text = "清理中心";
-            navCleanupButton.TextAlign = ContentAlignment.MiddleLeft;
-            navCleanupButton.UseVisualStyleBackColor = true;
-            navCleanupButton.Click += navCleanupButton_Click;
-            // 
-            // navAnalyzerButton
-            // 
-            navAnalyzerButton.Dock = DockStyle.Top;
-            navAnalyzerButton.FlatStyle = FlatStyle.Flat;
-            navAnalyzerButton.ForeColor = Color.FromArgb(102, 112, 133);
-            navAnalyzerButton.Location = new Point(8, 138);
-            navAnalyzerButton.Margin = new Padding(4, 2, 4, 2);
-            navAnalyzerButton.Name = "navAnalyzerButton";
-            navAnalyzerButton.Size = new Size(192, 42);
-            navAnalyzerButton.TabIndex = 4;
-            navAnalyzerButton.Text = "空间分析";
-            navAnalyzerButton.TextAlign = ContentAlignment.MiddleLeft;
-            navAnalyzerButton.UseVisualStyleBackColor = true;
-            navAnalyzerButton.Click += navAnalyzerButton_Click;
-            // 
-            // navRulesButton
-            // 
-            navRulesButton.Dock = DockStyle.Top;
-            navRulesButton.FlatStyle = FlatStyle.Flat;
-            navRulesButton.ForeColor = Color.FromArgb(102, 112, 133);
-            navRulesButton.Location = new Point(8, 96);
-            navRulesButton.Margin = new Padding(4, 2, 4, 2);
-            navRulesButton.Name = "navRulesButton";
-            navRulesButton.Size = new Size(192, 42);
-            navRulesButton.TabIndex = 3;
-            navRulesButton.Text = "监控规则";
-            navRulesButton.TextAlign = ContentAlignment.MiddleLeft;
-            navRulesButton.UseVisualStyleBackColor = true;
-            navRulesButton.Click += navRulesButton_Click;
-            // 
-            // navActivityButton
-            // 
-            navActivityButton.Dock = DockStyle.Top;
-            navActivityButton.FlatStyle = FlatStyle.Flat;
-            navActivityButton.ForeColor = Color.FromArgb(102, 112, 133);
-            navActivityButton.Location = new Point(8, 54);
-            navActivityButton.Margin = new Padding(4, 2, 4, 2);
-            navActivityButton.Name = "navActivityButton";
-            navActivityButton.Size = new Size(192, 42);
-            navActivityButton.TabIndex = 2;
-            navActivityButton.Text = "实时活动";
-            navActivityButton.TextAlign = ContentAlignment.MiddleLeft;
-            navActivityButton.UseVisualStyleBackColor = true;
-            navActivityButton.Click += navActivityButton_Click;
-            // 
-            // navDashboardButton
-            // 
-            navDashboardButton.Dock = DockStyle.Top;
-            navDashboardButton.FlatStyle = FlatStyle.Flat;
-            navDashboardButton.ForeColor = Color.FromArgb(102, 112, 133);
-            navDashboardButton.Location = new Point(8, 12);
-            navDashboardButton.Margin = new Padding(4, 2, 4, 2);
-            navDashboardButton.Name = "navDashboardButton";
-            navDashboardButton.Size = new Size(192, 42);
-            navDashboardButton.TabIndex = 1;
-            navDashboardButton.Text = "工作台";
-            navDashboardButton.TextAlign = ContentAlignment.MiddleLeft;
-            navDashboardButton.UseVisualStyleBackColor = true;
-            navDashboardButton.Click += navDashboardButton_Click;
-            // 
+            //
+            // workspaceMenu
+            //
+            workspaceMenu.AutoCollapse = false;
+            workspaceMenu.BackColor = Color.White;
+            workspaceMenu.Dock = DockStyle.Fill;
+            workspaceMenu.Items.AddRange(new AntdUI.MenuItem[] {
+            new AntdUI.MenuItem { ID = "dashboard", Name = "dashboard", Text = "工作台", IconSvg = "DashboardOutlined", Select = true },
+            new AntdUI.MenuItem { ID = "activity", Name = "activity", Text = "实时活动", IconSvg = "MonitorOutlined" },
+            new AntdUI.MenuItem { ID = "rules", Name = "rules", Text = "监控规则", IconSvg = "ControlOutlined" },
+            new AntdUI.MenuItem { ID = "analyzer", Name = "analyzer", Text = "空间分析", IconSvg = "PieChartOutlined" },
+            new AntdUI.MenuItem { ID = "cleanup", Name = "cleanup", Text = "清理中心", IconSvg = "DeleteOutlined" },
+            new AntdUI.MenuItem { ID = "records", Name = "records", Text = "记录中心", IconSvg = "HistoryOutlined" }});
+            workspaceMenu.Location = new Point(8, 48);
+            workspaceMenu.Margin = new Padding(0);
+            workspaceMenu.Name = "workspaceMenu";
+            workspaceMenu.Radius = 5;
+            workspaceMenu.Size = new Size(192, 60);
+            workspaceMenu.TabIndex = 1;
+            workspaceMenu.ItemClick += workspaceMenu_ItemClick;
+            //
             // workspaceCollapseButton
-            // 
+            //
             workspaceCollapseButton.Dock = DockStyle.Bottom;
-            workspaceCollapseButton.FlatStyle = FlatStyle.Flat;
-            workspaceCollapseButton.ForeColor = Color.FromArgb(102, 112, 133);
-            workspaceCollapseButton.Location = new Point(8, -28);
+            workspaceCollapseButton.IconSvg = "ControlOutlined";
+            workspaceCollapseButton.Location = new Point(8, 108);
             workspaceCollapseButton.Margin = new Padding(4, 2, 4, 2);
             workspaceCollapseButton.Name = "workspaceCollapseButton";
+            workspaceCollapseButton.Radius = 1;
             workspaceCollapseButton.Size = new Size(192, 42);
-            workspaceCollapseButton.TabIndex = 7;
+            workspaceCollapseButton.TabIndex = 2;
             workspaceCollapseButton.Text = "折叠菜单";
-            workspaceCollapseButton.TextAlign = ContentAlignment.MiddleLeft;
-            workspaceCollapseButton.UseVisualStyleBackColor = true;
             workspaceCollapseButton.Click += workspaceCollapseButton_Click;
             // 
             // workspaceMain
@@ -629,6 +495,7 @@ namespace CdiskClean
             dashboardCapacitySurface.Location = new Point(0, 0);
             dashboardCapacitySurface.Margin = new Padding(0);
             dashboardCapacitySurface.Name = "dashboardCapacitySurface";
+            dashboardCapacitySurface.Radius = 6;
             dashboardCapacitySurface.Size = new Size(1, 188);
             dashboardCapacitySurface.TabIndex = 0;
             // 
@@ -657,12 +524,14 @@ namespace CdiskClean
             dashboardUsageLabel.Text = "正在读取磁盘信息...";
             // 
             // dashboardDiskProgress
-            // 
+            //
             dashboardDiskProgress.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             dashboardDiskProgress.Location = new Point(24, 98);
             dashboardDiskProgress.Name = "dashboardDiskProgress";
+            dashboardDiskProgress.Radius = 4;
             dashboardDiskProgress.Size = new Size(0, 18);
             dashboardDiskProgress.TabIndex = 2;
+            dashboardDiskProgress.Value = 0F;
             // 
             // dashboardCapacityLabel
             // 
@@ -703,6 +572,7 @@ namespace CdiskClean
             dashboardMonitorSurface.Location = new Point(0, 0);
             dashboardMonitorSurface.Margin = new Padding(0, 0, 6, 0);
             dashboardMonitorSurface.Name = "dashboardMonitorSurface";
+            dashboardMonitorSurface.Radius = 6;
             dashboardMonitorSurface.Size = new Size(1, 80);
             dashboardMonitorSurface.TabIndex = 0;
             // 
@@ -742,6 +612,7 @@ namespace CdiskClean
             dashboardRecordSurface.Location = new Point(6, 0);
             dashboardRecordSurface.Margin = new Padding(6, 0, 6, 0);
             dashboardRecordSurface.Name = "dashboardRecordSurface";
+            dashboardRecordSurface.Radius = 6;
             dashboardRecordSurface.Size = new Size(1, 80);
             dashboardRecordSurface.TabIndex = 1;
             // 
@@ -781,6 +652,7 @@ namespace CdiskClean
             dashboardRuleSurface.Location = new Point(6, 0);
             dashboardRuleSurface.Margin = new Padding(6, 0, 0, 0);
             dashboardRuleSurface.Name = "dashboardRuleSurface";
+            dashboardRuleSurface.Radius = 6;
             dashboardRuleSurface.Size = new Size(1, 80);
             dashboardRuleSurface.TabIndex = 2;
             // 
@@ -820,6 +692,7 @@ namespace CdiskClean
             dashboardRecentSurface.Location = new Point(0, 278);
             dashboardRecentSurface.Margin = new Padding(0);
             dashboardRecentSurface.Name = "dashboardRecentSurface";
+            dashboardRecentSurface.Radius = 6;
             dashboardRecentSurface.Size = new Size(1, 1);
             dashboardRecentSurface.TabIndex = 2;
             // 
@@ -933,15 +806,16 @@ namespace CdiskClean
             activityToolbar.WrapContents = false;
             // 
             // workspaceMonitorToggleButton
-            // 
-            workspaceMonitorToggleButton.FlatStyle = FlatStyle.Flat;
+            //
+            workspaceMonitorToggleButton.IconSvg = "PlayCircleOutlined";
             workspaceMonitorToggleButton.Location = new Point(0, 8);
             workspaceMonitorToggleButton.Margin = new Padding(0, 4, 8, 0);
             workspaceMonitorToggleButton.Name = "workspaceMonitorToggleButton";
+            workspaceMonitorToggleButton.Radius = 1;
             workspaceMonitorToggleButton.Size = new Size(100, 36);
             workspaceMonitorToggleButton.TabIndex = 0;
             workspaceMonitorToggleButton.Text = "开始监测";
-            workspaceMonitorToggleButton.UseVisualStyleBackColor = true;
+            workspaceMonitorToggleButton.Type = AntdUI.TTypeMini.Primary;
             workspaceMonitorToggleButton.Click += pauseBtn_Click;
             // 
             // typeFilterCombo
@@ -957,53 +831,56 @@ namespace CdiskClean
             typeFilterCombo.SelectedIndexChanged += typeFilterCombo_SelectedIndexChanged;
             // 
             // recordSearchBox
-            // 
-            recordSearchBox.BorderStyle = BorderStyle.FixedSingle;
+            //
             recordSearchBox.Location = new Point(252, 8);
             recordSearchBox.Margin = new Padding(10, 4, 0, 0);
             recordSearchBox.Name = "recordSearchBox";
-            recordSearchBox.Size = new Size(260, 30);
+            recordSearchBox.PlaceholderText = "搜索文件、路径或来源进程";
+            recordSearchBox.PrefixSvg = "SearchOutlined";
+            recordSearchBox.Radius = 5;
+            recordSearchBox.Size = new Size(260, 36);
             recordSearchBox.TabIndex = 2;
             recordSearchBox.TextChanged += recordSearchBox_TextChanged;
-            // 
+            //
             // exportBtn
-            // 
-            exportBtn.FlatStyle = FlatStyle.Flat;
+            //
+            exportBtn.IconSvg = "ExportOutlined";
             exportBtn.Location = new Point(524, 8);
             exportBtn.Margin = new Padding(12, 4, 8, 0);
             exportBtn.Name = "exportBtn";
+            exportBtn.Radius = 1;
             exportBtn.Size = new Size(84, 36);
             exportBtn.TabIndex = 3;
             exportBtn.Text = "导出";
-            exportBtn.UseVisualStyleBackColor = true;
             exportBtn.Click += exportBtn_Click;
-            // 
+            //
             // clearBtn
-            // 
-            clearBtn.FlatStyle = FlatStyle.Flat;
+            //
+            clearBtn.IconSvg = "ClearOutlined";
             clearBtn.Location = new Point(616, 8);
             clearBtn.Margin = new Padding(0, 4, 8, 0);
             clearBtn.Name = "clearBtn";
+            clearBtn.Radius = 1;
             clearBtn.Size = new Size(84, 36);
             clearBtn.TabIndex = 4;
             clearBtn.Text = "清空";
-            clearBtn.UseVisualStyleBackColor = true;
+            clearBtn.Type = AntdUI.TTypeMini.Error;
             clearBtn.Click += clearBtn_Click;
-            // 
+            //
             // activityRecordCenterButton
-            // 
-            activityRecordCenterButton.FlatStyle = FlatStyle.Flat;
+            //
+            activityRecordCenterButton.IconSvg = "HistoryOutlined";
             activityRecordCenterButton.Location = new Point(708, 8);
             activityRecordCenterButton.Margin = new Padding(0, 4, 8, 0);
             activityRecordCenterButton.Name = "activityRecordCenterButton";
+            activityRecordCenterButton.Radius = 1;
             activityRecordCenterButton.Size = new Size(100, 36);
             activityRecordCenterButton.TabIndex = 5;
             activityRecordCenterButton.Text = "记录中心";
-            activityRecordCenterButton.UseVisualStyleBackColor = true;
             activityRecordCenterButton.Click += activityRecordCenterButton_Click;
-            // 
+            //
             // activitySurface
-            // 
+            //
             activitySurface.BackColor = Color.White;
             activitySurface.Controls.Add(changesDataGrid);
             activitySurface.Dock = DockStyle.Fill;
@@ -1011,6 +888,7 @@ namespace CdiskClean
             activitySurface.Margin = new Padding(0);
             activitySurface.Name = "activitySurface";
             activitySurface.Padding = new Padding(12);
+            activitySurface.Radius = 6;
             activitySurface.Size = new Size(0, 0);
             activitySurface.TabIndex = 1;
             // 
@@ -1118,31 +996,32 @@ namespace CdiskClean
             rulesToolbar.WrapContents = false;
             // 
             // rulesDirectoryTab
-            // 
-            rulesDirectoryTab.FlatStyle = FlatStyle.Flat;
+            //
+            rulesDirectoryTab.IconSvg = "FolderOpenOutlined";
             rulesDirectoryTab.Location = new Point(0, 8);
             rulesDirectoryTab.Margin = new Padding(0, 4, 8, 0);
             rulesDirectoryTab.Name = "rulesDirectoryTab";
+            rulesDirectoryTab.Radius = 1;
             rulesDirectoryTab.Size = new Size(100, 36);
             rulesDirectoryTab.TabIndex = 0;
             rulesDirectoryTab.Text = "监控目录";
-            rulesDirectoryTab.UseVisualStyleBackColor = true;
+            rulesDirectoryTab.Type = AntdUI.TTypeMini.Primary;
             rulesDirectoryTab.Click += rulesDirectoryTab_Click;
-            // 
+            //
             // rulesProcessTab
-            // 
-            rulesProcessTab.FlatStyle = FlatStyle.Flat;
+            //
+            rulesProcessTab.IconSvg = "ControlOutlined";
             rulesProcessTab.Location = new Point(108, 8);
             rulesProcessTab.Margin = new Padding(0, 4, 8, 0);
             rulesProcessTab.Name = "rulesProcessTab";
+            rulesProcessTab.Radius = 1;
             rulesProcessTab.Size = new Size(100, 36);
             rulesProcessTab.TabIndex = 1;
             rulesProcessTab.Text = "忽略进程";
-            rulesProcessTab.UseVisualStyleBackColor = true;
             rulesProcessTab.Click += rulesProcessTab_Click;
-            // 
+            //
             // rulesSurface
-            // 
+            //
             rulesSurface.BackColor = Color.White;
             rulesSurface.Controls.Add(rulesDirectoryView);
             rulesSurface.Controls.Add(rulesProcessView);
@@ -1151,6 +1030,7 @@ namespace CdiskClean
             rulesSurface.Margin = new Padding(0);
             rulesSurface.Name = "rulesSurface";
             rulesSurface.Padding = new Padding(14);
+            rulesSurface.Radius = 6;
             rulesSurface.Size = new Size(0, 0);
             rulesSurface.TabIndex = 1;
             // 
@@ -1180,27 +1060,28 @@ namespace CdiskClean
             rulesDirToolbar.WrapContents = false;
             // 
             // dirAddButton
-            // 
-            dirAddButton.FlatStyle = FlatStyle.Flat;
+            //
+            dirAddButton.IconSvg = "PlusOutlined";
             dirAddButton.Location = new Point(0, 6);
             dirAddButton.Margin = new Padding(0, 4, 8, 0);
             dirAddButton.Name = "dirAddButton";
+            dirAddButton.Radius = 1;
             dirAddButton.Size = new Size(110, 36);
             dirAddButton.TabIndex = 0;
             dirAddButton.Text = "添加目录";
-            dirAddButton.UseVisualStyleBackColor = true;
+            dirAddButton.Type = AntdUI.TTypeMini.Primary;
             dirAddButton.Click += dirAddButton_Click;
-            // 
+            //
             // betterDirAddButton
-            // 
-            betterDirAddButton.FlatStyle = FlatStyle.Flat;
+            //
+            betterDirAddButton.IconSvg = "FolderOpenOutlined";
             betterDirAddButton.Location = new Point(118, 6);
             betterDirAddButton.Margin = new Padding(0, 4, 8, 0);
             betterDirAddButton.Name = "betterDirAddButton";
+            betterDirAddButton.Radius = 1;
             betterDirAddButton.Size = new Size(110, 36);
             betterDirAddButton.TabIndex = 1;
             betterDirAddButton.Text = "批量选择";
-            betterDirAddButton.UseVisualStyleBackColor = true;
             betterDirAddButton.Click += betterDirAddButton_Click;
             // 
             // watcherDirListView
@@ -1243,36 +1124,39 @@ namespace CdiskClean
             rulesProcToolbar.WrapContents = false;
             // 
             // manualProcessInput
-            // 
-            manualProcessInput.BorderStyle = BorderStyle.FixedSingle;
+            //
             manualProcessInput.Location = new Point(0, 6);
             manualProcessInput.Margin = new Padding(0, 4, 8, 0);
             manualProcessInput.Name = "manualProcessInput";
-            manualProcessInput.Size = new Size(240, 30);
+            manualProcessInput.PlaceholderText = "输入进程名";
+            manualProcessInput.PrefixSvg = "SearchOutlined";
+            manualProcessInput.Radius = 5;
+            manualProcessInput.Size = new Size(240, 36);
             manualProcessInput.TabIndex = 0;
-            // 
+            //
             // rulesProcessAddButton
-            // 
-            rulesProcessAddButton.FlatStyle = FlatStyle.Flat;
+            //
+            rulesProcessAddButton.IconSvg = "PlusOutlined";
             rulesProcessAddButton.Location = new Point(248, 6);
             rulesProcessAddButton.Margin = new Padding(0, 4, 8, 0);
             rulesProcessAddButton.Name = "rulesProcessAddButton";
+            rulesProcessAddButton.Radius = 1;
             rulesProcessAddButton.Size = new Size(84, 36);
             rulesProcessAddButton.TabIndex = 1;
             rulesProcessAddButton.Text = "添加";
-            rulesProcessAddButton.UseVisualStyleBackColor = true;
+            rulesProcessAddButton.Type = AntdUI.TTypeMini.Primary;
             rulesProcessAddButton.Click += rulesProcessAddButton_Click;
-            // 
+            //
             // betterProcessAddButton
-            // 
-            betterProcessAddButton.FlatStyle = FlatStyle.Flat;
+            //
+            betterProcessAddButton.IconSvg = "ControlOutlined";
             betterProcessAddButton.Location = new Point(340, 6);
             betterProcessAddButton.Margin = new Padding(0, 4, 8, 0);
             betterProcessAddButton.Name = "betterProcessAddButton";
+            betterProcessAddButton.Radius = 1;
             betterProcessAddButton.Size = new Size(130, 36);
             betterProcessAddButton.TabIndex = 2;
             betterProcessAddButton.Text = "选择运行进程";
-            betterProcessAddButton.UseVisualStyleBackColor = true;
             betterProcessAddButton.Click += betterProcessAddButton_Click;
             // 
             // ignoreProcessView
@@ -1404,7 +1288,7 @@ namespace CdiskClean
             analyzerContent.TabIndex = 2;
             // 
             // analyzerTreeSurface
-            // 
+            //
             analyzerTreeSurface.BackColor = Color.White;
             analyzerTreeSurface.Controls.Add(folderTreeView);
             analyzerTreeSurface.Dock = DockStyle.Fill;
@@ -1412,6 +1296,7 @@ namespace CdiskClean
             analyzerTreeSurface.Margin = new Padding(0, 10, 8, 0);
             analyzerTreeSurface.Name = "analyzerTreeSurface";
             analyzerTreeSurface.Padding = new Padding(12);
+            analyzerTreeSurface.Radius = 6;
             analyzerTreeSurface.Size = new Size(1, 1);
             analyzerTreeSurface.TabIndex = 0;
             // 
@@ -1426,7 +1311,7 @@ namespace CdiskClean
             folderTreeView.AfterSelect += folderTreeView_AfterSelect;
             // 
             // analyzerDetailsSurface
-            // 
+            //
             analyzerDetailsSurface.BackColor = Color.White;
             analyzerDetailsSurface.Controls.Add(analyzerDetailsTitle);
             analyzerDetailsSurface.Controls.Add(analyzerPathValue);
@@ -1439,6 +1324,7 @@ namespace CdiskClean
             analyzerDetailsSurface.Margin = new Padding(8, 10, 0, 0);
             analyzerDetailsSurface.Name = "analyzerDetailsSurface";
             analyzerDetailsSurface.Padding = new Padding(18);
+            analyzerDetailsSurface.Radius = 6;
             analyzerDetailsSurface.Size = new Size(1, 1);
             analyzerDetailsSurface.TabIndex = 1;
             // 
@@ -1506,14 +1392,15 @@ namespace CdiskClean
             analyzerFoldersValue.Text = "子目录：-";
             // 
             // analyzerUseForCleanupButton
-            // 
-            analyzerUseForCleanupButton.FlatStyle = FlatStyle.Flat;
+            //
+            analyzerUseForCleanupButton.IconSvg = "DeleteOutlined";
             analyzerUseForCleanupButton.Location = new Point(0, 244);
             analyzerUseForCleanupButton.Name = "analyzerUseForCleanupButton";
+            analyzerUseForCleanupButton.Radius = 1;
             analyzerUseForCleanupButton.Size = new Size(160, 38);
             analyzerUseForCleanupButton.TabIndex = 5;
             analyzerUseForCleanupButton.Text = "作为清理来源";
-            analyzerUseForCleanupButton.UseVisualStyleBackColor = true;
+            analyzerUseForCleanupButton.Type = AntdUI.TTypeMini.Primary;
             analyzerUseForCleanupButton.Click += analyzerUseForCleanupButton_Click;
             // 
             // cleanupPage
@@ -1612,7 +1499,7 @@ namespace CdiskClean
             cleanupContent.TabIndex = 2;
             // 
             // cleanupTreeSurface
-            // 
+            //
             cleanupTreeSurface.BackColor = Color.White;
             cleanupTreeSurface.Controls.Add(cleanupTreeLayout);
             cleanupTreeSurface.Dock = DockStyle.Fill;
@@ -1620,6 +1507,7 @@ namespace CdiskClean
             cleanupTreeSurface.Margin = new Padding(0, 10, 8, 0);
             cleanupTreeSurface.Name = "cleanupTreeSurface";
             cleanupTreeSurface.Padding = new Padding(12);
+            cleanupTreeSurface.Radius = 6;
             cleanupTreeSurface.Size = new Size(1, 1);
             cleanupTreeSurface.TabIndex = 0;
             // 
@@ -1720,7 +1608,7 @@ namespace CdiskClean
             cleanStatusLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // cleanupActionSurface
-            // 
+            //
             cleanupActionSurface.BackColor = Color.White;
             cleanupActionSurface.Controls.Add(cleanupActionLayout);
             cleanupActionSurface.Dock = DockStyle.Fill;
@@ -1728,6 +1616,7 @@ namespace CdiskClean
             cleanupActionSurface.Margin = new Padding(8, 10, 0, 0);
             cleanupActionSurface.Name = "cleanupActionSurface";
             cleanupActionSurface.Padding = new Padding(12);
+            cleanupActionSurface.Radius = 6;
             cleanupActionSurface.Size = new Size(336, 1);
             cleanupActionSurface.TabIndex = 1;
             // 
@@ -1763,15 +1652,15 @@ namespace CdiskClean
             cleanupFrequentPanel.TabIndex = 0;
             // 
             // frequentRefreshButton
-            // 
+            //
             frequentRefreshButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            frequentRefreshButton.FlatStyle = FlatStyle.Flat;
+            frequentRefreshButton.IconSvg = "ReloadOutlined";
             frequentRefreshButton.Location = new Point(278, 0);
             frequentRefreshButton.Name = "frequentRefreshButton";
+            frequentRefreshButton.Padding = new Padding(8);
+            frequentRefreshButton.Radius = 1;
             frequentRefreshButton.Size = new Size(34, 32);
             frequentRefreshButton.TabIndex = 0;
-            frequentRefreshButton.Text = "⟳";
-            frequentRefreshButton.UseVisualStyleBackColor = true;
             frequentRefreshButton.Click += cleanRefreshFrequentBtn_Click;
             // 
             // frequentPathListView
@@ -1973,67 +1862,68 @@ namespace CdiskClean
             recordsToolbar.WrapContents = false;
             // 
             // recordsNotificationTab
-            // 
-            recordsNotificationTab.FlatStyle = FlatStyle.Flat;
+            //
+            recordsNotificationTab.IconSvg = "MonitorOutlined";
             recordsNotificationTab.Location = new Point(0, 8);
             recordsNotificationTab.Margin = new Padding(0, 4, 8, 0);
             recordsNotificationTab.Name = "recordsNotificationTab";
+            recordsNotificationTab.Radius = 1;
             recordsNotificationTab.Size = new Size(100, 36);
             recordsNotificationTab.TabIndex = 0;
             recordsNotificationTab.Text = "提醒记录";
-            recordsNotificationTab.UseVisualStyleBackColor = true;
+            recordsNotificationTab.Type = AntdUI.TTypeMini.Primary;
             recordsNotificationTab.Click += recordsNotificationTab_Click;
-            // 
+            //
             // recordsStatsTab
-            // 
-            recordsStatsTab.FlatStyle = FlatStyle.Flat;
+            //
+            recordsStatsTab.IconSvg = "LineChartOutlined";
             recordsStatsTab.Location = new Point(108, 8);
             recordsStatsTab.Margin = new Padding(0, 4, 8, 0);
             recordsStatsTab.Name = "recordsStatsTab";
+            recordsStatsTab.Radius = 1;
             recordsStatsTab.Size = new Size(100, 36);
             recordsStatsTab.TabIndex = 1;
             recordsStatsTab.Text = "进程统计";
-            recordsStatsTab.UseVisualStyleBackColor = true;
             recordsStatsTab.Click += recordsStatsTab_Click;
-            // 
+            //
             // recordsDetailsTab
-            // 
-            recordsDetailsTab.FlatStyle = FlatStyle.Flat;
+            //
+            recordsDetailsTab.IconSvg = "DatabaseOutlined";
             recordsDetailsTab.Location = new Point(216, 8);
             recordsDetailsTab.Margin = new Padding(0, 4, 8, 0);
             recordsDetailsTab.Name = "recordsDetailsTab";
+            recordsDetailsTab.Radius = 1;
             recordsDetailsTab.Size = new Size(100, 36);
             recordsDetailsTab.TabIndex = 2;
             recordsDetailsTab.Text = "变更明细";
-            recordsDetailsTab.UseVisualStyleBackColor = true;
             recordsDetailsTab.Click += recordsDetailsTab_Click;
-            // 
+            //
             // recordsCleanupTab
-            // 
-            recordsCleanupTab.FlatStyle = FlatStyle.Flat;
+            //
+            recordsCleanupTab.IconSvg = "HistoryOutlined";
             recordsCleanupTab.Location = new Point(324, 8);
             recordsCleanupTab.Margin = new Padding(0, 4, 8, 0);
             recordsCleanupTab.Name = "recordsCleanupTab";
+            recordsCleanupTab.Radius = 1;
             recordsCleanupTab.Size = new Size(100, 36);
             recordsCleanupTab.TabIndex = 3;
             recordsCleanupTab.Text = "清理历史";
-            recordsCleanupTab.UseVisualStyleBackColor = true;
             recordsCleanupTab.Click += recordsCleanupTab_Click;
-            // 
+            //
             // recordsRefreshButton
-            // 
-            recordsRefreshButton.FlatStyle = FlatStyle.Flat;
+            //
+            recordsRefreshButton.IconSvg = "ReloadOutlined";
             recordsRefreshButton.Location = new Point(432, 8);
             recordsRefreshButton.Margin = new Padding(0, 4, 8, 0);
             recordsRefreshButton.Name = "recordsRefreshButton";
+            recordsRefreshButton.Radius = 1;
             recordsRefreshButton.Size = new Size(84, 36);
             recordsRefreshButton.TabIndex = 4;
             recordsRefreshButton.Text = "刷新";
-            recordsRefreshButton.UseVisualStyleBackColor = true;
             recordsRefreshButton.Click += recordsRefreshButton_Click;
-            // 
+            //
             // recordsSurface
-            // 
+            //
             recordsSurface.BackColor = Color.White;
             recordsSurface.Controls.Add(recordViewHost);
             recordsSurface.Dock = DockStyle.Fill;
@@ -2041,6 +1931,7 @@ namespace CdiskClean
             recordsSurface.Margin = new Padding(0);
             recordsSurface.Name = "recordsSurface";
             recordsSurface.Padding = new Padding(12);
+            recordsSurface.Radius = 6;
             recordsSurface.Size = new Size(0, 0);
             recordsSurface.TabIndex = 1;
             // 
@@ -2443,184 +2334,8 @@ namespace CdiskClean
             workspaceStatusBar.ResumeLayout(false);
             ResumeLayout(false);
 
-
-            // 不可见组件
-
-        //this.Controls.Add(notifyIcon1);
-        //this.Controls.Add(notifyMenuStrip);
-        //this.Controls.Add(exitToolStripMenuItem);
-        //this.Controls.Add(ImportFolderDialog);
-
-        // 工作区壳
-        this.Controls.Add(workspaceRoot);
-        this.Controls.Add(workspaceHeader);
-        this.Controls.Add(headerTitleLabel);
-        this.Controls.Add(minimizeButton);
-        this.Controls.Add(maximizeButton);
-        this.Controls.Add(closeButton);
-        this.Controls.Add(workspaceBodyLayout);
-        this.Controls.Add(workspaceNavigation);
-        this.Controls.Add(brandLabel);
-        this.Controls.Add(navDashboardButton);
-        this.Controls.Add(navActivityButton);
-        this.Controls.Add(navRulesButton);
-        this.Controls.Add(navAnalyzerButton);
-        this.Controls.Add(navCleanupButton);
-        this.Controls.Add(navRecordsButton);
-        this.Controls.Add(workspaceCollapseButton);
-        this.Controls.Add(workspaceMain);
-        this.Controls.Add(workspacePageHeader);
-        this.Controls.Add(workspacePageTitle);
-        this.Controls.Add(workspacePageSubtitle);
-        this.Controls.Add(workspaceTabControl);
-        this.Controls.Add(dashboardPage);
-        this.Controls.Add(activityPage);
-        this.Controls.Add(rulesPage);
-        this.Controls.Add(analyzerPage);
-        this.Controls.Add(cleanupPage);
-        this.Controls.Add(recordsPage);
-        this.Controls.Add(workspaceStatusBar);
-        this.Controls.Add(workspaceDiskStatus);
-        this.Controls.Add(workspaceMonitorStatus);
-        this.Controls.Add(workspaceRecordStatus);
-        this.Controls.Add(workspaceClockStatus);
-
-        this.Controls.Add(dashboardLayout);
-        this.Controls.Add(dashboardCapacitySurface);
-        this.Controls.Add(dashboardTitleLabel);
-        this.Controls.Add(dashboardUsageLabel);
-        this.Controls.Add(dashboardDiskProgress);
-        this.Controls.Add(dashboardCapacityLabel);
-        this.Controls.Add(dashboardMetrics);
-        this.Controls.Add(dashboardMonitorSurface);
-        this.Controls.Add(dashboardMonitorTitle);
-        this.Controls.Add(dashboardMonitorMetric);
-        this.Controls.Add(dashboardRecordSurface);
-        this.Controls.Add(dashboardRecordTitle);
-        this.Controls.Add(dashboardRecordMetric);
-        this.Controls.Add(dashboardRuleSurface);
-        this.Controls.Add(dashboardRuleTitle);
-        this.Controls.Add(dashboardRuleMetric);
-        this.Controls.Add(dashboardRecentSurface);
-        this.Controls.Add(dashboardRecentTitle);
-        this.Controls.Add(dashboardRecentGrid);
-
-        this.Controls.Add(RecentTimestampColumn);
-        this.Controls.Add(RecentTypeColumn);
-        this.Controls.Add(RecentFileNameColumn);
-        this.Controls.Add(RecentSourceColumn);
-        this.Controls.Add(RecentDirectoryColumn);
-
-        this.Controls.Add(activityToolbar);
-        this.Controls.Add(workspaceMonitorToggleButton);
-        this.Controls.Add(typeFilterCombo);
-        this.Controls.Add(recordSearchBox);
-        this.Controls.Add(exportBtn);
-        this.Controls.Add(clearBtn);
-        this.Controls.Add(activityRecordCenterButton);
-        this.Controls.Add(activitySurface);
-        this.Controls.Add(changesDataGrid);
-        this.Controls.Add(TimeColumn);
-        this.Controls.Add(TypeColumn);
-        this.Controls.Add(FileNameColumn);
-        this.Controls.Add(PathColumn);
-        this.Controls.Add(SizeColumn);
-        this.Controls.Add(SourceColumn);
-
-this.Controls.Add(rulesToolbar);
-        this.Controls.Add(rulesDirectoryTab);
-        this.Controls.Add(rulesProcessTab);
-        this.Controls.Add(rulesSurface);
-        this.Controls.Add(rulesDirectoryView);
-        this.Controls.Add(rulesDirToolbar);
-        this.Controls.Add(dirAddButton);
-        this.Controls.Add(betterDirAddButton);
-        this.Controls.Add(watcherDirListView);
-        this.Controls.Add(rulesProcessView);
-        this.Controls.Add(rulesProcToolbar);
-        this.Controls.Add(manualProcessInput);
-        this.Controls.Add(rulesProcessAddButton);
-        this.Controls.Add(betterProcessAddButton);
-        this.Controls.Add(ignoreProcessView);
-
-this.Controls.Add(analyzerToolbar);
-        this.Controls.Add(selectedPathTextBox);
-        this.Controls.Add(selectDirBtn);
-        this.Controls.Add(scanBtn);
-        this.Controls.Add(stopBtn);
-        this.Controls.Add(scanProgressBar);
-        this.Controls.Add(analyzerContent);
-        this.Controls.Add(analyzerTreeSurface);
-        this.Controls.Add(folderTreeView);
-        this.Controls.Add(analyzerDetailsSurface);
-        this.Controls.Add(analyzerDetailsTitle);
-        this.Controls.Add(analyzerPathValue);
-        this.Controls.Add(analyzerSizeValue);
-        this.Controls.Add(analyzerFilesValue);
-        this.Controls.Add(analyzerFoldersValue);
-        this.Controls.Add(analyzerUseForCleanupButton);
-
-this.Controls.Add(cleanupToolbar);
-        this.Controls.Add(cleanPathTextBox);
-        this.Controls.Add(cleanSelectDirBtn);
-        this.Controls.Add(cleanScanBtn);
-        this.Controls.Add(cleanScanProgressBar);
-        this.Controls.Add(cleanupContent);
-        this.Controls.Add(cleanupTreeSurface);
-        this.Controls.Add(cleanupTreeLayout);
-        this.Controls.Add(cleanupSelectionBar);
-        this.Controls.Add(cleanSelectAllBtn);
-        this.Controls.Add(cleanSelectNoneBtn);
-        this.Controls.Add(cleanupSelectionLabel);
-        this.Controls.Add(cleanTreeView);
-        this.Controls.Add(cleanStatusLabel);
-        this.Controls.Add(cleanupActionSurface);
-        this.Controls.Add(cleanupActionLayout);
-        this.Controls.Add(cleanupFrequentPanel);
-        this.Controls.Add(frequentRefreshButton);
-        this.Controls.Add(frequentPathListView);
-        this.Controls.Add(frequentHintLabel);
-        this.Controls.Add(cleanupFrequentTitle);
-        this.Controls.Add(cleanupMethodPanel);
-        this.Controls.Add(cleanupMethodTitle);
-        this.Controls.Add(cleanRecycleRadio);
-        this.Controls.Add(cleanPermanentRadio);
-        this.Controls.Add(cleanMoveRadio);
-        this.Controls.Add(cleanCompressRadio);
-        this.Controls.Add(cleanMklinkRadio);
-        this.Controls.Add(cleanTargetLabel);
-        this.Controls.Add(cleanTargetTextBox);
-        this.Controls.Add(cleanTargetSelectBtn);
-        this.Controls.Add(cleanBtn);
-
-        this.Controls.Add(recordsToolbar);
-        this.Controls.Add(recordsNotificationTab);
-        this.Controls.Add(recordsStatsTab);
-        this.Controls.Add(recordsDetailsTab);
-        this.Controls.Add(recordsCleanupTab);
-        this.Controls.Add(recordsRefreshButton);
-        this.Controls.Add(recordsSurface);
-        this.Controls.Add(recordViewHost);
-        this.Controls.Add(notificationRecordsGrid);
-        this.Controls.Add(NotificationProcessNameColumn);
-        this.Controls.Add(NotificationOperationCountColumn);
-        this.Controls.Add(NotificationDurationColumn);
-        this.Controls.Add(NotificationTriggerTimeColumn);
-        this.Controls.Add(processStatsGrid);
-        this.Controls.Add(StatsAppNameColumn);
-        this.Controls.Add(StatsChangeCountColumn);
-        this.Controls.Add(StatsFirstChangeColumn);
-        this.Controls.Add(StatsLastChangeColumn);
-        this.Controls.Add(detailRecordsGrid);
-        this.Controls.Add(DetailTimestampColumn);
-        this.Controls.Add(DetailSourceProcessColumn);
-        this.Controls.Add(DetailChangeTypeColumn);
-        this.Controls.Add(DetailDirectoryColumn);
-        this.Controls.Add(DetailFileNameColumn);
-        this.Controls.Add(cleanupRecordView);
-        this.Controls.Add(cleanHistoryGrid);
-        this.Controls.Add(cleanHistoryEmptyLabel);
-
+            // 工作区壳（根容器挂到窗体，控件树由上方设计器语句建立）
+            this.Controls.Add(workspaceRoot);
         }
 
         #endregion
@@ -2635,21 +2350,12 @@ this.Controls.Add(cleanupToolbar);
 
         // 工作区壳
         private TableLayoutPanel workspaceRoot;
-        private Panel workspaceHeader;
-        private Label headerTitleLabel;
-        private Button minimizeButton;
-        private Button maximizeButton;
-        private Button closeButton;
+        private AntdUI.PageHeader workspaceHeader;
         private TableLayoutPanel workspaceBodyLayout;
-        private Panel workspaceNavigation;
+        private AntdUI.Panel workspaceNavigation;
         private Label brandLabel;
-        private Button navDashboardButton;
-        private Button navActivityButton;
-        private Button navRulesButton;
-        private Button navAnalyzerButton;
-        private Button navCleanupButton;
-        private Button navRecordsButton;
-        private Button workspaceCollapseButton;
+        private AntdUI.Menu workspaceMenu;
+        private AntdUI.Button workspaceCollapseButton;
         private TableLayoutPanel workspaceMain;
         private Panel workspacePageHeader;
         private Label workspacePageTitle;
@@ -2669,22 +2375,22 @@ this.Controls.Add(cleanupToolbar);
 
         // 工作台页
         private TableLayoutPanel dashboardLayout;
-        private Panel dashboardCapacitySurface;
+        private AntdUI.Panel dashboardCapacitySurface;
         private Label dashboardTitleLabel;
         private Label dashboardUsageLabel;
-        private ProgressBar dashboardDiskProgress;
+        private AntdUI.Progress dashboardDiskProgress;
         private Label dashboardCapacityLabel;
         private TableLayoutPanel dashboardMetrics;
-        private Panel dashboardMonitorSurface;
+        private AntdUI.Panel dashboardMonitorSurface;
         private Label dashboardMonitorTitle;
         private Label dashboardMonitorMetric;
-        private Panel dashboardRecordSurface;
+        private AntdUI.Panel dashboardRecordSurface;
         private Label dashboardRecordTitle;
         private Label dashboardRecordMetric;
-        private Panel dashboardRuleSurface;
+        private AntdUI.Panel dashboardRuleSurface;
         private Label dashboardRuleTitle;
         private Label dashboardRuleMetric;
-        private Panel dashboardRecentSurface;
+        private AntdUI.Panel dashboardRecentSurface;
         private Label dashboardRecentTitle;
         private DataGridView dashboardRecentGrid;
         private DataGridViewTextBoxColumn RecentTimestampColumn;
@@ -2695,13 +2401,13 @@ this.Controls.Add(cleanupToolbar);
 
         // 实时活动页
         private FlowLayoutPanel activityToolbar;
-        private Button workspaceMonitorToggleButton;
+        private AntdUI.Button workspaceMonitorToggleButton;
         private ComboBox typeFilterCombo;
-        private TextBox recordSearchBox;
-        private Button exportBtn;
-        private Button clearBtn;
-        private Button activityRecordCenterButton;
-        private Panel activitySurface;
+        private AntdUI.Input recordSearchBox;
+        private AntdUI.Button exportBtn;
+        private AntdUI.Button clearBtn;
+        private AntdUI.Button activityRecordCenterButton;
+        private AntdUI.Panel activitySurface;
         private DataGridView changesDataGrid;
         private DataGridViewTextBoxColumn TimeColumn;
         private DataGridViewTextBoxColumn TypeColumn;
@@ -2712,19 +2418,19 @@ this.Controls.Add(cleanupToolbar);
 
         // 监控规则页
         private FlowLayoutPanel rulesToolbar;
-        private Button rulesDirectoryTab;
-        private Button rulesProcessTab;
-        private Panel rulesSurface;
+        private AntdUI.Button rulesDirectoryTab;
+        private AntdUI.Button rulesProcessTab;
+        private AntdUI.Panel rulesSurface;
         private Panel rulesDirectoryView;
         private FlowLayoutPanel rulesDirToolbar;
-        private Button dirAddButton;
-        private Button betterDirAddButton;
+        private AntdUI.Button dirAddButton;
+        private AntdUI.Button betterDirAddButton;
         private ListView watcherDirListView;
         private Panel rulesProcessView;
         private FlowLayoutPanel rulesProcToolbar;
-        private TextBox manualProcessInput;
-        private Button rulesProcessAddButton;
-        private Button betterProcessAddButton;
+        private AntdUI.Input manualProcessInput;
+        private AntdUI.Button rulesProcessAddButton;
+        private AntdUI.Button betterProcessAddButton;
         private ListView ignoreProcessView;
 
         // 空间分析页
@@ -2735,15 +2441,15 @@ this.Controls.Add(cleanupToolbar);
         private Button stopBtn;
         private ProgressBar scanProgressBar;
         private TableLayoutPanel analyzerContent;
-        private Panel analyzerTreeSurface;
+        private AntdUI.Panel analyzerTreeSurface;
         private TreeView folderTreeView;
-        private Panel analyzerDetailsSurface;
+        private AntdUI.Panel analyzerDetailsSurface;
         private Label analyzerDetailsTitle;
         private Label analyzerPathValue;
         private Label analyzerSizeValue;
         private Label analyzerFilesValue;
         private Label analyzerFoldersValue;
-        private Button analyzerUseForCleanupButton;
+        private AntdUI.Button analyzerUseForCleanupButton;
 
         // 清理中心页
         private TableLayoutPanel cleanupToolbar;
@@ -2752,7 +2458,7 @@ this.Controls.Add(cleanupToolbar);
         private Button cleanScanBtn;
         private ProgressBar cleanScanProgressBar;
         private TableLayoutPanel cleanupContent;
-        private Panel cleanupTreeSurface;
+        private AntdUI.Panel cleanupTreeSurface;
         private TableLayoutPanel cleanupTreeLayout;
         private FlowLayoutPanel cleanupSelectionBar;
         private Button cleanSelectAllBtn;
@@ -2760,10 +2466,10 @@ this.Controls.Add(cleanupToolbar);
         private Label cleanupSelectionLabel;
         private TreeView cleanTreeView;
         private Label cleanStatusLabel;
-        private Panel cleanupActionSurface;
+        private AntdUI.Panel cleanupActionSurface;
         private TableLayoutPanel cleanupActionLayout;
         private Panel cleanupFrequentPanel;
-        private Button frequentRefreshButton;
+        private AntdUI.Button frequentRefreshButton;
         private ListView frequentPathListView;
         private Label frequentHintLabel;
         private Label cleanupFrequentTitle;
@@ -2781,12 +2487,12 @@ this.Controls.Add(cleanupToolbar);
 
         // 记录中心页
         private FlowLayoutPanel recordsToolbar;
-        private Button recordsNotificationTab;
-        private Button recordsStatsTab;
-        private Button recordsDetailsTab;
-        private Button recordsCleanupTab;
-        private Button recordsRefreshButton;
-        private Panel recordsSurface;
+        private AntdUI.Button recordsNotificationTab;
+        private AntdUI.Button recordsStatsTab;
+        private AntdUI.Button recordsDetailsTab;
+        private AntdUI.Button recordsCleanupTab;
+        private AntdUI.Button recordsRefreshButton;
+        private AntdUI.Panel recordsSurface;
         private Panel recordViewHost;
         private DataGridView notificationRecordsGrid;
         private DataGridViewTextBoxColumn NotificationProcessNameColumn;
