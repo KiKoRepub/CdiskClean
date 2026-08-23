@@ -8,6 +8,7 @@ codex-prompt.txt
 claude-prompt.txt
 docs/
 cacheRefer/
+icons/
 # User-specific files
 *.rsuser
 *.suo

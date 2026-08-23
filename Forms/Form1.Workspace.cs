@@ -37,17 +37,27 @@ public partial class Form1
 
     private void ShowWorkspacePage(string id)
     {
-        var tab = id switch
+        // 隐藏所有页面面板
+        dashboardPanel.Visible = false;
+        activityPanel.Visible = false;
+        rulesPanel.Visible = false;
+        analyzerPanel.Visible = false;
+        cleanupPanel.Visible = false;
+        recordsPanel.Visible = false;
+
+        // 显示目标页面面板
+        var targetPanel = id switch
         {
-            DashboardPageId => dashboardPage,
-            ActivityPageId => activityPage,
-            RulesPageId => rulesPage,
-            AnalyzerPageId => analyzerPage,
-            CleanupPageId => cleanupPage,
-            RecordsPageId => recordsPage,
-            _ => dashboardPage
+            DashboardPageId => dashboardPanel,
+            ActivityPageId => activityPanel,
+            RulesPageId => rulesPanel,
+            AnalyzerPageId => analyzerPanel,
+            CleanupPageId => cleanupPanel,
+            RecordsPageId => recordsPanel,
+            _ => dashboardPanel
         };
-        workspaceTabControl.SelectedTab = tab;
+        targetPanel.Visible = true;
+
         SetNavigationSelection(id);
 
         var (title, subtitle) = id switch

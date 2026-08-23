@@ -448,4 +448,14 @@ public class DiskMonitorService : IDisposable
         Stop();
         _deferredCts?.Dispose(); 
     }
+
+    internal void EnableDefaultMode()
+    {
+        throw new NotImplementedException();
+    }
+
+    internal void DisableDefaultMode()
+    {
+        throw new NotImplementedException();
+    }
 }

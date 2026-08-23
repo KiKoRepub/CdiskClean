@@ -98,4 +98,35 @@ public partial class Form1
             e.FormattingApplied = true;
         }
     }
+
+    /// <summary>提醒记录网格：时间格式化显示</summary>
+    private void notificationRecordsGrid_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+    {
+        if (e.ColumnIndex >= 0 &&
+            notificationRecordsGrid.Columns[e.ColumnIndex].DataPropertyName == "TriggerTime" &&
+            e.Value is DateTime time)
+        {
+            e.Value = time.ToString("yyyy-MM-dd HH:mm:ss");
+            e.FormattingApplied = true;
+        }
+    }
+
+    /// <summary>进程统计网格：时间格式化显示</summary>
+    private void processStatsGrid_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+    {
+        if (e.ColumnIndex >= 0)
+        {
+            var colName = processStatsGrid.Columns[e.ColumnIndex].DataPropertyName;
+            if (colName == "FirstChange" && e.Value is DateTime firstTime)
+            {
+                e.Value = firstTime.ToString("yyyy-MM-dd HH:mm:ss");
+                e.FormattingApplied = true;
+            }
+            else if (colName == "LastChange" && e.Value is DateTime lastTime)
+            {
+                e.Value = lastTime.ToString("yyyy-MM-dd HH:mm:ss");
+                e.FormattingApplied = true;
+            }
+        }
+    }
 }

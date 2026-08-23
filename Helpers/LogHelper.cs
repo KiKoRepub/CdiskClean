@@ -10,6 +10,10 @@ namespace CdiskClean.Helpers
     {
         private static readonly object LogLock = new();
 
+        public static void showDefaultToDoMessage(string msg)
+        {
+            MessageBox.Show(msg, "还没完成呢，等一等", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
         public static string? LogException(Exception exception, string source)
         {
             try

@@ -55,7 +55,8 @@
       "Bash(taskkill //PID 40828 //F)",
       "Bash(powershell -Command \"Get-Process CdiskClean | Select-Object Id, MainWindowTitle, Responding | Format-List\")",
       "Bash(sed 's/ \\\\[.*//')",
-      "Bash(git -c safe.directory='*' show HEAD:Forms/Form1.Workspace.cs)"
+      "Bash(git -c safe.directory='*' show HEAD:Forms/Form1.Workspace.cs)",
+      "Bash(dotnet msbuild *)"
     ]
   }
 }

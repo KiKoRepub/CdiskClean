@@ -43,6 +43,19 @@ public partial class Form1
             > 70 => Color.FromArgb(217, 119, 6),
             _ => UiTheme.TextPrimary
         };
+        // 更新进度条
+
+        dashboardDiskProgress.Value = (float)(info.UsagePercent / 100);
+        
+        dashboardDiskProgress.ForeColor = info.UsagePercent switch
+        {
+            > 90 => UiTheme.Danger,
+            > 70 => Color.FromArgb(217, 119, 6),
+            _ => UiTheme.Primary
+        };
+        //LogHelper.showDefaultToDoMessage("进度条颜色渐变还没做呢，等一等");
+        //dashboardDiskProgress
+
         dashboardCapacityLabel.Text =
             $"总容量 {FormatHelper.FormatBytes(info.TotalSizeBytes)}    已用 {FormatHelper.FormatBytes(info.UsedSpaceBytes)}    剩余 {FormatHelper.FormatBytes(info.FreeSpaceBytes)}";
         workspaceDiskStatus.Text = $"C: 剩余 {FormatHelper.FormatBytes(info.FreeSpaceBytes)} / {FormatHelper.FormatBytes(info.TotalSizeBytes)}";

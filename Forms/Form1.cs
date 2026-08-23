@@ -110,10 +110,7 @@ namespace CdiskClean
             // 统一外观：设计器布局 + 原生控件样式（AntdUI 控件样式由自身 Type 管理）
             UiTheme.Apply(this);
 
-            // 运行时工作区初始化：隐藏 TabControl 标签头、初始页面与子视图（须在 Apply 之后，避免选中态颜色被覆盖）
-            workspaceTabControl.Appearance = TabAppearance.FlatButtons;
-            workspaceTabControl.SizeMode = TabSizeMode.Fixed;
-            workspaceTabControl.ItemSize = new Size(0, 1);
+            // 运行时工作区初始化：设置初始页面与子视图（须在 Apply 之后，避免选中态颜色被覆盖）
             ShowWorkspacePage(DashboardPageId);
             ShowRulesView(true);
             ShowRecordView("notifications");
@@ -153,9 +150,9 @@ namespace CdiskClean
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.SetProperty,
                 null, watcherDirListView, new object[] { true });
         }
-        /// <summary>
-        ///  填充监视目录列表
-        /// </summary>
+
+        #region 监视目录列表 相关操作
+
         private void PopulateDirListView()
         {
             watcherDirListView.Items.Clear();
@@ -192,63 +189,6 @@ namespace CdiskClean
             watcherDirListView.Columns[1].Width = (int)(totalWidth * 0.15);
             watcherDirListView.Columns[2].Width = (int)(totalWidth * 0.15);
         }
-
-        // ==================== 忽略进程列表 ====================
-
-        private void SetupProcessListView()
-        {
-            int totalWidth = ignoreProcessView.Width;
-
-            ignoreProcessView.View = View.Details;
-            ignoreProcessView.FullRowSelect = true;
-            ignoreProcessView.MultiSelect = false;
-            ignoreProcessView.HeaderStyle = ColumnHeaderStyle.Nonclickable;
-
-            // 设置内部列宽度为总宽度的比例
-            ignoreProcessView.Columns.Add("进程名称", (int)(totalWidth * 0.80));
-            ignoreProcessView.Columns.Add("状态", (int)(totalWidth * 0.20));
-
-
-            // 开启双缓冲，减少闪烁
-            typeof(ListView).InvokeMember("DoubleBuffered",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.SetProperty,
-                null, ignoreProcessView, new object[] { true });
-        }
-
-
-        private void PopulateProcessListView()
-        {
-            ignoreProcessView.Items.Clear();
-            foreach (var proc in _monitorService.IgnoreProcessRecords)
-            {
-                var item = new ListViewItem(proc.ProcessName);
-                item.SubItems.Add(EnumHelper.FormatStatus(proc.Status));
-                item.Tag = proc;
-
-                StyleHelper.ApplyRecordStatusStyle(item, proc.Status);
-                ignoreProcessView.Items.Add(item);
-            }
-            RefreshDashboardMetrics();
-        }
-
-        private void ignoreProcessView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
-        {
-            // 仅保留选中状态（原"选中进程为"提示框已随旧界面移除）
-        }
-
-
-        private void ignoreProcessView_Resize(object sender, EventArgs e)
-        {
-            int totalWidth = ignoreProcessView.Width;
-            ignoreProcessView.Columns[0].Width = (int)(totalWidth * 0.80);
-            ignoreProcessView.Columns[1].Width = (int)(totalWidth * 0.20);
-        }
-
-        /// <summary>
-        /// 调整 ListViewItem 的前景色和背景色，以便根据状态显示不同的颜色
-        /// </summary>
-        /// <param name="item"></param>
-        /// <param name="status"></param>
 
 
         private void SetupDirContextMenu()
@@ -299,6 +239,58 @@ namespace CdiskClean
 
             PopulateDirListView();
         }
+
+        #endregion
+
+
+        #region 忽略进程列表 相关操作
+        private void SetupProcessListView()
+        {
+            int totalWidth = ignoreProcessView.Width;
+
+            ignoreProcessView.View = View.Details;
+            ignoreProcessView.FullRowSelect = true;
+            ignoreProcessView.MultiSelect = false;
+            ignoreProcessView.HeaderStyle = ColumnHeaderStyle.Nonclickable;
+
+            // 设置内部列宽度为总宽度的比例
+            ignoreProcessView.Columns.Add("进程名称", (int)(totalWidth * 0.80));
+            ignoreProcessView.Columns.Add("状态", (int)(totalWidth * 0.20));
+
+
+            // 开启双缓冲，减少闪烁
+            typeof(ListView).InvokeMember("DoubleBuffered",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.SetProperty,
+                null, ignoreProcessView, new object[] { true });
+        }
+
+        private void PopulateProcessListView()
+        {
+            ignoreProcessView.Items.Clear();
+            foreach (var proc in _monitorService.IgnoreProcessRecords)
+            {
+                var item = new ListViewItem(proc.ProcessName);
+                item.SubItems.Add(EnumHelper.FormatStatus(proc.Status));
+                item.Tag = proc;
+
+                StyleHelper.ApplyRecordStatusStyle(item, proc.Status);
+                ignoreProcessView.Items.Add(item);
+            }
+            RefreshDashboardMetrics();
+        }
+
+        private void ignoreProcessView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        {
+            // 仅保留选中状态（原"选中进程为"提示框已随旧界面移除）
+        }
+
+        private void ignoreProcessView_Resize(object sender, EventArgs e)
+        {
+            int totalWidth = ignoreProcessView.Width;
+            ignoreProcessView.Columns[0].Width = (int)(totalWidth * 0.80);
+            ignoreProcessView.Columns[1].Width = (int)(totalWidth * 0.20);
+        }
+
 
         // ==================== 忽略进程右键菜单 ====================
 
@@ -364,7 +356,10 @@ namespace CdiskClean
             PopulateProcessListView();
         }
 
-        // ==================== 磁盘概览 ====================
+        #endregion
+
+
+        #region 磁盘概览
 
         private void RefreshDiskInfo()
         {
@@ -396,6 +391,10 @@ namespace CdiskClean
             RefreshDiskInfo();
         }
 
+        #endregion
+
+
+        #region 实时监测
         // ==================== 实时监测 ====================
 
         private void pauseBtn_Click(object? sender, EventArgs e)
@@ -424,8 +423,31 @@ namespace CdiskClean
             workspaceMonitorToggleButton.Type = _monitorService.IsRunning
                 ? AntdUI.TTypeMini.Error
                 : AntdUI.TTypeMini.Primary;
+
+            // 调整托盘菜单
+            startMonitorNotifyItem.Text = workspaceMonitorToggleButton.Text;
+            // 刷新工作区状态
             RefreshWorkspaceStatus();
             RefreshDashboardMetrics();
+
+            startNotifyRotate(_monitorService.IsRunning);
+
+        }
+
+        private void startNotifyRotate(bool status)
+        {
+            if (status)
+            {
+                // 托盘实现 旋转
+                notifyRotateTimer.Start();
+                //notifyIcon1.Icon = Properties.Resources.leftRotate_1;
+            }
+            else
+            {
+                notifyRotateTimer.Stop();
+                notifyIcon1.Icon = Properties.Resources.defaultIcon;
+            }
+
         }
 
         private void clearBtn_Click(object? sender, EventArgs e)
@@ -628,9 +650,9 @@ namespace CdiskClean
             workspaceRecordStatus.Text = $"当前记录 {_records.Count:N0} 条";
             workspaceRecordStatus.ForeColor = UiTheme.TextSecondary;
         }
+        #endregion
 
-        // ==================== 文件夹分析 ====================
-
+        #region 文件夹分析
         private void selectDirBtn_Click(object? sender, EventArgs e)
         {
             using var dialog = new FolderBrowserDialog
@@ -727,6 +749,9 @@ namespace CdiskClean
             return node;
         }
 
+        #endregion
+
+        #region 磁盘清理
         // ==================== 磁盘清理 ====================
 
         private CancellationTokenSource? _cleanScanCts;
@@ -1493,6 +1518,7 @@ namespace CdiskClean
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+        #endregion
 
         // ==================== 时钟 ====================
 
@@ -1501,8 +1527,7 @@ namespace CdiskClean
             workspaceClockStatus.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         }
 
-        // ==================== 工具方法 ====================
-
+        #region 工具方法
         private static string GetChangeRecordKey(FileChangeRecord record) =>
             $"{record.Timestamp.Ticks}|{record.ChangeType}|{record.FullPath}";
 
@@ -1535,6 +1560,8 @@ namespace CdiskClean
             timer1.Stop();
             Application.Exit();
         }
+
+        #endregion
 
         // ==================== 无边框窗口拖拽 ====================
 
@@ -1742,6 +1769,50 @@ namespace CdiskClean
 
             foreach (var name in form.SelectedProcessNames)
                 AddIgnoreProcessInternal(name);
+        }
+
+        private void recordSearchBox_KeyDown(object? sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+                ApplyFilter();
+        }
+
+        int cycleCount = 0;
+        private void notifyRotateTimer_Tick(object sender, EventArgs e)
+        {
+            cycleCount++;
+            if (cycleCount == 1)
+                notifyIcon1.Icon = Properties.Resources.leftRotate_1;
+            else if (cycleCount == 2)
+                notifyIcon1.Icon = Properties.Resources.leftRotate_2;
+            else if (cycleCount == 3)
+                notifyIcon1.Icon = Properties.Resources.leftRotate_3;
+            else if (cycleCount == 4)
+                notifyIcon1.Icon = Properties.Resources.leftRotate_4;
+            else
+            {
+                cycleCount = 0;
+            }
+        }
+
+        private void startMonitorNotifyItem_Click(object sender, EventArgs e)
+        {
+            // 通过托盘图标启动监视时，确保主窗口显示
+            pauseBtn_Click(sender, e);
+        }
+
+        private void defaultModeRadio_CheckedChanged(object sender, AntdUI.BoolEventArgs e)
+        {
+            if (defaultModeRadio.Checked)
+            {
+                // 切换到默认模式，启用相关资源。
+                _monitorService.EnableDefaultMode();
+
+            }else
+            {
+                // 离开默认模式，关闭默认模式相关资源。
+                _monitorService.DisableDefaultMode();
+            }
         }
     }
 }
