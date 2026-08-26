@@ -8,19 +8,39 @@ public partial class Form1
     private void ShowRulesView(bool directories)
     {
         rulesDirectoryView.Visible = directories;
-        rulesProcessView.Visible = !directories;
+        rulesIgnoreProcessView.Visible = !directories;
+        rulesExeProcessView.Visible = false;
         if (directories) rulesDirectoryView.BringToFront();
-        else rulesProcessView.BringToFront();
+        else rulesIgnoreProcessView.BringToFront();
 
         SetTabActive(rulesDirectoryTab, directories);
         SetTabActive(rulesProcessTab, !directories);
+        SetTabActive(rulesExeTab, false);
     }
 
+    private void ShowExeProcView(bool show)
+    {
+        rulesExeProcessView.Visible = show;
+        rulesDirectoryView.Visible = !show;
+        rulesIgnoreProcessView.Visible = !show;
+
+        if (show) rulesExeProcessView.BringToFront();
+        else if (rulesDirectoryView.Visible) rulesDirectoryView.BringToFront();
+        else rulesIgnoreProcessView.BringToFront();
+
+
+        SetTabActive(rulesExeTab, show);
+        SetTabActive(rulesProcessTab, !show);
+        SetTabActive(rulesDirectoryTab, !show);
+    }
     /// <summary>子页签按钮选中态：激活为主题色，否则默认态</summary>
     private static void SetTabActive(AntdUI.Button button, bool active)
     {
         button.Type = active ? AntdUI.TTypeMini.Primary : AntdUI.TTypeMini.Default;
     }
+
+
+
 
     private void AddManualIgnoreProcess()
     {
@@ -42,4 +62,8 @@ public partial class Form1
     private void rulesDirectoryTab_Click(object? sender, EventArgs e) => ShowRulesView(true);
     private void rulesProcessTab_Click(object? sender, EventArgs e) => ShowRulesView(false);
     private void rulesProcessAddButton_Click(object? sender, EventArgs e) => AddManualIgnoreProcess();
+
+    private void rulesExeTab_Click(object sender, EventArgs e) => ShowExeProcView(true);
+
+
 }

@@ -18,6 +18,7 @@ namespace CdiskClean
         private readonly FolderSizeAnalyzer _folderAnalyzer;
         private readonly NotificationService _notificationService;
         private readonly CleanupService _cleanupService;
+        private readonly BindingList<FileChangeRecord> _exeChangeRecords;
         private readonly BindingList<FileChangeRecord> _records;
 
         private readonly object _recordsLock = new();
@@ -83,10 +84,10 @@ namespace CdiskClean
 
             // 设置数据绑定（关闭自动生成列，使用设计器定义的手动列）
             _records = new BindingList<FileChangeRecord>();
-            changesDataGrid.AutoGenerateColumns = false;
-            changesDataGrid.DataSource = _records;
+            //changesDataGrid.AutoGenerateColumns = false;
+            //changesDataGrid.DataSource = _records;
             _gridBoundToRecords = true;
-            changesDataGrid.CellFormatting += changesDataGrid_CellFormatting;
+            //changesDataGrid.CellFormatting += changesDataGrid_CellFormatting;
 
             typeFilterCombo.SelectedIndex = 0;
 
@@ -115,6 +116,8 @@ namespace CdiskClean
             ShowRulesView(true);
             ShowRecordView("notifications");
             RefreshWorkspaceStatus();
+
+            ConfigureTableColumns();
         }
 
 
@@ -127,6 +130,8 @@ namespace CdiskClean
             timer1.Start();
             diskRefreshTimer.Start();
             RefreshDiskInfo();
+
+            BindActivityCenter(_records);
         }
 
         // ==================== 监视目录列表 ====================
@@ -152,6 +157,31 @@ namespace CdiskClean
         }
 
         #region 监视目录列表 相关操作
+        private void dirAddButton_Click(object? sender, EventArgs e)
+        {
+
+            DialogResult result = ImportFolderDialog.ShowDialog();
+
+            if (result == DialogResult.OK)
+            {
+                string selectedPath = ImportFolderDialog.SelectedPath;
+                var newDir = new WatchingDirectory(selectedPath, true);
+                try
+                {
+                    _databaseService.SaveWatchDirectory(newDir);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"保存监测目录失败: {ex.Message}", "错误",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                var dir = _monitorService.AddDirectoryToEtwArr(selectedPath, true);
+                _monitorService.SetDirectoryStatus(dir.Path, RecordStatusEnum.USING);
+                PopulateDirListView();
+            }
+        }
 
         private void PopulateDirListView()
         {
@@ -240,33 +270,82 @@ namespace CdiskClean
             PopulateDirListView();
         }
 
+
+
+        private void betterDirAddButton_Click(object? sender, EventArgs e)
+        {
+            using var form = new BetterDirAddForm();
+            if (form.ShowDialog() != DialogResult.OK) return;
+
+            var addedCount = 0;
+            foreach (var path in form.SelectedPaths)
+            {
+                // 已在监视列表中（非删除状态）的路径跳过
+                if (_monitorService.WatchDirectories.Any(d =>
+                        string.Equals(d.Path, path, StringComparison.OrdinalIgnoreCase) &&
+                        d.Status != RecordStatusEnum.DELETED))
+                    continue;
+
+                try
+                {
+                    _databaseService.SaveWatchDirectory(new WatchingDirectory(path, true));
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"保存监测目录失败: {ex.Message}", "错误",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    continue;
+                }
+
+                var dir = _monitorService.AddDirectoryToEtwArr(path, true);
+                _monitorService.SetDirectoryStatus(dir.Path, RecordStatusEnum.USING);
+                addedCount++;
+            }
+
+            PopulateDirListView();
+            if (addedCount == 0)
+            {
+                MessageBox.Show("所选路径已在监测列表中。", "提示",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void betterProcessAddButton_Click(object? sender, EventArgs e)
+        {
+            using var form = new ProcessPickForm();
+            if (form.ShowDialog() != DialogResult.OK) return;
+
+            foreach (var name in form.SelectedProcessNames)
+                AddIgnoreProcessInternal(name);
+        }
+
         #endregion
 
 
         #region 忽略进程列表 相关操作
         private void SetupProcessListView()
         {
-            int totalWidth = ignoreProcessView.Width;
+            int totalWidth = ignoreProcessListView.Width;
 
-            ignoreProcessView.View = View.Details;
-            ignoreProcessView.FullRowSelect = true;
-            ignoreProcessView.MultiSelect = false;
-            ignoreProcessView.HeaderStyle = ColumnHeaderStyle.Nonclickable;
+            ignoreProcessListView.View = View.Details;
+            ignoreProcessListView.FullRowSelect = true;
+            ignoreProcessListView.MultiSelect = false;
+            ignoreProcessListView.HeaderStyle = ColumnHeaderStyle.Nonclickable;
 
             // 设置内部列宽度为总宽度的比例
-            ignoreProcessView.Columns.Add("进程名称", (int)(totalWidth * 0.80));
-            ignoreProcessView.Columns.Add("状态", (int)(totalWidth * 0.20));
+            ignoreProcessListView.Columns.Add("进程名称", (int)(totalWidth * 0.80));
+            ignoreProcessListView.Columns.Add("状态", (int)(totalWidth * 0.20));
 
 
             // 开启双缓冲，减少闪烁
             typeof(ListView).InvokeMember("DoubleBuffered",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.SetProperty,
-                null, ignoreProcessView, new object[] { true });
+                null, ignoreProcessListView, new object[] { true });
         }
 
         private void PopulateProcessListView()
         {
-            ignoreProcessView.Items.Clear();
+            ignoreProcessListView.Items.Clear();
             foreach (var proc in _monitorService.IgnoreProcessRecords)
             {
                 var item = new ListViewItem(proc.ProcessName);
@@ -274,7 +353,7 @@ namespace CdiskClean
                 item.Tag = proc;
 
                 StyleHelper.ApplyRecordStatusStyle(item, proc.Status);
-                ignoreProcessView.Items.Add(item);
+                ignoreProcessListView.Items.Add(item);
             }
             RefreshDashboardMetrics();
         }
@@ -286,9 +365,9 @@ namespace CdiskClean
 
         private void ignoreProcessView_Resize(object sender, EventArgs e)
         {
-            int totalWidth = ignoreProcessView.Width;
-            ignoreProcessView.Columns[0].Width = (int)(totalWidth * 0.80);
-            ignoreProcessView.Columns[1].Width = (int)(totalWidth * 0.20);
+            int totalWidth = ignoreProcessListView.Width;
+            ignoreProcessListView.Columns[0].Width = (int)(totalWidth * 0.80);
+            ignoreProcessListView.Columns[1].Width = (int)(totalWidth * 0.20);
         }
 
 
@@ -296,19 +375,19 @@ namespace CdiskClean
 
         private void SetupProcessContextMenu()
         {
-            ignoreProcessView.MouseClick += ignoreProcessView_MouseClick;
+            ignoreProcessListView.MouseClick += ignoreProcessView_MouseClick;
         }
 
         private void ignoreProcessView_MouseClick(object? sender, MouseEventArgs e)
         {
             if (e.Button != MouseButtons.Right) return;
 
-            var item = ignoreProcessView.GetItemAt(e.X, e.Y);
+            var item = ignoreProcessListView.GetItemAt(e.X, e.Y);
             if (item?.Tag is not IgnoreProcessRecord proc) return;
             if (proc.Status == RecordStatusEnum.DELETED) return;
 
             BuildStatusContextMenu(proc.Status, status => ChangeProcessStatus(proc, status))
-                .Show(ignoreProcessView, e.Location);
+                .Show(ignoreProcessListView, e.Location);
         }
 
         /// <summary>按记录状态构建统一的"禁用/启用/删除"右键菜单</summary>
@@ -356,6 +435,60 @@ namespace CdiskClean
             PopulateProcessListView();
         }
 
+        private void AddIgnoreProcessInternal(string processName)
+        {
+            processName = Path.GetFileNameWithoutExtension(processName.Trim());
+            if (string.IsNullOrWhiteSpace(processName)) return;
+
+            var existing = _monitorService.IgnoreProcessRecords.FirstOrDefault(r =>
+                string.Equals(r.ProcessName, processName, StringComparison.OrdinalIgnoreCase));
+
+            if (existing != null && existing.Status != RecordStatusEnum.DELETED)
+            {
+                MessageBox.Show($"进程「{processName}」已在忽略列表中。", "提示",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                SelectProcessInListView(processName);
+                return;
+            }
+
+            var record = new IgnoreProcessRecord(processName);
+            try
+            {
+                _databaseService.SaveIgnoreProcessRecord(record);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"保存忽略进程失败: {ex.Message}", "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (existing != null)
+            {
+                _monitorService.SetIgnoreProcessStatus(processName, RecordStatusEnum.USING);
+            }
+            else
+            {
+                _monitorService.AddIgnoreProcess(processName);
+            }
+
+            PopulateProcessListView();
+            SelectProcessInListView(processName);
+        }
+
+        private void SelectProcessInListView(string processName)
+        {
+            foreach (ListViewItem item in ignoreProcessListView.Items)
+            {
+                if (string.Equals(item.Text, processName, StringComparison.OrdinalIgnoreCase))
+                {
+                    item.Selected = true;
+                    ignoreProcessListView.EnsureVisible(item.Index);
+                    break;
+                }
+            }
+        }
+
         #endregion
 
 
@@ -399,15 +532,10 @@ namespace CdiskClean
 
         private void pauseBtn_Click(object? sender, EventArgs e)
         {
+            string processName = "Notepad";
             if (!_monitorService.IsRunning)
             {
-                if (!_etwService.Start())
-                {
-                    MessageBox.Show("ETW 监控会话启动失败，请确认程序以管理员权限运行。", "错误",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-                _monitorService.Start();
+                _monitorService.StartMonitor(processName);
                 _notificationService.Start();
                 notifyIcon1.Text = "C盘管理工具\r\n监测中";
             }
@@ -511,60 +639,60 @@ namespace CdiskClean
 
         private void typeFilterCombo_SelectedIndexChanged(object? sender, EventArgs e)
         {
-            ApplyFilter();
+            //ApplyFilter();
         }
         /// <summary>
         /// 添加类型过滤器的逻辑，根据选择的类型过滤显示的记录
         /// </summary>
         private void ApplyFilter()
         {
-            var filterIndex = typeFilterCombo.SelectedIndex;
-            var searchText = recordSearchBox.Text.Trim();
-            var hasSearch = !string.IsNullOrWhiteSpace(searchText);
-            if (filterIndex <= 0 && !hasSearch)
-            {
-                // 已绑定 _records 时无需重新赋值，避免网格滚动/选择位置被重置
-                if (!_gridBoundToRecords)
+            /*            var filterIndex = typeFilterCombo.SelectedIndex;
+                        var searchText = recordSearchBox.Text.Trim();
+                        var hasSearch = !string.IsNullOrWhiteSpace(searchText);
+                        if (filterIndex <= 0 && !hasSearch)
+                        {
+                            // 已绑定 _records 时无需重新赋值，避免网格滚动/选择位置被重置
+                            if (!_gridBoundToRecords)
+                            {
+                                changesDataGrid.DataSource = _records;
+                                _gridBoundToRecords = true;
+                            }
+                            return;
+                        }
+
+                        var targetType = filterIndex switch
+                        {
+                            1 => ChangeType.Created,
+                            2 => ChangeType.Changed,
+                            3 => ChangeType.Deleted,
+                            4 => ChangeType.Renamed,
+                            _ => (ChangeType?)null
+                        };
+
+                        IEnumerable<FileChangeRecord> filtered = _records;
+                        if (targetType.HasValue)
+                            filtered = filtered.Where(r => r.ChangeType == targetType.Value);
+                        if (hasSearch)
+                        {
+                            filtered = filtered.Where(r =>
+                                r.FileName.Contains(searchText!, StringComparison.OrdinalIgnoreCase) ||
+                                r.FullPath.Contains(searchText!, StringComparison.OrdinalIgnoreCase) ||
+                                (r.SourceProcess?.Contains(searchText!, StringComparison.OrdinalIgnoreCase) ?? false));
+                        }
+
+                        changesDataGrid.DataSource = new BindingList<FileChangeRecord>(
+                            filtered.ToList());
+                        _gridBoundToRecords = false;*/
+        }
+
+        /*        private void changesDataGrid_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
                 {
-                    changesDataGrid.DataSource = _records;
-                    _gridBoundToRecords = true;
-                }
-                return;
-            }
-
-            var targetType = filterIndex switch
-            {
-                1 => ChangeType.Created,
-                2 => ChangeType.Changed,
-                3 => ChangeType.Deleted,
-                4 => ChangeType.Renamed,
-                _ => (ChangeType?)null
-            };
-
-            IEnumerable<FileChangeRecord> filtered = _records;
-            if (targetType.HasValue)
-                filtered = filtered.Where(r => r.ChangeType == targetType.Value);
-            if (hasSearch)
-            {
-                filtered = filtered.Where(r =>
-                    r.FileName.Contains(searchText!, StringComparison.OrdinalIgnoreCase) ||
-                    r.FullPath.Contains(searchText!, StringComparison.OrdinalIgnoreCase) ||
-                    (r.SourceProcess?.Contains(searchText!, StringComparison.OrdinalIgnoreCase) ?? false));
-            }
-
-            changesDataGrid.DataSource = new BindingList<FileChangeRecord>(
-                filtered.ToList());
-            _gridBoundToRecords = false;
-        }
-
-        private void changesDataGrid_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
-        {
-            if (e.ColumnIndex == TypeColumn.Index && e.Value is ChangeType changeType)
-            {
-                e.Value = EnumHelper.FormatChangeType(changeType);
-                e.FormattingApplied = true;
-            }
-        }
+                    if (e.ColumnIndex == TypeColumn.Index && e.Value is ChangeType changeType)
+                    {
+                        e.Value = EnumHelper.FormatChangeType(changeType);
+                        e.FormattingApplied = true;
+                    }
+                }*/
 
         private void OnFileChanged(FileChangeRecord record)
         {
@@ -601,6 +729,9 @@ namespace CdiskClean
                     while (_records.Count > MaxRecords)
                         _records.RemoveAt(_records.Count - 1);
                 }
+
+                activityRecordTable.DataSource = _records.ToList();
+                activityRecordTable.Refresh();
             }
 
             UpdateRecordCount();
@@ -608,9 +739,9 @@ namespace CdiskClean
             // 过滤模式下重建过滤快照以包含新记录；全部模式下 BindingList 自动通知网格
             if (typeFilterCombo.SelectedIndex > 0 ||
                 !string.IsNullOrWhiteSpace(recordSearchBox.Text))
-                ApplyFilter();
+                //ApplyFilter();
 
-            RefreshDashboardMetrics();
+                RefreshDashboardMetrics();
         }
 
         private void OnMonitorError(string message)
@@ -1355,8 +1486,8 @@ namespace CdiskClean
             _cleanExecCts = new CancellationTokenSource();
             var cts = _cleanExecCts;
 
-            cleanBtn.Enabled = false;
-            cleanBtn.Text = "取消清理";
+            cleanButton.Enabled = false;
+            cleanButton.Text = "取消清理";
             cleanScanProgressBar.Style = ProgressBarStyle.Marquee;
             var progress = new Progress<string>(s => cleanStatusLabel.Text = s);
 
@@ -1399,8 +1530,8 @@ namespace CdiskClean
             finally
             {
                 if (_cleanExecCts == cts) _cleanExecCts = null;
-                cleanBtn.Enabled = true;
-                cleanBtn.Text = "清理选中文件";
+                cleanButton.Enabled = true;
+                cleanButton.Text = "清理选中文件";
                 cleanScanProgressBar.Style = ProgressBarStyle.Blocks;
             }
         }
@@ -1439,47 +1570,22 @@ namespace CdiskClean
         private void RefreshCleanHistory()
         {
             var records = _databaseService.GetCleanupRecords(200);
-            cleanHistoryGrid.DataSource = records;
+            cleanHistoryTable.DataSource = records;
             cleanHistoryEmptyLabel.Visible = records.Count == 0;
 
-            // 列配置（数据绑定后列才存在）：隐藏原始列，其余按比例分配宽度
-            if (records.Count > 0 && cleanHistoryGrid.Columns.Count > 0)
-            {
-                cleanHistoryGrid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-                foreach (DataGridViewColumn col in cleanHistoryGrid.Columns)
-                {
-                    col.Visible = col.Name is not ("Id" or "SizeBytes" or "Success");
-                    col.HeaderText = col.Name switch
-                    {
-                        "CleanupTime" => "清理时间",
-                        "FullPath" => "原始路径",
-                        "FileName" => "文件名",
-                        "Method" => "清理方式",
-                        "Message" => "处理结果",
-                        "SizeText" => "文件大小",
-                        "ResultText" => "状态",
-                        _ => col.HeaderText
-                    };
-                    col.FillWeight = col.Name switch
-                    {
-                        "FullPath" => 30,
-                        "CleanupTime" => 16,
-                        "FileName" => 14,
-                        "Message" => 12,
-                        "Method" => 8,
-                        "SizeText" => 8,
-                        "ResultText" => 6,
-                        _ => 8
-                    };
-                }
-            }
+            // 列配置统一在 ConfigureTableColumns() 中完成，此处只需绑定数据
         }
 
-        private void cleanHistoryGrid_CellContextMenuStripNeeded(
-            object? sender, DataGridViewCellContextMenuStripNeededEventArgs e)
+        /// <summary>
+        /// 清理历史表格右键菜单：选中行后弹出（回收站记录可定位回收站 / 复制路径）。
+        /// AntdUI.Table 无 CellContextMenuStripNeeded，改用 CellClick 监听右键。
+        /// </summary>
+        private void cleanHistoryGrid_CellClick(object? sender, AntdUI.TableClickEventArgs e)
         {
-            if (e.RowIndex < 0 || cleanHistoryGrid.Rows[e.RowIndex].DataBoundItem is not CleanupRecord record)
+            if (e.Button != MouseButtons.Right || e.Record is not CleanupRecord record)
                 return;
+
+            cleanHistoryTable.SetSelected(record);
 
             var menu = new ContextMenuStrip();
 
@@ -1499,7 +1605,7 @@ namespace CdiskClean
             };
             menu.Items.Add(copyPath);
 
-            e.ContextMenuStrip = menu;
+            menu.Show(Cursor.Position);
         }
 
         private static void OpenRecycleBin()
@@ -1539,11 +1645,6 @@ namespace CdiskClean
                 new string(quote, 2)) + quote;
         }
 
-        private void notifyIcon1_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            this.Show();
-            this.WindowState = FormWindowState.Normal;
-        }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -1563,38 +1664,10 @@ namespace CdiskClean
 
         #endregion
 
-        // ==================== 无边框窗口拖拽 ====================
-
-        // 无边框窗体的标题栏拖拽、最小化/最大化/关闭按钮由 AntdUI.Window + AntdUI.PageHeader(ShowButton) 原生提供
-
-        private void dirAddButton_Click(object? sender, EventArgs e)
-        {
-
-            DialogResult result = ImportFolderDialog.ShowDialog();
-
-            if (result == DialogResult.OK)
-            {
-                string selectedPath = ImportFolderDialog.SelectedPath;
-                var newDir = new WatchingDirectory(selectedPath, true);
-                try
-                {
-                    _databaseService.SaveWatchDirectory(newDir);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"保存监测目录失败: {ex.Message}", "错误",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
-                var dir = _monitorService.AddDirectoryToEtwArr(selectedPath, true);
-                _monitorService.SetDirectoryStatus(dir.Path, RecordStatusEnum.USING);
-                PopulateDirListView();
-            }
-        }
 
 
 
+        #region 记录拖拽 [遗留项]
         // ==================== 拖拽：监视记录 → 忽略进程列表 ====================
 
         private bool _isGridDragging;
@@ -1611,7 +1684,7 @@ namespace CdiskClean
         }
 
         // 鼠标移动：达到拖拽阈值后启动拖拽，携带整条变更记录
-        private void changesDataGrid_MouseMove(object sender, MouseEventArgs e)
+        /*private void changesDataGrid_MouseMove(object sender, MouseEventArgs e)
         {
             if (e.Button != MouseButtons.Left || _isGridDragging) return;
 
@@ -1629,7 +1702,7 @@ namespace CdiskClean
             _isGridDragging = true;
             changesDataGrid.DoDragDrop(record, DragDropEffects.Copy);
         }
-
+*/
         // 鼠标松开：重置标记
         private void changesDataGrid_MouseUp(object sender, MouseEventArgs e)
         {
@@ -1666,117 +1739,20 @@ namespace CdiskClean
 
             AddIgnoreProcessInternal(record.SourceProcess);
         }
+        #endregion
+
 
         /// <summary>
         /// 添加忽略进程：去重 → 同步 ETW 黑名单 → 入库 → 刷新列表
         /// </summary>
-        private void AddIgnoreProcessInternal(string processName)
-        {
-            processName = Path.GetFileNameWithoutExtension(processName.Trim());
-            if (string.IsNullOrWhiteSpace(processName)) return;
-
-            var existing = _monitorService.IgnoreProcessRecords.FirstOrDefault(r =>
-                string.Equals(r.ProcessName, processName, StringComparison.OrdinalIgnoreCase));
-
-            if (existing != null && existing.Status != RecordStatusEnum.DELETED)
-            {
-                MessageBox.Show($"进程「{processName}」已在忽略列表中。", "提示",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-                SelectProcessInListView(processName);
-                return;
-            }
-
-            var record = new IgnoreProcessRecord(processName);
-            try
-            {
-                _databaseService.SaveIgnoreProcessRecord(record);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"保存忽略进程失败: {ex.Message}", "错误",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            if (existing != null)
-            {
-                _monitorService.SetIgnoreProcessStatus(processName, RecordStatusEnum.USING);
-            }
-            else
-            {
-                _monitorService.AddIgnoreProcess(processName);
-            }
-
-            PopulateProcessListView();
-            SelectProcessInListView(processName);
-        }
-
-        private void SelectProcessInListView(string processName)
-        {
-            foreach (ListViewItem item in ignoreProcessView.Items)
-            {
-                if (string.Equals(item.Text, processName, StringComparison.OrdinalIgnoreCase))
-                {
-                    item.Selected = true;
-                    ignoreProcessView.EnsureVisible(item.Index);
-                    break;
-                }
-            }
-        }
-
-        private void betterDirAddButton_Click(object? sender, EventArgs e)
-        {
-            using var form = new BetterDirAddForm();
-            if (form.ShowDialog() != DialogResult.OK) return;
-
-            var addedCount = 0;
-            foreach (var path in form.SelectedPaths)
-            {
-                // 已在监视列表中（非删除状态）的路径跳过
-                if (_monitorService.WatchDirectories.Any(d =>
-                        string.Equals(d.Path, path, StringComparison.OrdinalIgnoreCase) &&
-                        d.Status != RecordStatusEnum.DELETED))
-                    continue;
-
-                try
-                {
-                    _databaseService.SaveWatchDirectory(new WatchingDirectory(path, true));
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"保存监测目录失败: {ex.Message}", "错误",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    continue;
-                }
-
-                var dir = _monitorService.AddDirectoryToEtwArr(path, true);
-                _monitorService.SetDirectoryStatus(dir.Path, RecordStatusEnum.USING);
-                addedCount++;
-            }
-
-            PopulateDirListView();
-            if (addedCount == 0)
-            {
-                MessageBox.Show("所选路径已在监测列表中。", "提示",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-        }
-
-        private void betterProcessAddButton_Click(object? sender, EventArgs e)
-        {
-            using var form = new ProcessPickForm();
-            if (form.ShowDialog() != DialogResult.OK) return;
-
-            foreach (var name in form.SelectedProcessNames)
-                AddIgnoreProcessInternal(name);
-        }
 
         private void recordSearchBox_KeyDown(object? sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Enter)
-                ApplyFilter();
+            if (e.KeyCode == Keys.Enter) { }
+            //ApplyFilter();
         }
 
+        #region 托盘
         int cycleCount = 0;
         private void notifyRotateTimer_Tick(object sender, EventArgs e)
         {
@@ -1788,11 +1764,11 @@ namespace CdiskClean
             else if (cycleCount == 3)
                 notifyIcon1.Icon = Properties.Resources.leftRotate_3;
             else if (cycleCount == 4)
-                notifyIcon1.Icon = Properties.Resources.leftRotate_4;
-            else
             {
+                notifyIcon1.Icon = Properties.Resources.leftRotate_4;
                 cycleCount = 0;
             }
+
         }
 
         private void startMonitorNotifyItem_Click(object sender, EventArgs e)
@@ -1805,14 +1781,41 @@ namespace CdiskClean
         {
             if (defaultModeRadio.Checked)
             {
+                if (_monitorService.IsRunning)
+                {
+                    MessageBox.Show("需要暂停监测才能选择模式！！！");
+                    defaultModeRadio.Checked = false;
+                    return;
+                }
                 // 切换到默认模式，启用相关资源。
                 _monitorService.EnableDefaultMode();
 
-            }else
+            }
+            else
             {
                 // 离开默认模式，关闭默认模式相关资源。
                 _monitorService.DisableDefaultMode();
             }
         }
+
+        private void exeModeRadio_CheckedChanged(object sender, AntdUI.BoolEventArgs e)
+        {
+            /*
+             需要 一个组件来向 ETW 获取 记录。
+                FSW 不能满足
+
+
+            BindingList
+             */
+            LogHelper.showDefaultToDoMessage("exeModeRadio_CheckedChanged");
+        }
+
+        private void notifyIcon1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            this.Show();
+            this.WindowState = FormWindowState.Normal;
+
+        }
+        #endregion
     }
 }

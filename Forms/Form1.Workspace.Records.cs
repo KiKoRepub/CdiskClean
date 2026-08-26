@@ -9,13 +9,13 @@ public partial class Form1
 {
     private void ShowRecordView(string id)
     {
-        notificationRecordsGrid.Visible = id == "notifications";
-        processStatsGrid.Visible = id == "stats";
-        detailRecordsGrid.Visible = id == "details";
+        notificationRecordsTable.Visible = id == "notifications";
+        processStatsTable.Visible = id == "stats";
+        detailRecordsTable.Visible = id == "details";
         cleanupRecordView.Visible = id == "cleanup";
-        if (id == "notifications") notificationRecordsGrid.BringToFront();
-        else if (id == "stats") processStatsGrid.BringToFront();
-        else if (id == "details") detailRecordsGrid.BringToFront();
+        if (id == "notifications") notificationRecordsTable.BringToFront();
+        else if (id == "stats") processStatsTable.BringToFront();
+        else if (id == "details") detailRecordsTable.BringToFront();
         else cleanupRecordView.BringToFront();
 
         SetTabActive(recordsNotificationTab, id == "notifications");
@@ -51,13 +51,13 @@ public partial class Form1
             records = dbRecords;
 
         var stats = AppChangeStats.BuildFrom(records);
-        BindRecordsCenter(notifications, stats, records);
+        BindRecordsCenter( new (notifications), new (stats), new (records));
     }
 
     private void BindRecordsCenter(
-        List<ProcessNotificationRecord> notifications,
-        List<AppChangeStats> stats,
-        List<FileChangeRecord> records)
+        BindingList<ProcessNotificationRecord> notifications,
+        BindingList<AppChangeStats> stats,
+        BindingList<FileChangeRecord> records)
     {
         if (IsDisposed) return;
         // 句柄尚未创建（构造期异步完成时）挂到 Load 后执行；非 UI 线程则回传 UI 线程
@@ -72,10 +72,10 @@ public partial class Form1
             return;
         }
 
-        notificationRecordsGrid.DataSource = new BindingList<ProcessNotificationRecord>(notifications);
-        processStatsGrid.DataSource = new BindingList<AppChangeStats>(stats);
-        detailRecordsGrid.DataSource = new BindingList<FileChangeRecord>(
-            records.OrderByDescending(r => r.Timestamp).ToList());
+        // 列配置见 ConfigureTableColumns()；时间格式化由列 DisplayFormat 完成
+        notificationRecordsTable.DataSource = notifications;
+        processStatsTable.DataSource = stats;
+        detailRecordsTable.DataSource = new BindingList<FileChangeRecord>(records.OrderByDescending(r => r.Timestamp).ToList());
         RefreshCleanHistory();
     }
 
@@ -86,47 +86,4 @@ public partial class Form1
     private void recordsDetailsTab_Click(object? sender, EventArgs e) => ShowRecordView("details");
     private void recordsCleanupTab_Click(object? sender, EventArgs e) => ShowRecordView("cleanup");
     private void recordsRefreshButton_Click(object? sender, EventArgs e) => RefreshRecordsCenter();
-
-    /// <summary>变更明细网格：ChangeType 枚举转中文显示</summary>
-    private void detailRecordsGrid_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
-    {
-        if (e.ColumnIndex >= 0 &&
-            detailRecordsGrid.Columns[e.ColumnIndex].DataPropertyName == "ChangeType" &&
-            e.Value is ChangeType type)
-        {
-            e.Value = EnumHelper.FormatChangeType(type);
-            e.FormattingApplied = true;
-        }
-    }
-
-    /// <summary>提醒记录网格：时间格式化显示</summary>
-    private void notificationRecordsGrid_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
-    {
-        if (e.ColumnIndex >= 0 &&
-            notificationRecordsGrid.Columns[e.ColumnIndex].DataPropertyName == "TriggerTime" &&
-            e.Value is DateTime time)
-        {
-            e.Value = time.ToString("yyyy-MM-dd HH:mm:ss");
-            e.FormattingApplied = true;
-        }
-    }
-
-    /// <summary>进程统计网格：时间格式化显示</summary>
-    private void processStatsGrid_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
-    {
-        if (e.ColumnIndex >= 0)
-        {
-            var colName = processStatsGrid.Columns[e.ColumnIndex].DataPropertyName;
-            if (colName == "FirstChange" && e.Value is DateTime firstTime)
-            {
-                e.Value = firstTime.ToString("yyyy-MM-dd HH:mm:ss");
-                e.FormattingApplied = true;
-            }
-            else if (colName == "LastChange" && e.Value is DateTime lastTime)
-            {
-                e.Value = lastTime.ToString("yyyy-MM-dd HH:mm:ss");
-                e.FormattingApplied = true;
-            }
-        }
-    }
 }

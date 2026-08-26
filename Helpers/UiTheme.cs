@@ -49,8 +49,8 @@ namespace CdiskClean.Helpers
             control.Font = BodyFont;
             switch (control)
             {
-                case DataGridView grid:
-                    StyleGrid(grid);
+                case AntdUI.Table table:
+                    StyleTable(table);
                     break;
                 case ListView list:
                     StyleList(list);
@@ -78,29 +78,24 @@ namespace CdiskClean.Helpers
             }
         }
 
-        private static void StyleGrid(DataGridView grid)
+        /// <summary>
+        /// 统一 AntdUI.Table 样式入口：项目中所有表格（含 5 个记录表格与活动页表格）
+        /// 都经过此方法统一样式。如需全局调整表格外观（表头背景/行高/圆角/空态文案/边框等），
+        /// 只需修改此方法一处即可，无需逐个表格设置。
+        /// </summary>
+        private static void StyleTable(AntdUI.Table table)
         {
-            grid.BackgroundColor = Surface;
-            grid.BorderStyle = BorderStyle.FixedSingle;
-            grid.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
-            grid.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
-            grid.EnableHeadersVisualStyles = false;
-            grid.GridColor = Border;
-            grid.RowHeadersVisible = false;
-            grid.RowTemplate.Height = 36;
-            grid.ColumnHeadersHeight = 40;
-            grid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            grid.DefaultCellStyle.BackColor = Surface;
-            grid.DefaultCellStyle.ForeColor = TextPrimary;
-            grid.DefaultCellStyle.SelectionBackColor = PrimarySoft;
-            grid.DefaultCellStyle.SelectionForeColor = Color.FromArgb(9, 88, 217);
-            grid.DefaultCellStyle.Padding = new Padding(6, 2, 6, 2);
-            grid.AlternatingRowsDefaultCellStyle.BackColor = SurfaceMuted;
-            grid.AlternatingRowsDefaultCellStyle.SelectionBackColor = PrimarySoft;
-            grid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(242, 244, 247);
-            grid.ColumnHeadersDefaultCellStyle.ForeColor = TextPrimary;
-            grid.ColumnHeadersDefaultCellStyle.Font = StrongFont;
-            grid.ColumnHeadersDefaultCellStyle.Padding = new Padding(6, 0, 6, 0);
+            table.FixedHeader = true;
+            table.AutoSizeColumnsMode = AntdUI.ColumnsMode.Fill;
+            table.Radius = 6;
+            table.Bordered = false;
+            table.RowHeight = 36;
+            table.RowHeightHeader = 40;
+            table.ColumnBack = Color.FromArgb(242, 244, 247);
+            table.ColumnFore = TextPrimary;
+            table.ColumnFont = StrongFont;
+            table.ShowTip = true;
+            table.EmptyText = table.EmptyText ?? "暂无数据";
         }
 
         private static void StyleList(ListView list)

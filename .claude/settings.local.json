@@ -56,7 +56,15 @@
       "Bash(powershell -Command \"Get-Process CdiskClean | Select-Object Id, MainWindowTitle, Responding | Format-List\")",
       "Bash(sed 's/ \\\\[.*//')",
       "Bash(git -c safe.directory='*' show HEAD:Forms/Form1.Workspace.cs)",
-      "Bash(dotnet msbuild *)"
+      "Bash(dotnet msbuild *)",
+      "Read(//d/university/CSharp/projects/AntdUI/**)",
+      "Bash(grep -n \"public\\\\b.*\\\\b\\\\w+\\\\b\\\\s*$\\\\|public\\\\b.*{ get\\\\|public\\\\b.*{ set\\\\|public Column\\\\|public string Key\\\\|public string Title\\\\|public.*Width\\\\|public.*Align\\\\|public.*Fixed\\\\|public.*SortOrder\\\\|public.*DisplayFormat\\\\|public.*Render\" \"D:/university/CSharp/projects/AntdUI/src/AntdUI/Controls/Column.cs\")",
+      "Bash(awk '/public class Column :/,/^    }/' \"D:/university/CSharp/projects/AntdUI/src/AntdUI/Controls/Table/Table.List.cs\")",
+      "Bash(awk '/public class Column$/,/^    }/' \"D:/university/CSharp/projects/AntdUI/src/AntdUI/Controls/Table/Table.cs\")",
+      "Bash(python -)",
+      "Bash(grep -v \"^.*//\")",
+      "Bash(grep -v \"^\\\\s*//\")",
+      "Bash(grep -v \"/\\\\*\")"
     ]
   }
 }

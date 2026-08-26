@@ -25,7 +25,6 @@ public partial class Form1
         y += 29;
         cleanTargetTextBox.SetBounds(4, y, Math.Max(120, width - 92), 32);
         cleanTargetSelectBtn.SetBounds(width - 80, y - 1, 76, 34);
-        cleanBtn.SetBounds(4, Math.Max(y + 46, panel.ClientSize.Height - 48), width - 8, 42);
     }
 
     // ==================== 事件包装方法（设计器绑定） ====================

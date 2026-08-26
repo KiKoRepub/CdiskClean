@@ -1,6 +1,9 @@
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+
 namespace CdiskClean.Models;
 
-public class ProcessNotificationRecord
+public class ProcessNotificationRecord : INotifyPropertyChanged
 {
     public string ProcessName { get; set; } = string.Empty;
 
@@ -10,6 +13,13 @@ public class ProcessNotificationRecord
 
     public DateTime TriggerTime { get; set; }
 
+    // 委托 
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
     public static string GetCreateSQL()
     {
         return @"CREATE TABLE IF NOT EXISTS ProcessNotifications (

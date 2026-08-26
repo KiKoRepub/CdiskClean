@@ -1,5 +1,6 @@
 using CdiskClean.Helpers;
 using CdiskClean.Models;
+using System.ComponentModel;
 
 namespace CdiskClean;
 
@@ -16,19 +17,19 @@ public partial class Form1
         var ignored = _monitorService.IgnoreProcessRecords.Count(p => p.Status == RecordStatusEnum.USING);
         dashboardRuleMetric.Text = $"{directories} 目录 / {ignored} 进程";
 
-        List<DashboardActivityRow> rows;
+        BindingList<DashboardActivityRow> rows;
         lock (_recordsLock)
         {
-            rows = _records.Take(8).Select(r => new DashboardActivityRow
+            rows = new (_records.Take(8).Select(r => new DashboardActivityRow
             {
                 Timestamp = r.Timestamp,
                 TypeText = EnumHelper.FormatChangeType(r.ChangeType),
                 FileName = r.FileName,
                 SourceProcess = r.SourceProcess ?? "未知进程",
                 Directory = r.Directory
-            }).ToList();
+            }).ToList());
         }
-        dashboardRecentGrid.DataSource = rows;
+        dashboardRecentTable.DataSource = rows;
 
         RefreshWorkspaceStatus();
     }
@@ -36,25 +37,23 @@ public partial class Form1
     private void UpdateWorkspaceDiskStatus(DriveInfoModel info)
     {
         dashboardDiskProgress.Value = (int)Math.Round(Math.Min(info.UsagePercent, 100D));
-        dashboardUsageLabel.Text = $"{info.UsagePercent:0.#}% 已使用  ·  剩余 {FormatHelper.FormatBytes(info.FreeSpaceBytes)}";
-        dashboardUsageLabel.ForeColor = info.UsagePercent switch
-        {
-            > 90 => UiTheme.Danger,
-            > 70 => Color.FromArgb(217, 119, 6),
-            _ => UiTheme.TextPrimary
-        };
-        // 更新进度条
-
-        dashboardDiskProgress.Value = (float)(info.UsagePercent / 100);
         
-        dashboardDiskProgress.ForeColor = info.UsagePercent switch
+        dashboardUsageLabel.Text = $"{info.UsagePercent:0.#}% 已使用  ·  剩余 {FormatHelper.FormatBytes(info.FreeSpaceBytes)}";
+        Color diskUsageColor = info.UsagePercent switch
         {
             > 90 => UiTheme.Danger,
             > 70 => Color.FromArgb(217, 119, 6),
             _ => UiTheme.Primary
         };
-        //LogHelper.showDefaultToDoMessage("进度条颜色渐变还没做呢，等一等");
-        //dashboardDiskProgress
+
+        dashboardUsageLabel.ForeColor = diskUsageColor;
+
+        // 更新进度条
+        dashboardDiskProgress.Value = (float)(info.UsagePercent / 100);
+        dashboardDiskProgress.ForeColor = diskUsageColor;
+
+
+        dashboardDiskProgress.Fill = diskUsageColor;
 
         dashboardCapacityLabel.Text =
             $"总容量 {FormatHelper.FormatBytes(info.TotalSizeBytes)}    已用 {FormatHelper.FormatBytes(info.UsedSpaceBytes)}    剩余 {FormatHelper.FormatBytes(info.FreeSpaceBytes)}";
@@ -74,4 +73,16 @@ public partial class Form1
         workspaceRecordStatus.Text = $"当前记录 {_records.Count:N0} 条";
         workspaceClockStatus.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
     }
+
+
+    #region 实体
+    private sealed class DashboardActivityRow
+    {
+        public DateTime Timestamp { get; init; }
+        public string TypeText { get; init; } = string.Empty;
+        public string FileName { get; init; } = string.Empty;
+        public string SourceProcess { get; init; } = string.Empty;
+        public string Directory { get; init; } = string.Empty;
+    }
+    #endregion 
 }

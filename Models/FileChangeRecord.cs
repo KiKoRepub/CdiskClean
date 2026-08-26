@@ -44,7 +44,7 @@ public class FileChangeRecord : INotifyPropertyChanged
         get => _fileName;
         set { _fileName = value; OnPropertyChanged(); }
     }
-    [Browsable(false)]
+    //[Browsable(false)]
     public string Directory
     {
         get => _directory;

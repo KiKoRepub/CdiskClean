@@ -1,3 +1,4 @@
+using AntdUI;
 using CdiskClean.Helpers;
 using CdiskClean.Models;
 using System.ComponentModel;
@@ -20,7 +21,7 @@ public partial class Form1
     private bool _workspaceMenuCollapsed;
     private bool _isExiting;
 
-    // ==================== 页面切换 ====================
+    #region 页面切换 
 
     internal void ShowWorkspacePage(int legacyIndex)
     {
@@ -91,8 +92,9 @@ public partial class Form1
         _workspaceMenuCollapsed = !_workspaceMenuCollapsed;
         workspaceMenu.Collapsed = _workspaceMenuCollapsed;
         workspaceBodyLayout.ColumnStyles[0].Width = _workspaceMenuCollapsed ? 64F : 208F;
-        brandLabel.Visible = !_workspaceMenuCollapsed;
+        //brandLabel.Visible = !_workspaceMenuCollapsed;
         workspaceCollapseButton.Text = _workspaceMenuCollapsed ? string.Empty : "折叠菜单";
+        //brandLabel.Text = _workspaceMenuCollapsed ? "C" : "CdiskClean";
     }
 
     private void UpdateCleanupSelectionSummary()
@@ -108,7 +110,11 @@ public partial class Form1
         Hide();
     }
 
-    // ==================== 事件包装方法（设计器绑定） ====================
+    #endregion
+
+
+    # region 事件包装方法（设计器绑定）
+
 
     private void workspaceMenu_ItemClick(object? sender, AntdUI.MenuItemEventArgs e)
     {
@@ -119,13 +125,88 @@ public partial class Form1
     private void workspaceCollapseButton_Click(object? sender, EventArgs e) => ToggleWorkspaceMenu();
     private void activityRecordCenterButton_Click(object? sender, EventArgs e) => ShowWorkspacePage(RecordsPageId);
     private void recordSearchBox_TextChanged(object? sender, EventArgs e) => ApplyFilter();
+    #endregion
 
-    private sealed class DashboardActivityRow
+
+    #region AntdUI Table 
+
+    /// <summary>
+    /// 统一表格列创建入口：项目中所有记录表格（工作台/记录中心共 5 张表）的列
+    /// 都经由此方法创建。如需统一调整列样式（对齐、宽度、省略显示、表头样式等），
+    /// 只需修改此方法即可全局生效。
+    /// </summary>
+    private static AntdUI.Column MakeColumn(string key, string title,
+        string width = "auto", AntdUI.ColumnAlign align = AntdUI.ColumnAlign.Center)
     {
-        public DateTime Timestamp { get; init; }
-        public string TypeText { get; init; } = string.Empty;
-        public string FileName { get; init; } = string.Empty;
-        public string SourceProcess { get; init; } = string.Empty;
-        public string Directory { get; init; } = string.Empty;
+        return new AntdUI.Column(key, title, align)
+            .SetWidth(width);
     }
+
+    /// <summary>配置工作台与记录中心的 5 个 AntdUI.Table 列（构造期执行一次）</summary>
+    private void ConfigureTableColumns()
+    {
+        // 工作台-最近活动
+        dashboardRecentTable.Columns = new AntdUI.ColumnCollection
+            {
+                MakeColumn("Timestamp", "时间", "16%"),
+                MakeColumn("TypeText", "类型", "10%"),
+                MakeColumn("FileName", "文件名", "28%"),
+                MakeColumn("SourceProcess", "来源进程", "16%"),
+                MakeColumn("Directory", "目录", "30%", AntdUI.ColumnAlign.Left)
+            };
+        dashboardRecentTable.Columns["Timestamp"]?.SetDisplayFormat("yyyy-MM-dd HH:mm:ss");
+        dashboardRecentTable.Columns["TypeText"]?.SetRender(
+            (value, _, _) => value is ChangeType type ? EnumHelper.FormatChangeType(type) : value);
+
+        // 记录中心-提醒记录
+        notificationRecordsTable.Columns = new AntdUI.ColumnCollection
+            {
+                MakeColumn("ProcessName", "进程", "24%"),
+                MakeColumn("OperationCount", "操作次数", "16%"),
+                MakeColumn("DurationSeconds", "持续时长(秒)", "18%"),
+                MakeColumn("TriggerTime", "触发时间", "30%")
+            };
+        notificationRecordsTable.Columns["TriggerTime"]?.SetDisplayFormat("yyyy-MM-dd HH:mm:ss");
+
+        // 记录中心-进程统计
+        processStatsTable.Columns = new AntdUI.ColumnCollection
+            {
+                MakeColumn("AppName", "应用", "26%"),
+                MakeColumn("ChangeCount", "变更次数", "14%"),
+                MakeColumn("FirstChangeTime", "首次变更", "24%"),
+                MakeColumn("LastChangeTime", "最近变更", "24%")
+            };
+        processStatsTable.Columns["FirstChangeTime"]?.SetDisplayFormat("yyyy-MM-dd HH:mm:ss");
+        processStatsTable.Columns["LastChangeTime"]?.SetDisplayFormat("yyyy-MM-dd HH:mm:ss");
+
+        // 记录中心-变更明细（ChangeType 枚举经 Render 转中文显示）
+        detailRecordsTable.Columns = new AntdUI.ColumnCollection
+            {
+                MakeColumn("Timestamp", "时间", "14%"),
+                MakeColumn("ChangeType", "类型", "8%"),
+                MakeColumn("FileName", "文件名", "14%"),
+                MakeColumn("FullPath", "完整路径", "22%", AntdUI.ColumnAlign.Left),
+                MakeColumn("Directory", "目录", "20%", AntdUI.ColumnAlign.Left),
+                MakeColumn("SizeBytes", "大小", "10%"),
+                MakeColumn("SourceProcess", "来源进程", "12%")
+            };
+        detailRecordsTable.Columns["Timestamp"]?.SetDisplayFormat("yyyy-MM-dd HH:mm:ss");
+        detailRecordsTable.Columns["ChangeType"]?.SetRender(
+            (value, _, _) => value is ChangeType type ? EnumHelper.FormatChangeType(type) : value);
+
+        // 记录中心-清理历史
+        cleanHistoryTable.Columns = new AntdUI.ColumnCollection
+            {
+                MakeColumn("CleanupTime", "清理时间", "16%"),
+                MakeColumn("FullPath", "原始路径", "28%", AntdUI.ColumnAlign.Left),
+                MakeColumn("FileName", "文件名", "16%"),
+                MakeColumn("Method", "清理方式", "10%"),
+                MakeColumn("Message", "处理结果", "14%", AntdUI.ColumnAlign.Left),
+                MakeColumn("SizeText", "文件大小", "10%"),
+                MakeColumn("ResultText", "状态", "6%")
+            };
+        cleanHistoryTable.Columns["CleanupTime"]?.SetDisplayFormat("yyyy-MM-dd HH:mm:ss");
+    }
+    #endregion
+
 }

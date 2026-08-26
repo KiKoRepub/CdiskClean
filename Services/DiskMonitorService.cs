@@ -66,17 +66,29 @@ public class DiskMonitorService : IDisposable
         _etwService.OperateWriteFolderArr(WatchDirectories.Select(d => d.Path).ToArray());
     }
 
-    public void Start()
+    public void Start(string processName)
     {
         if (IsRunning) return;
 
-        lock (_lock)
+        if (!_etwService.Start())
         {
-            foreach (var item in WatchDirectories)
-            {
-                if (item.Status != RecordStatusEnum.USING) continue;
-                StartWatchingInternal(item.Path, item.IncludeSubdirs);
-            }
+            MessageBox.Show("ETW 监控会话启动失败，请确认程序以管理员权限运行。", "错误",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+
+        switch (_currentMode)
+        {
+            case MonitorMode.DEFAULT:
+                StartOnDefaultMode();
+                break;
+            case MonitorMode.EXE:
+                StartOnExeMode(processName);
+                break;
+            case MonitorMode.NONE:
+                throw new InvalidOperationException("未知的监测模式");
+            default:
+                throw new ArgumentOutOfRangeException();
         }
 
         // 启动延迟查询后台处理器
@@ -84,8 +96,12 @@ public class DiskMonitorService : IDisposable
         _deferredCts?.Dispose();
         _deferredCts = new CancellationTokenSource();
         _deferredTask = Task.Run(() => ProcessPendingQueriesAsync(_deferredCts.Token));
+
+
         IsRunning = true;
     }
+
+
 
     public void Stop()
     {
@@ -422,7 +438,7 @@ public class DiskMonitorService : IDisposable
                 1500,
                 ct,
                 query.AttributionNotBefore);
-            ct.ThrowIfCancellationRequested();
+            ct.ThrowIfCancellationRequested(); 
             if (processName != null)
             {
                 query.Record.SourceProcess = processName;
@@ -439,6 +455,7 @@ public class DiskMonitorService : IDisposable
         catch (Exception ex)
         {
             MonitorError?.Invoke($"解析来源进程失败: {ex.Message}");
+
             PublishRecord(query.Record);
         }
     }
@@ -449,13 +466,58 @@ public class DiskMonitorService : IDisposable
         _deferredCts?.Dispose(); 
     }
 
+    #region 模式选择
+    MonitorMode _currentMode = MonitorMode.DEFAULT;
     internal void EnableDefaultMode()
     {
-        throw new NotImplementedException();
+        _currentMode = MonitorMode.DEFAULT;
     }
 
     internal void DisableDefaultMode()
     {
-        throw new NotImplementedException();
+       _currentMode = MonitorMode.NONE;
     }
+    internal void StartOnDefaultMode()
+    {
+        lock (_lock)
+        {
+            foreach (var item in WatchDirectories)
+            {
+                if (item.Status != RecordStatusEnum.USING) continue;
+                StartWatchingInternal(item.Path, item.IncludeSubdirs);
+            }
+        }
+
+    }
+
+
+    internal void EnableExeMode()
+    {
+        _currentMode = MonitorMode.EXE;
+    }
+
+    internal void DisableExeMode()
+    {
+        _currentMode = MonitorMode.NONE;
+    }
+
+    private void StartOnExeMode(string processName)
+    {
+        _etwService.setWatchProcess(processName);   
+    }
+
+    internal void StartMonitor(string processName)
+    {
+        Start(processName);
+    
+    }
+    #endregion
+}
+
+
+internal enum MonitorMode
+{
+    NONE,
+    DEFAULT,
+    EXE
 }

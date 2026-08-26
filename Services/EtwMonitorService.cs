@@ -21,13 +21,15 @@ public class EtwMonitorService : IDisposable
     /// <summary>
     /// 缓存起来的 所有进程的事件字典，监控触发的时候 会来这里面查询对应的进程名
     /// </summary>
-    private readonly ConcurrentDictionary<string, (string ProcessName, DateTime Timestamp)> _eventBuffer = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, (string ProcessName, DateTime Timestamp)> _dirEventBuffer = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, (string fileName,DateTime Timestamp)> _procEventBuffer = new(StringComparer.OrdinalIgnoreCase);
+
     private readonly TimeSpan _bufferTtl = TimeSpan.FromSeconds(3);
     private static readonly string CurrentProcessName = Process.GetCurrentProcess().ProcessName;
     // 定义一个原子引用（因为引用赋值是原子的，不需要锁）
     private volatile string[] _watchDirectoryArray = new string[0]; // 白名单
     private volatile string[] _ignoreProcessArray = new string[0]; // 黑名单
-
+    private volatile string _watchProcess = string.Empty; // 监控的进程名
     
     public bool IsRunning { get; private set; }
 
@@ -121,6 +123,11 @@ public class EtwMonitorService : IDisposable
     }
     #endregion
 
+    #region WatchProcess 相关操作
+        public void setWatchProcess(string processName) { _watchProcess = processName; }
+        public string getWatchProcess() { return _watchProcess; }
+    #endregion
+
     /// <summary>
     /// 缓冲区 用来往字典里添加记录到的事件
     /// </summary>
@@ -146,10 +153,20 @@ public class EtwMonitorService : IDisposable
                 {
                     // 匹配成功
                     var normalized = NormalizePath(fileName);
-                    _eventBuffer[normalized] = (processName, DateTime.Now);
+                    _dirEventBuffer[normalized] = (processName, DateTime.Now);
                     break;
                 }
             }
+            // 对于 监控的进程名进行选取
+
+            if (!string.IsNullOrWhiteSpace(_watchProcess) &&
+                string.Equals(processName, _watchProcess, StringComparison.OrdinalIgnoreCase))
+            {
+                var normalized = NormalizePath(fileName);
+                _procEventBuffer[normalized] = (processName, DateTime.Now);
+            }
+
+
         }
         catch
         {
@@ -164,7 +181,7 @@ public class EtwMonitorService : IDisposable
         if (string.IsNullOrEmpty(filePath)) return null;
 
         var normalized = NormalizePath(filePath);
-        if (_eventBuffer.TryGetValue(normalized, out var entry))
+        if (_dirEventBuffer.TryGetValue(normalized, out var entry))
         {
             if (DateTime.Now - entry.Timestamp <= _bufferTtl &&
                 (!notBefore.HasValue || entry.Timestamp >= notBefore.Value))
@@ -199,7 +216,7 @@ public class EtwMonitorService : IDisposable
 */
         while (sw.ElapsedMilliseconds < maxDelayMs && !ct.IsCancellationRequested)
         {
-            if (_eventBuffer.TryGetValue(normalized, out var entry))
+            if (_dirEventBuffer.TryGetValue(normalized, out var entry))
             {
                 // 如果事件在缓冲区中，并且没有过期，则返回进程名并移除缓冲区中的记录
                 if (DateTime.Now - entry.Timestamp <= _bufferTtl &&
@@ -221,14 +238,33 @@ public class EtwMonitorService : IDisposable
 
         return null;
     }
+    public async Task<(string fileName, DateTime Timestamp)> TryGetFileInfoAsync(
+        string processName)
+    {
+            foreach (var changeInfo in _procEventBuffer)
+            {
+                if (processName.Equals(changeInfo.Key))
+                {
+                    return changeInfo.Value;
+                }
+            }
+            return new () { fileName = string.Empty, Timestamp = DateTime.MinValue };
+
+    }
 
     private void CleanupBuffer()
     {
         var cutoff = DateTime.Now - _bufferTtl;
-        foreach (var kv in _eventBuffer)
+        foreach (var kv in _dirEventBuffer)
         {
             if (kv.Value.Timestamp < cutoff)
-                _eventBuffer.TryRemove(kv.Key, out _);
+                _dirEventBuffer.TryRemove(kv.Key, out _);
+        }
+        // 清理 _procEventBuffer 中的过期记录
+        foreach (var kv in _procEventBuffer)
+        {
+            if (kv.Value.Timestamp < cutoff)
+                _procEventBuffer.TryRemove(kv.Key, out _);
         }
     }
 
@@ -241,7 +277,8 @@ public class EtwMonitorService : IDisposable
         _cts?.Cancel();
         try { _session?.Dispose(); } catch { }
         _session = null;
-        _eventBuffer.Clear();
+        _dirEventBuffer.Clear();
+        _procEventBuffer.Clear();
     }
 
     public void Dispose()

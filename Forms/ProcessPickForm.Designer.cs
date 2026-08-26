@@ -28,116 +28,114 @@ namespace CdiskClean.Forms
         /// </summary>
         private void InitializeComponent()
         {
-            searchLabel = new System.Windows.Forms.Label();
+            searchLabel = new Label();
             searchTextBox = new AntdUI.Input();
             refreshBtn = new AntdUI.Button();
-            procListView = new System.Windows.Forms.ListView();
-            nameColumn = new System.Windows.Forms.ColumnHeader();
-            pidColumn = new System.Windows.Forms.ColumnHeader();
-            titleColumn = new System.Windows.Forms.ColumnHeader();
+            procListView = new ListView();
+            nameColumn = new ColumnHeader();
+            pidColumn = new ColumnHeader();
+            titleColumn = new ColumnHeader();
             okBtn = new AntdUI.Button();
             cancelBtn = new AntdUI.Button();
-            hintLabel = new System.Windows.Forms.Label();
+            hintLabel = new Label();
             SuspendLayout();
-            //
+            // 
             // searchLabel
-            //
+            // 
             searchLabel.AutoSize = true;
-            searchLabel.Font = new System.Drawing.Font("Microsoft YaHei UI", 11F);
-            searchLabel.Location = new System.Drawing.Point(12, 20);
+            searchLabel.Font = new Font("Microsoft YaHei UI", 11F);
+            searchLabel.Location = new Point(12, 20);
             searchLabel.Name = "searchLabel";
-            searchLabel.Size = new System.Drawing.Size(62, 24);
+            searchLabel.Size = new Size(62, 30);
             searchLabel.TabIndex = 0;
             searchLabel.Text = "搜索:";
-            //
+            // 
             // searchTextBox
-            //
-            searchTextBox.Font = new System.Drawing.Font("Microsoft YaHei UI", 11F);
-            searchTextBox.Location = new System.Drawing.Point(80, 16);
+            // 
+            searchTextBox.Font = new Font("Microsoft YaHei UI", 11F);
+            searchTextBox.Location = new Point(80, 16);
             searchTextBox.Name = "searchTextBox";
-            searchTextBox.Size = new System.Drawing.Size(430, 30);
+            searchTextBox.Size = new Size(430, 30);
             searchTextBox.TabIndex = 1;
             searchTextBox.TextChanged += searchTextBox_TextChanged;
-            //
+            // 
             // refreshBtn
-            //
-            refreshBtn.Font = new System.Drawing.Font("Microsoft YaHei UI", 11F);
-            refreshBtn.Location = new System.Drawing.Point(526, 14);
+            // 
+            refreshBtn.Font = new Font("Microsoft YaHei UI", 11F);
+            refreshBtn.IconHoverSvg = "RefreshOutline";
+            refreshBtn.Location = new Point(516, 9);
             refreshBtn.Name = "refreshBtn";
-            refreshBtn.Size = new System.Drawing.Size(80, 34);
+            refreshBtn.Radius = 1;
+            refreshBtn.Size = new Size(116, 43);
             refreshBtn.TabIndex = 2;
             refreshBtn.Text = "刷新";
+            refreshBtn.Type = AntdUI.TTypeMini.Primary;
             refreshBtn.Click += refreshBtn_Click;
-            //
+            // 
             // procListView
-            //
-            procListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[]
-            {
-                nameColumn, pidColumn, titleColumn
-            });
-            procListView.Font = new System.Drawing.Font("Microsoft YaHei UI", 11F);
+            // 
+            procListView.Columns.AddRange(new ColumnHeader[] { nameColumn, pidColumn, titleColumn });
+            procListView.Font = new Font("Microsoft YaHei UI", 11F);
             procListView.FullRowSelect = true;
-            procListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
-            procListView.HideSelection = false;
-            procListView.Location = new System.Drawing.Point(12, 58);
-            procListView.MultiSelect = true;
+            procListView.HeaderStyle = ColumnHeaderStyle.Nonclickable;
+            procListView.Location = new Point(12, 58);
             procListView.Name = "procListView";
-            procListView.Size = new System.Drawing.Size(640, 400);
+            procListView.Size = new Size(640, 400);
             procListView.TabIndex = 3;
             procListView.UseCompatibleStateImageBehavior = false;
-            procListView.View = System.Windows.Forms.View.Details;
-            //
+            procListView.View = View.Details;
+            // 
             // nameColumn
-            //
+            // 
             nameColumn.Text = "进程名";
             nameColumn.Width = 170;
-            //
+            // 
             // pidColumn
-            //
+            // 
             pidColumn.Text = "PID";
             pidColumn.Width = 90;
-            //
+            // 
             // titleColumn
-            //
+            // 
             titleColumn.Text = "窗口标题";
             titleColumn.Width = 370;
-            //
+            // 
             // okBtn
-            //
-            okBtn.Font = new System.Drawing.Font("Microsoft YaHei UI", 11F);
-            okBtn.Location = new System.Drawing.Point(472, 480);
+            // 
+            okBtn.Font = new Font("Microsoft YaHei UI", 11F);
+            okBtn.Location = new Point(472, 480);
             okBtn.Name = "okBtn";
-            okBtn.Size = new System.Drawing.Size(85, 36);
+            okBtn.Size = new Size(85, 36);
             okBtn.TabIndex = 4;
             okBtn.Text = "确定";
             okBtn.Click += okBtn_Click;
-            //
+            // 
             // cancelBtn
-            //
-            cancelBtn.Font = new System.Drawing.Font("Microsoft YaHei UI", 11F);
-            cancelBtn.Location = new System.Drawing.Point(567, 480);
+            // 
+            cancelBtn.Font = new Font("Microsoft YaHei UI", 11F);
+            cancelBtn.Location = new Point(567, 480);
             cancelBtn.Name = "cancelBtn";
-            cancelBtn.Size = new System.Drawing.Size(85, 36);
+            cancelBtn.Size = new Size(85, 36);
             cancelBtn.TabIndex = 5;
             cancelBtn.Text = "取消";
             cancelBtn.Click += cancelBtn_Click;
-            //
+            // 
             // hintLabel
-            //
+            // 
             hintLabel.AutoSize = true;
-            hintLabel.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F);
-            hintLabel.ForeColor = System.Drawing.Color.Gray;
-            hintLabel.Location = new System.Drawing.Point(14, 525);
+            hintLabel.Font = new Font("Microsoft YaHei UI", 9F);
+            hintLabel.ForeColor = Color.Gray;
+            hintLabel.Location = new Point(14, 525);
             hintLabel.Name = "hintLabel";
-            hintLabel.Size = new System.Drawing.Size(550, 20);
+            hintLabel.Size = new Size(676, 24);
             hintLabel.TabIndex = 6;
             hintLabel.Text = "提示：选择当前系统正在运行的进程（可多选、可搜索），确定后加入忽略进程列表";
-            //
+            // 
             // ProcessPickForm
-            //
-            AutoScaleDimensions = new System.Drawing.SizeF(11F, 24F);
-            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(664, 556);
+            // 
+            AutoScaleDimensions = new SizeF(11F, 24F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(664, 556);
             Controls.Add(hintLabel);
             Controls.Add(cancelBtn);
             Controls.Add(okBtn);
@@ -145,11 +143,11 @@ namespace CdiskClean.Forms
             Controls.Add(refreshBtn);
             Controls.Add(searchTextBox);
             Controls.Add(searchLabel);
-            FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "ProcessPickForm";
-            StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            StartPosition = FormStartPosition.CenterParent;
             Text = "选择要忽略的进程";
             ResumeLayout(false);
             PerformLayout();
