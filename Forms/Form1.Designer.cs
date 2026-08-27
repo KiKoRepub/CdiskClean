@@ -67,11 +67,8 @@ namespace CdiskClean
             cleanupContent = new TableLayoutPanel();
             cleanupTreeSurface = new AntdUI.Panel();
             cleanupTreeLayout = new TableLayoutPanel();
-            cleanupSelectionBarRow = new Panel();
             cleanupSelectionBar = new FlowLayoutPanel();
-            cleanSelectAllBtn = new Button();
-            cleanSelectNoneBtn = new Button();
-            cleanupSelectionLabel = new Label();
+            cleanupSelectionBarRow = new Panel();
             riskLegendBar = new FlowLayoutPanel();
             riskHighChip = new Panel();
             riskHighLabel = new Label();
@@ -79,6 +76,9 @@ namespace CdiskClean
             riskMediumLabel = new Label();
             riskLowChip = new Panel();
             riskLowLabel = new Label();
+            cleanSelectAllBtn = new Button();
+            cleanSelectNoneBtn = new Button();
+            cleanupSelectionLabel = new Label();
             cleanTreeView = new AntdUI.Tree();
             cleanStatusLabel = new Label();
             cleanupActionSurface = new AntdUI.Panel();
@@ -628,18 +628,6 @@ namespace CdiskClean
             cleanupTreeLayout.Size = new Size(820, 549);
             cleanupTreeLayout.TabIndex = 0;
             // 
-            // cleanupSelectionBarRow
-            // 
-            cleanupSelectionBarRow.BackColor = Color.White;
-            cleanupSelectionBarRow.Controls.Add(cleanupSelectionBar);
-            cleanupSelectionBarRow.Controls.Add(riskLegendBar);
-            cleanupSelectionBarRow.Dock = DockStyle.Fill;
-            cleanupSelectionBarRow.Location = new Point(0, 0);
-            cleanupSelectionBarRow.Margin = new Padding(0);
-            cleanupSelectionBarRow.Name = "cleanupSelectionBarRow";
-            cleanupSelectionBarRow.Size = new Size(820, 42);
-            cleanupSelectionBarRow.TabIndex = 0;
-            // 
             // cleanupSelectionBar
             // 
             cleanupSelectionBar.Controls.Add(cleanSelectAllBtn);
@@ -692,9 +680,21 @@ namespace CdiskClean
             cleanupSelectionLabel.TabIndex = 2;
             cleanupSelectionLabel.Text = "已选择 0 项 / 0 B";
             cleanupSelectionLabel.TextAlign = ContentAlignment.MiddleLeft;
-            // 
+            //
+            // cleanupSelectionBarRow
+            //
+            cleanupSelectionBarRow.BackColor = Color.White;
+            cleanupSelectionBarRow.Controls.Add(cleanupSelectionBar);
+            cleanupSelectionBarRow.Controls.Add(riskLegendBar);
+            cleanupSelectionBarRow.Dock = DockStyle.Fill;
+            cleanupSelectionBarRow.Location = new Point(0, 0);
+            cleanupSelectionBarRow.Margin = new Padding(0);
+            cleanupSelectionBarRow.Name = "cleanupSelectionBarRow";
+            cleanupSelectionBarRow.Size = new Size(820, 42);
+            cleanupSelectionBarRow.TabIndex = 0;
+            //
             // riskLegendBar
-            // 
+            //
             riskLegendBar.BackColor = Color.White;
             riskLegendBar.Controls.Add(riskHighChip);
             riskLegendBar.Controls.Add(riskHighLabel);
@@ -709,18 +709,18 @@ namespace CdiskClean
             riskLegendBar.Size = new Size(215, 42);
             riskLegendBar.TabIndex = 3;
             riskLegendBar.WrapContents = false;
-            // 
+            //
             // riskHighChip
-            // 
-            riskHighChip.BackColor = Color.FromArgb(255, 230, 230);
+            //
+            riskHighChip.BackColor = Color.FromArgb(255, 230, 230); // 高风险（红），与 RiskLevelHelper.HighColor 保持一致
             riskHighChip.Location = new Point(0, 13);
             riskHighChip.Margin = new Padding(0, 13, 4, 0);
             riskHighChip.Name = "riskHighChip";
             riskHighChip.Size = new Size(12, 12);
             riskHighChip.TabIndex = 4;
-            // 
+            //
             // riskHighLabel
-            // 
+            //
             riskHighLabel.AutoSize = true;
             riskHighLabel.BackColor = Color.Transparent;
             riskHighLabel.Font = new Font("Microsoft YaHei UI", 9.5F);
@@ -728,56 +728,56 @@ namespace CdiskClean
             riskHighLabel.Location = new Point(16, 12);
             riskHighLabel.Margin = new Padding(0, 12, 8, 0);
             riskHighLabel.Name = "riskHighLabel";
-            riskHighLabel.Size = new Size(69, 25);
+            riskHighLabel.Size = new Size(41, 17);
             riskHighLabel.TabIndex = 5;
             riskHighLabel.Text = "高风险";
-            // 
+            //
             // riskMediumChip
-            // 
-            riskMediumChip.BackColor = Color.FromArgb(255, 255, 220);
-            riskMediumChip.Location = new Point(93, 13);
+            //
+            riskMediumChip.BackColor = Color.FromArgb(255, 255, 220); // 中风险（黄），与 RiskLevelHelper.MediumColor 保持一致
+            riskMediumChip.Location = new Point(69, 13);
             riskMediumChip.Margin = new Padding(0, 13, 4, 0);
             riskMediumChip.Name = "riskMediumChip";
             riskMediumChip.Size = new Size(12, 12);
             riskMediumChip.TabIndex = 6;
-            // 
+            //
             // riskMediumLabel
-            // 
+            //
             riskMediumLabel.AutoSize = true;
             riskMediumLabel.BackColor = Color.Transparent;
             riskMediumLabel.Font = new Font("Microsoft YaHei UI", 9.5F);
             riskMediumLabel.ForeColor = Color.FromArgb(107, 114, 128);
-            riskMediumLabel.Location = new Point(109, 12);
+            riskMediumLabel.Location = new Point(85, 12);
             riskMediumLabel.Margin = new Padding(0, 12, 8, 0);
             riskMediumLabel.Name = "riskMediumLabel";
-            riskMediumLabel.Size = new Size(69, 25);
+            riskMediumLabel.Size = new Size(41, 17);
             riskMediumLabel.TabIndex = 7;
             riskMediumLabel.Text = "中风险";
-            // 
+            //
             // riskLowChip
-            // 
-            riskLowChip.BackColor = Color.FromArgb(230, 255, 230);
-            riskLowChip.Location = new Point(186, 13);
+            //
+            riskLowChip.BackColor = Color.FromArgb(230, 255, 230); // 低风险（绿），与 RiskLevelHelper.LowColor 保持一致
+            riskLowChip.Location = new Point(138, 13);
             riskLowChip.Margin = new Padding(0, 13, 4, 0);
             riskLowChip.Name = "riskLowChip";
             riskLowChip.Size = new Size(12, 12);
             riskLowChip.TabIndex = 8;
-            // 
+            //
             // riskLowLabel
-            // 
+            //
             riskLowLabel.AutoSize = true;
             riskLowLabel.BackColor = Color.Transparent;
             riskLowLabel.Font = new Font("Microsoft YaHei UI", 9.5F);
             riskLowLabel.ForeColor = Color.FromArgb(107, 114, 128);
-            riskLowLabel.Location = new Point(202, 12);
+            riskLowLabel.Location = new Point(154, 12);
             riskLowLabel.Margin = new Padding(0, 12, 8, 0);
             riskLowLabel.Name = "riskLowLabel";
-            riskLowLabel.Size = new Size(69, 25);
+            riskLowLabel.Size = new Size(41, 17);
             riskLowLabel.TabIndex = 9;
             riskLowLabel.Text = "低风险";
-            // 
+            //
             // cleanTreeView
-            // 
+            //
             cleanTreeView.BlockNode = true;
             cleanTreeView.Checkable = true;
             cleanTreeView.CheckStrictly = false;
@@ -787,11 +787,11 @@ namespace CdiskClean
             cleanTreeView.Name = "cleanTreeView";
             cleanTreeView.Size = new Size(820, 473);
             cleanTreeView.TabIndex = 1;
-            cleanTreeView.SelectChanged += cleanTreeView_SelectChanged;
             cleanTreeView.AfterExpand += cleanTreeView_AfterExpand;
             cleanTreeView.CheckedChanged += cleanTreeView_CheckedChanged;
-            cleanTreeView.NodeMouseClick += cleanTreeView_NodeMouseClick;
             cleanTreeView.MouseWheel += cleanTreeView_MouseWheel;
+            cleanTreeView.NodeMouseClick += cleanTreeView_NodeMouseClick;
+            cleanTreeView.SelectChanged += cleanTreeView_SelectChanged;
             // 
             // cleanStatusLabel
             // 
@@ -2297,7 +2297,6 @@ namespace CdiskClean
             cleanupSelectionBarRow.ResumeLayout(false);
             cleanupSelectionBar.ResumeLayout(false);
             riskLegendBar.ResumeLayout(false);
-            riskLegendBar.PerformLayout();
             cleanupActionSurface.ResumeLayout(false);
             cleanupActionLayout.ResumeLayout(false);
             cleanupFrequentPanel.ResumeLayout(false);
