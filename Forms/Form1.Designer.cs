@@ -1179,7 +1179,61 @@ namespace CdiskClean
             cleanTargetSelectBtn.TabIndex = 8;
             cleanTargetSelectBtn.Text = "浏览";
             cleanTargetSelectBtn.UseVisualStyleBackColor = true;
-            cleanTargetSelectBtn.Click += cleanTargetSelectBtn_Click;
+            cleanTargetSelectBtn.Click += this.cleanTargetSelectBtn_Click;
+            // 
+            // rulesPanel
+            // 
+            rulesPanel.BackColor = Color.FromArgb(245, 247, 250);
+            rulesPanel.Controls.Add(rulesExeProcessView);
+            rulesPanel.Controls.Add(rulesToolbar);
+            rulesPanel.Controls.Add(rulesSurface);
+            rulesPanel.Location = new Point(18, 18);
+            rulesPanel.Name = "rulesPanel";
+            rulesPanel.Padding = new Padding(18);
+            rulesPanel.Size = new Size(1196, 656);
+            rulesPanel.TabIndex = 6;
+            rulesPanel.Visible = false;
+            // 
+            // rulesExeProcessView
+            // 
+            rulesExeProcessView.BackColor = Color.White;
+            rulesExeProcessView.Controls.Add(rulesExeProcViewTable);
+            rulesExeProcessView.Controls.Add(rulesExeProcToolBar);
+            rulesExeProcessView.Location = new Point(16, 75);
+            rulesExeProcessView.Name = "rulesExeProcessView";
+            rulesExeProcessView.Size = new Size(1160, 563);
+            rulesExeProcessView.TabIndex = 2;
+            // 
+            // rulesExeProcViewTable
+            // 
+            rulesExeProcViewTable.Dock = DockStyle.Bottom;
+            rulesExeProcViewTable.EmptyHeader = true;
+            rulesExeProcViewTable.Gap = 12;
+            rulesExeProcViewTable.Location = new Point(0, 49);
+            rulesExeProcViewTable.Name = "rulesExeProcViewTable";
+            rulesExeProcViewTable.Size = new Size(1160, 514);
+            rulesExeProcViewTable.TabIndex = 1;
+            rulesExeProcViewTable.Text = "table1";
+            // 
+            // rulesExeProcToolBar
+            // 
+            rulesExeProcToolBar.Controls.Add(input1);
+            rulesExeProcToolBar.Controls.Add(rulesExeProcAddButton);
+            rulesExeProcToolBar.Controls.Add(button1);
+            rulesExeProcToolBar.Dock = DockStyle.Top;
+            rulesExeProcToolBar.Location = new Point(0, 0);
+            rulesExeProcToolBar.Name = "rulesExeProcToolBar";
+            rulesExeProcToolBar.Size = new Size(1160, 48);
+            rulesExeProcToolBar.TabIndex = 0;
+            // 
+            // input1
+            // 
+            input1.Location = new Point(3, 3);
+            input1.Name = "input1";
+            input1.PlaceholderText = "输入应用程序名称";
+            input1.PrefixSvg = "SearchOutlined";
+            input1.Size = new Size(240, 40);
+            input1.TabIndex = 0;
             // 
             // rulesPanel
             // 
