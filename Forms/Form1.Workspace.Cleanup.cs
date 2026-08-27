@@ -11,7 +11,7 @@ namespace CdiskClean;
 public partial class Form1
 {
     /// <summary>清理方式单选按钮与枚举映射（初始化于 SetupCleanPage）</summary>
-    private (RadioButton Radio, CleanupMethod Method)[] _cleanupMethodRadios = Array.Empty<(RadioButton, CleanupMethod)>();
+    private (Radio radio, CleanupMethod Method)[] _cleanupMethodRadios = Array.Empty<(Radio, CleanupMethod)>();
 
     /// <summary>按面板宽度动态排列清理方式区控件（单选、目标目录、清理按钮）</summary>
     private void LayoutCleanupMethodPanel(Control panel)
