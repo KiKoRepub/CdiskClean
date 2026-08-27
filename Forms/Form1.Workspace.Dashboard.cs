@@ -1,5 +1,6 @@
 using CdiskClean.Helpers;
 using CdiskClean.Models;
+using CdiskClean.Models.rules;
 using System.ComponentModel;
 
 namespace CdiskClean;

@@ -1,8 +1,10 @@
 using Microsoft.Data.Sqlite;
 using CdiskClean.Models;
 using System.Data.Common;
+using CdiskClean.Models.cleanUp;
+using CdiskClean.Models.rules;
 
-namespace CdiskClean.Services;
+namespace CdiskClean.Services.database;
 
 public class SqliteDatabaseService : IDatabaseService
 {
@@ -26,7 +28,7 @@ public class SqliteDatabaseService : IDatabaseService
 
         using var cmd = connection.CreateCommand();
         // Id , CreatedAt 可以 使用 AUTOINCREMENT 和 DEFAULT CURRENT_TIMESTAMP 来自动生成和设置时间戳
-        cmd.CommandText =(@"PRAGMA journal_mode=WAL; " +
+        cmd.CommandText = (@"PRAGMA journal_mode=WAL; " +
 
             WatchingDirectory.GetCreateSQL() +
 
@@ -35,6 +37,8 @@ public class SqliteDatabaseService : IDatabaseService
             ProcessNotificationRecord.GetCreateSQL() +
 
             IgnoreProcessRecord.GetCreateSQL() +
+
+            WatchingExeInfo.GetCreateSQL() +
 
             CleanupRecord.GetCreateSQL());
 
@@ -289,14 +293,21 @@ public class SqliteDatabaseService : IDatabaseService
         cmd.CommandText = @"INSERT INTO CleanupRecords (CleanupTime, FullPath, FileName, SizeBytes, Method, Success, Message, CreatedAt)
                             VALUES (@Time, @FullPath, @FileName, @Size, @Method, @Success, @Message, @Now);";
 
-        cmd.Parameters.AddWithValue("@Time", record.CleanupTime.ToString("O"));
-        cmd.Parameters.AddWithValue("@FullPath", record.FullPath);
-        cmd.Parameters.AddWithValue("@FileName", record.FileName);
-        cmd.Parameters.AddWithValue("@Size", record.SizeBytes.HasValue ? (object)record.SizeBytes.Value : DBNull.Value);
-        cmd.Parameters.AddWithValue("@Method", record.Method);
-        cmd.Parameters.AddWithValue("@Success", record.Success ? 1 : 0);
-        cmd.Parameters.AddWithValue("@Message", record.Message ?? (object)DBNull.Value);
-        cmd.Parameters.AddWithValue("@Now", DateTime.Now.ToString("O"));
+        var paramList = new List<(string, object)>
+        {
+("@Time", record.CleanupTime.ToString("O")),
+        ("@FullPath", record.FullPath),
+        ("@FileName", record.FileName),
+        ("@Size", record.SizeBytes.HasValue ? (object)record.SizeBytes.Value : DBNull.Value),
+        ("@Method", record.Method),
+        ("@Success", record.Success ? 1 : 0),
+        ("@Message", record.Message ?? (object)DBNull.Value),
+        ("@Now", DateTime.Now.ToString("O"))
+        };
+
+
+
+
         cmd.ExecuteNonQuery();
     }
 
@@ -331,5 +342,13 @@ public class SqliteDatabaseService : IDatabaseService
         return list;
     }
     #endregion
+
+
+    #region MonitoringExeInfo
+
+
+
+    #endregion
+
 
 }

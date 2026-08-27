@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CdiskClean.Models
+namespace CdiskClean.Models.rules
 {
     /// <summary>
     /// Represents the status of a record in the database.

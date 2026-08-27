@@ -1,4 +1,4 @@
-﻿using CdiskClean.Models;
+﻿using CdiskClean.Models.rules;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,5 +1,6 @@
 using CdiskClean.Helpers;
 using CdiskClean.Models;
+using CdiskClean.Models.cleanUp;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Runtime.InteropServices;

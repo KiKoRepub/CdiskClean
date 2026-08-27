@@ -30,12 +30,12 @@ namespace CdiskClean
         {
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
-            AntdUI.MenuItem menuItem13 = new AntdUI.MenuItem();
-            AntdUI.MenuItem menuItem14 = new AntdUI.MenuItem();
-            AntdUI.MenuItem menuItem15 = new AntdUI.MenuItem();
-            AntdUI.MenuItem menuItem16 = new AntdUI.MenuItem();
-            AntdUI.MenuItem menuItem17 = new AntdUI.MenuItem();
-            AntdUI.MenuItem menuItem18 = new AntdUI.MenuItem();
+            AntdUI.MenuItem menuItem1 = new AntdUI.MenuItem();
+            AntdUI.MenuItem menuItem2 = new AntdUI.MenuItem();
+            AntdUI.MenuItem menuItem3 = new AntdUI.MenuItem();
+            AntdUI.MenuItem menuItem4 = new AntdUI.MenuItem();
+            AntdUI.MenuItem menuItem5 = new AntdUI.MenuItem();
+            AntdUI.MenuItem menuItem6 = new AntdUI.MenuItem();
             timer1 = new System.Windows.Forms.Timer(components);
             diskRefreshTimer = new System.Windows.Forms.Timer(components);
             notifyIcon1 = new NotifyIcon(components);
@@ -66,13 +66,12 @@ namespace CdiskClean
             cleanScanProgressBar = new ProgressBar();
             cleanupContent = new TableLayoutPanel();
             cleanupTreeSurface = new AntdUI.Panel();
-            cleanUpTree = new AntdUI.Tree();
             cleanupTreeLayout = new TableLayoutPanel();
             cleanupSelectionBar = new FlowLayoutPanel();
             cleanSelectAllBtn = new Button();
             cleanSelectNoneBtn = new Button();
             cleanupSelectionLabel = new Label();
-            cleanTreeView = new TreeView();
+            cleanTreeView = new AntdUI.Tree();
             cleanStatusLabel = new Label();
             cleanupActionSurface = new AntdUI.Panel();
             cleanupActionLayout = new TableLayoutPanel();
@@ -92,6 +91,29 @@ namespace CdiskClean
             cleanTargetLabel = new Label();
             cleanTargetTextBox = new TextBox();
             cleanTargetSelectBtn = new Button();
+            rulesPanel = new Panel();
+            rulesExeProcessView = new Panel();
+            rulesExeProcViewTable = new AntdUI.Table();
+            rulesExeProcToolBar = new FlowLayoutPanel();
+            input1 = new AntdUI.Input();
+            rulesExeProcAddButton = new AntdUI.Button();
+            button1 = new AntdUI.Button();
+            rulesToolbar = new FlowLayoutPanel();
+            rulesDirectoryTab = new AntdUI.Button();
+            rulesProcessTab = new AntdUI.Button();
+            rulesExeTab = new AntdUI.Button();
+            rulesSurface = new AntdUI.Panel();
+            rulesIgnoreProcessView = new Panel();
+            ignoreProcessListView = new ListView();
+            rulesIgnoreProcToolbar = new FlowLayoutPanel();
+            manualProcessInput = new AntdUI.Input();
+            rulesProcessAddButton = new AntdUI.Button();
+            betterIngnoreProcAddButton = new AntdUI.Button();
+            rulesDirectoryView = new Panel();
+            rulesDirToolbar = new FlowLayoutPanel();
+            dirAddButton = new AntdUI.Button();
+            betterDirAddButton = new AntdUI.Button();
+            watcherDirListView = new ListView();
             activityPanel = new Panel();
             activityToolbar = new FlowLayoutPanel();
             panel2 = new AntdUI.Panel();
@@ -122,29 +144,6 @@ namespace CdiskClean
             detailRecordsTable = new AntdUI.Table();
             processStatsTable = new AntdUI.Table();
             notificationRecordsTable = new AntdUI.Table();
-            rulesPanel = new Panel();
-            rulesToolbar = new FlowLayoutPanel();
-            rulesDirectoryTab = new AntdUI.Button();
-            rulesProcessTab = new AntdUI.Button();
-            rulesExeTab = new AntdUI.Button();
-            rulesSurface = new AntdUI.Panel();
-            rulesIgnoreProcessView = new Panel();
-            ignoreProcessListView = new ListView();
-            rulesIgnoreProcToolbar = new FlowLayoutPanel();
-            manualProcessInput = new AntdUI.Input();
-            rulesProcessAddButton = new AntdUI.Button();
-            betterIngnoreProcAddButton = new AntdUI.Button();
-            rulesDirectoryView = new Panel();
-            rulesDirToolbar = new FlowLayoutPanel();
-            dirAddButton = new AntdUI.Button();
-            betterDirAddButton = new AntdUI.Button();
-            watcherDirListView = new ListView();
-            rulesExeProcessView = new Panel();
-            rulesExeProcViewTable = new AntdUI.Table();
-            rulesExeProcToolBar = new FlowLayoutPanel();
-            input1 = new AntdUI.Input();
-            rulesExeProcAddButton = new AntdUI.Button();
-            button1 = new AntdUI.Button();
             dashboardPanel = new Panel();
             dashboardLayout = new TableLayoutPanel();
             dashboardCapacitySurface = new AntdUI.Panel();
@@ -205,6 +204,15 @@ namespace CdiskClean
             cleanupActionLayout.SuspendLayout();
             cleanupFrequentPanel.SuspendLayout();
             cleanupMethodPanel.SuspendLayout();
+            rulesPanel.SuspendLayout();
+            rulesExeProcessView.SuspendLayout();
+            rulesExeProcToolBar.SuspendLayout();
+            rulesToolbar.SuspendLayout();
+            rulesSurface.SuspendLayout();
+            rulesIgnoreProcessView.SuspendLayout();
+            rulesIgnoreProcToolbar.SuspendLayout();
+            rulesDirectoryView.SuspendLayout();
+            rulesDirToolbar.SuspendLayout();
             activityPanel.SuspendLayout();
             activityToolbar.SuspendLayout();
             panel2.SuspendLayout();
@@ -215,15 +223,6 @@ namespace CdiskClean
             recordsSurface.SuspendLayout();
             recordViewHost.SuspendLayout();
             cleanupRecordView.SuspendLayout();
-            rulesPanel.SuspendLayout();
-            rulesToolbar.SuspendLayout();
-            rulesSurface.SuspendLayout();
-            rulesIgnoreProcessView.SuspendLayout();
-            rulesIgnoreProcToolbar.SuspendLayout();
-            rulesDirectoryView.SuspendLayout();
-            rulesDirToolbar.SuspendLayout();
-            rulesExeProcessView.SuspendLayout();
-            rulesExeProcToolBar.SuspendLayout();
             dashboardPanel.SuspendLayout();
             dashboardLayout.SuspendLayout();
             dashboardCapacitySurface.SuspendLayout();
@@ -379,31 +378,31 @@ namespace CdiskClean
             // workspaceMenu
             // 
             workspaceMenu.BackColor = Color.White;
-            menuItem13.IconSvg = "DashboardOutlined";
-            menuItem13.ID = "dashboard";
-            menuItem13.Select = true;
-            menuItem13.Text = "工作台";
-            menuItem14.IconSvg = "MonitorOutlined";
-            menuItem14.ID = "activity";
-            menuItem14.Text = "实时活动";
-            menuItem15.IconSvg = "ControlOutlined";
-            menuItem15.ID = "rules";
-            menuItem15.Text = "监控规则";
-            menuItem16.IconSvg = "PieChartOutlined";
-            menuItem16.ID = "analyzer";
-            menuItem16.Text = "空间分析";
-            menuItem17.IconSvg = "DeleteOutlined";
-            menuItem17.ID = "cleanup";
-            menuItem17.Text = "清理中心";
-            menuItem18.IconSvg = "HistoryOutlined";
-            menuItem18.ID = "records";
-            menuItem18.Text = "记录中心";
-            workspaceMenu.Items.Add(menuItem13);
-            workspaceMenu.Items.Add(menuItem14);
-            workspaceMenu.Items.Add(menuItem15);
-            workspaceMenu.Items.Add(menuItem16);
-            workspaceMenu.Items.Add(menuItem17);
-            workspaceMenu.Items.Add(menuItem18);
+            menuItem1.IconSvg = "DashboardOutlined";
+            menuItem1.ID = "dashboard";
+            menuItem1.Select = true;
+            menuItem1.Text = "工作台";
+            menuItem2.IconSvg = "MonitorOutlined";
+            menuItem2.ID = "activity";
+            menuItem2.Text = "实时活动";
+            menuItem3.IconSvg = "ControlOutlined";
+            menuItem3.ID = "rules";
+            menuItem3.Text = "监控规则";
+            menuItem4.IconSvg = "PieChartOutlined";
+            menuItem4.ID = "analyzer";
+            menuItem4.Text = "空间分析";
+            menuItem5.IconSvg = "DeleteOutlined";
+            menuItem5.ID = "cleanup";
+            menuItem5.Text = "清理中心";
+            menuItem6.IconSvg = "HistoryOutlined";
+            menuItem6.ID = "records";
+            menuItem6.Text = "记录中心";
+            workspaceMenu.Items.Add(menuItem1);
+            workspaceMenu.Items.Add(menuItem2);
+            workspaceMenu.Items.Add(menuItem3);
+            workspaceMenu.Items.Add(menuItem4);
+            workspaceMenu.Items.Add(menuItem5);
+            workspaceMenu.Items.Add(menuItem6);
             workspaceMenu.Location = new Point(8, 66);
             workspaceMenu.Margin = new Padding(0);
             workspaceMenu.Name = "workspaceMenu";
@@ -481,9 +480,9 @@ namespace CdiskClean
             // workspacePageContainer
             // 
             workspacePageContainer.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            workspacePageContainer.Controls.Add(cleanupPanel);
             workspacePageContainer.Controls.Add(rulesPanel);
             workspacePageContainer.Controls.Add(activityPanel);
-            workspacePageContainer.Controls.Add(cleanupPanel);
             workspacePageContainer.Controls.Add(recordsPanel);
             workspacePageContainer.Controls.Add(dashboardPanel);
             workspacePageContainer.Controls.Add(analyzerPanel);
@@ -591,7 +590,6 @@ namespace CdiskClean
             // cleanupTreeSurface
             // 
             cleanupTreeSurface.BackColor = Color.White;
-            cleanupTreeSurface.Controls.Add(cleanUpTree);
             cleanupTreeSurface.Controls.Add(cleanupTreeLayout);
             cleanupTreeSurface.Dock = DockStyle.Fill;
             cleanupTreeSurface.Location = new Point(0, 10);
@@ -600,14 +598,6 @@ namespace CdiskClean
             cleanupTreeSurface.Padding = new Padding(12);
             cleanupTreeSurface.Size = new Size(844, 561);
             cleanupTreeSurface.TabIndex = 0;
-            // 
-            // cleanUpTree
-            // 
-            cleanUpTree.Location = new Point(10, 303);
-            cleanUpTree.Name = "cleanUpTree";
-            cleanUpTree.Size = new Size(822, 260);
-            cleanUpTree.TabIndex = 1;
-            cleanUpTree.Text = "tree1";
             // 
             // cleanupTreeLayout
             // 
@@ -625,7 +615,7 @@ namespace CdiskClean
             cleanupTreeLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 42F));
             cleanupTreeLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             cleanupTreeLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34F));
-            cleanupTreeLayout.Size = new Size(820, 278);
+            cleanupTreeLayout.Size = new Size(820, 549);
             cleanupTreeLayout.TabIndex = 0;
             // 
             // cleanupSelectionBar
@@ -683,21 +673,22 @@ namespace CdiskClean
             // 
             // cleanTreeView
             // 
-            cleanTreeView.CheckBoxes = true;
-            cleanTreeView.Dock = DockStyle.Top;
+            cleanTreeView.BlockNode = true;
+            cleanTreeView.Checkable = true;
+            cleanTreeView.CheckStrictly = false;
+            cleanTreeView.Dock = DockStyle.Fill;
             cleanTreeView.Location = new Point(0, 42);
             cleanTreeView.Margin = new Padding(0);
             cleanTreeView.Name = "cleanTreeView";
-            cleanTreeView.Size = new Size(820, 202);
+            cleanTreeView.Size = new Size(820, 473);
             cleanTreeView.TabIndex = 1;
-            cleanTreeView.BeforeCheck += cleanTreeView_BeforeCheck;
-            cleanTreeView.AfterCheck += cleanTreeView_AfterCheck;
+            cleanTreeView.CheckedChanged += cleanTreeView_CheckedChanged;
             // 
             // cleanStatusLabel
             // 
             cleanStatusLabel.AutoEllipsis = true;
             cleanStatusLabel.Dock = DockStyle.Fill;
-            cleanStatusLabel.Location = new Point(0, 244);
+            cleanStatusLabel.Location = new Point(0, 515);
             cleanStatusLabel.Margin = new Padding(0);
             cleanStatusLabel.Name = "cleanStatusLabel";
             cleanStatusLabel.Size = new Size(820, 34);
@@ -927,6 +918,286 @@ namespace CdiskClean
             cleanTargetSelectBtn.Text = "浏览";
             cleanTargetSelectBtn.UseVisualStyleBackColor = true;
             cleanTargetSelectBtn.Click += cleanTargetSelectBtn_Click;
+            // 
+            // rulesPanel
+            // 
+            rulesPanel.BackColor = Color.FromArgb(245, 247, 250);
+            rulesPanel.Controls.Add(rulesExeProcessView);
+            rulesPanel.Controls.Add(rulesToolbar);
+            rulesPanel.Controls.Add(rulesSurface);
+            rulesPanel.Location = new Point(18, 18);
+            rulesPanel.Name = "rulesPanel";
+            rulesPanel.Padding = new Padding(18);
+            rulesPanel.Size = new Size(1196, 656);
+            rulesPanel.TabIndex = 6;
+            rulesPanel.Visible = false;
+            // 
+            // rulesExeProcessView
+            // 
+            rulesExeProcessView.BackColor = Color.White;
+            rulesExeProcessView.Controls.Add(rulesExeProcViewTable);
+            rulesExeProcessView.Controls.Add(rulesExeProcToolBar);
+            rulesExeProcessView.Location = new Point(16, 75);
+            rulesExeProcessView.Name = "rulesExeProcessView";
+            rulesExeProcessView.Size = new Size(1160, 563);
+            rulesExeProcessView.TabIndex = 2;
+            // 
+            // rulesExeProcViewTable
+            // 
+            rulesExeProcViewTable.Dock = DockStyle.Bottom;
+            rulesExeProcViewTable.EmptyHeader = true;
+            rulesExeProcViewTable.Gap = 12;
+            rulesExeProcViewTable.Location = new Point(0, 49);
+            rulesExeProcViewTable.Name = "rulesExeProcViewTable";
+            rulesExeProcViewTable.Size = new Size(1160, 514);
+            rulesExeProcViewTable.TabIndex = 1;
+            rulesExeProcViewTable.Text = "table1";
+            // 
+            // rulesExeProcToolBar
+            // 
+            rulesExeProcToolBar.Controls.Add(input1);
+            rulesExeProcToolBar.Controls.Add(rulesExeProcAddButton);
+            rulesExeProcToolBar.Controls.Add(button1);
+            rulesExeProcToolBar.Dock = DockStyle.Top;
+            rulesExeProcToolBar.Location = new Point(0, 0);
+            rulesExeProcToolBar.Name = "rulesExeProcToolBar";
+            rulesExeProcToolBar.Size = new Size(1160, 48);
+            rulesExeProcToolBar.TabIndex = 0;
+            // 
+            // input1
+            // 
+            input1.Location = new Point(3, 3);
+            input1.Name = "input1";
+            input1.PlaceholderText = "输入应用程序名称";
+            input1.PrefixSvg = "SearchOutlined";
+            input1.Size = new Size(240, 40);
+            input1.TabIndex = 0;
+            // 
+            // rulesExeProcAddButton
+            // 
+            rulesExeProcAddButton.IconSvg = "PlusOutlined";
+            rulesExeProcAddButton.Location = new Point(246, 4);
+            rulesExeProcAddButton.Margin = new Padding(0, 4, 8, 0);
+            rulesExeProcAddButton.Name = "rulesExeProcAddButton";
+            rulesExeProcAddButton.Radius = 1;
+            rulesExeProcAddButton.Size = new Size(84, 36);
+            rulesExeProcAddButton.TabIndex = 1;
+            rulesExeProcAddButton.Text = "添加";
+            rulesExeProcAddButton.ToggleType = AntdUI.TTypeMini.Primary;
+            rulesExeProcAddButton.Type = AntdUI.TTypeMini.Primary;
+            // 
+            // button1
+            // 
+            button1.IconSvg = "ControlOutlined";
+            button1.Location = new Point(341, 3);
+            button1.Name = "button1";
+            button1.Size = new Size(139, 34);
+            button1.TabIndex = 2;
+            button1.Text = "选择运行进程";
+            // 
+            // rulesToolbar
+            // 
+            rulesToolbar.AutoScroll = true;
+            rulesToolbar.Controls.Add(rulesDirectoryTab);
+            rulesToolbar.Controls.Add(rulesProcessTab);
+            rulesToolbar.Controls.Add(rulesExeTab);
+            rulesToolbar.Dock = DockStyle.Top;
+            rulesToolbar.Location = new Point(18, 18);
+            rulesToolbar.Margin = new Padding(0);
+            rulesToolbar.Name = "rulesToolbar";
+            rulesToolbar.Padding = new Padding(0, 4, 0, 8);
+            rulesToolbar.Size = new Size(1160, 54);
+            rulesToolbar.TabIndex = 0;
+            rulesToolbar.WrapContents = false;
+            // 
+            // rulesDirectoryTab
+            // 
+            rulesDirectoryTab.IconSvg = "FolderOpenOutlined";
+            rulesDirectoryTab.Location = new Point(0, 8);
+            rulesDirectoryTab.Margin = new Padding(0, 4, 8, 0);
+            rulesDirectoryTab.Name = "rulesDirectoryTab";
+            rulesDirectoryTab.Radius = 1;
+            rulesDirectoryTab.Size = new Size(124, 36);
+            rulesDirectoryTab.TabIndex = 0;
+            rulesDirectoryTab.Text = "监控目录";
+            rulesDirectoryTab.Type = AntdUI.TTypeMini.Primary;
+            rulesDirectoryTab.Click += rulesDirectoryTab_Click;
+            // 
+            // rulesProcessTab
+            // 
+            rulesProcessTab.IconSvg = "ControlOutlined";
+            rulesProcessTab.Location = new Point(132, 8);
+            rulesProcessTab.Margin = new Padding(0, 4, 8, 0);
+            rulesProcessTab.Name = "rulesProcessTab";
+            rulesProcessTab.Radius = 1;
+            rulesProcessTab.Size = new Size(113, 36);
+            rulesProcessTab.TabIndex = 1;
+            rulesProcessTab.Text = "忽略进程";
+            rulesProcessTab.Click += rulesProcessTab_Click;
+            // 
+            // rulesExeTab
+            // 
+            rulesExeTab.IconSvg = "ControlOutlined";
+            rulesExeTab.Location = new Point(256, 7);
+            rulesExeTab.Name = "rulesExeTab";
+            rulesExeTab.Radius = 1;
+            rulesExeTab.Size = new Size(113, 36);
+            rulesExeTab.TabIndex = 2;
+            rulesExeTab.Text = "监控应用";
+            rulesExeTab.Click += rulesExeTab_Click;
+            // 
+            // rulesSurface
+            // 
+            rulesSurface.BackColor = Color.White;
+            rulesSurface.Controls.Add(rulesIgnoreProcessView);
+            rulesSurface.Controls.Add(rulesDirectoryView);
+            rulesSurface.Location = new Point(18, 18);
+            rulesSurface.Margin = new Padding(0);
+            rulesSurface.Name = "rulesSurface";
+            rulesSurface.Padding = new Padding(2);
+            rulesSurface.Size = new Size(1160, 620);
+            rulesSurface.TabIndex = 1;
+            // 
+            // rulesIgnoreProcessView
+            // 
+            rulesIgnoreProcessView.BackColor = Color.White;
+            rulesIgnoreProcessView.Controls.Add(ignoreProcessListView);
+            rulesIgnoreProcessView.Controls.Add(rulesIgnoreProcToolbar);
+            rulesIgnoreProcessView.Location = new Point(0, 57);
+            rulesIgnoreProcessView.Margin = new Padding(0);
+            rulesIgnoreProcessView.Name = "rulesIgnoreProcessView";
+            rulesIgnoreProcessView.Size = new Size(1160, 577);
+            rulesIgnoreProcessView.TabIndex = 1;
+            rulesIgnoreProcessView.Visible = false;
+            // 
+            // ignoreProcessListView
+            // 
+            ignoreProcessListView.AllowDrop = true;
+            ignoreProcessListView.Dock = DockStyle.Bottom;
+            ignoreProcessListView.Location = new Point(0, 49);
+            ignoreProcessListView.Margin = new Padding(0);
+            ignoreProcessListView.Name = "ignoreProcessListView";
+            ignoreProcessListView.Size = new Size(1160, 528);
+            ignoreProcessListView.TabIndex = 1;
+            ignoreProcessListView.UseCompatibleStateImageBehavior = false;
+            ignoreProcessListView.ItemSelectionChanged += ignoreProcessView_ItemSelectionChanged;
+            ignoreProcessListView.DragDrop += ignoreProcessView_DragDrop;
+            ignoreProcessListView.DragEnter += ignoreProcessView_DragEnter;
+            ignoreProcessListView.MouseClick += ignoreProcessView_MouseClick;
+            ignoreProcessListView.Resize += ignoreProcessView_Resize;
+            // 
+            // rulesIgnoreProcToolbar
+            // 
+            rulesIgnoreProcToolbar.Controls.Add(manualProcessInput);
+            rulesIgnoreProcToolbar.Controls.Add(rulesProcessAddButton);
+            rulesIgnoreProcToolbar.Controls.Add(betterIngnoreProcAddButton);
+            rulesIgnoreProcToolbar.Dock = DockStyle.Top;
+            rulesIgnoreProcToolbar.Location = new Point(0, 0);
+            rulesIgnoreProcToolbar.Margin = new Padding(0);
+            rulesIgnoreProcToolbar.Name = "rulesIgnoreProcToolbar";
+            rulesIgnoreProcToolbar.Padding = new Padding(0, 2, 0, 7);
+            rulesIgnoreProcToolbar.Size = new Size(1160, 48);
+            rulesIgnoreProcToolbar.TabIndex = 0;
+            rulesIgnoreProcToolbar.WrapContents = false;
+            // 
+            // manualProcessInput
+            // 
+            manualProcessInput.Location = new Point(0, 6);
+            manualProcessInput.Margin = new Padding(0, 4, 8, 0);
+            manualProcessInput.Name = "manualProcessInput";
+            manualProcessInput.PlaceholderText = "输入进程名";
+            manualProcessInput.PrefixSvg = "SearchOutlined";
+            manualProcessInput.Radius = 5;
+            manualProcessInput.Size = new Size(240, 40);
+            manualProcessInput.TabIndex = 0;
+            // 
+            // rulesProcessAddButton
+            // 
+            rulesProcessAddButton.IconSvg = "PlusOutlined";
+            rulesProcessAddButton.Location = new Point(248, 6);
+            rulesProcessAddButton.Margin = new Padding(0, 4, 8, 0);
+            rulesProcessAddButton.Name = "rulesProcessAddButton";
+            rulesProcessAddButton.Radius = 1;
+            rulesProcessAddButton.Size = new Size(126, 36);
+            rulesProcessAddButton.TabIndex = 1;
+            rulesProcessAddButton.Text = "添加";
+            rulesProcessAddButton.Type = AntdUI.TTypeMini.Primary;
+            rulesProcessAddButton.Click += rulesProcessAddButton_Click;
+            // 
+            // betterIngnoreProcAddButton
+            // 
+            betterIngnoreProcAddButton.IconSvg = "ControlOutlined";
+            betterIngnoreProcAddButton.Location = new Point(382, 6);
+            betterIngnoreProcAddButton.Margin = new Padding(0, 4, 8, 0);
+            betterIngnoreProcAddButton.Name = "betterIngnoreProcAddButton";
+            betterIngnoreProcAddButton.Radius = 1;
+            betterIngnoreProcAddButton.Size = new Size(166, 36);
+            betterIngnoreProcAddButton.TabIndex = 2;
+            betterIngnoreProcAddButton.Text = "选择运行进程";
+            betterIngnoreProcAddButton.Click += betterProcessAddButton_Click;
+            // 
+            // rulesDirectoryView
+            // 
+            rulesDirectoryView.BackColor = Color.White;
+            rulesDirectoryView.Controls.Add(rulesDirToolbar);
+            rulesDirectoryView.Controls.Add(watcherDirListView);
+            rulesDirectoryView.Dock = DockStyle.Bottom;
+            rulesDirectoryView.Location = new Point(2, 57);
+            rulesDirectoryView.Margin = new Padding(0);
+            rulesDirectoryView.Name = "rulesDirectoryView";
+            rulesDirectoryView.Size = new Size(1156, 561);
+            rulesDirectoryView.TabIndex = 0;
+            // 
+            // rulesDirToolbar
+            // 
+            rulesDirToolbar.Controls.Add(dirAddButton);
+            rulesDirToolbar.Controls.Add(betterDirAddButton);
+            rulesDirToolbar.Dock = DockStyle.Top;
+            rulesDirToolbar.Location = new Point(0, 0);
+            rulesDirToolbar.Margin = new Padding(0);
+            rulesDirToolbar.Name = "rulesDirToolbar";
+            rulesDirToolbar.Padding = new Padding(0, 2, 0, 7);
+            rulesDirToolbar.Size = new Size(1156, 48);
+            rulesDirToolbar.TabIndex = 0;
+            rulesDirToolbar.WrapContents = false;
+            // 
+            // dirAddButton
+            // 
+            dirAddButton.IconSvg = "PlusOutlined";
+            dirAddButton.Location = new Point(0, 6);
+            dirAddButton.Margin = new Padding(0, 4, 8, 0);
+            dirAddButton.Name = "dirAddButton";
+            dirAddButton.Radius = 1;
+            dirAddButton.Size = new Size(110, 36);
+            dirAddButton.TabIndex = 0;
+            dirAddButton.Text = "添加目录";
+            dirAddButton.Type = AntdUI.TTypeMini.Primary;
+            dirAddButton.Click += dirAddButton_Click;
+            // 
+            // betterDirAddButton
+            // 
+            betterDirAddButton.IconSvg = "FolderOpenOutlined";
+            betterDirAddButton.Location = new Point(118, 6);
+            betterDirAddButton.Margin = new Padding(0, 4, 8, 0);
+            betterDirAddButton.Name = "betterDirAddButton";
+            betterDirAddButton.Radius = 1;
+            betterDirAddButton.Size = new Size(110, 36);
+            betterDirAddButton.TabIndex = 1;
+            betterDirAddButton.Text = "批量选择";
+            betterDirAddButton.Click += betterDirAddButton_Click;
+            // 
+            // watcherDirListView
+            // 
+            watcherDirListView.Dock = DockStyle.Bottom;
+            watcherDirListView.Location = new Point(0, 48);
+            watcherDirListView.Margin = new Padding(0);
+            watcherDirListView.Name = "watcherDirListView";
+            watcherDirListView.Size = new Size(1156, 513);
+            watcherDirListView.TabIndex = 1;
+            watcherDirListView.UseCompatibleStateImageBehavior = false;
+            watcherDirListView.ItemSelectionChanged += watcherDirListView_ItemSelectionChanged;
+            watcherDirListView.MouseClick += watcherDirListView_MouseClick;
+            watcherDirListView.Resize += watcherDirListView_Resize;
             // 
             // activityPanel
             // 
@@ -1308,284 +1579,6 @@ namespace CdiskClean
             notificationRecordsTable.Radius = 6;
             notificationRecordsTable.Size = new Size(1172, 573);
             notificationRecordsTable.TabIndex = 0;
-            // 
-            // rulesPanel
-            // 
-            rulesPanel.BackColor = Color.FromArgb(245, 247, 250);
-            rulesPanel.Controls.Add(rulesToolbar);
-            rulesPanel.Controls.Add(rulesSurface);
-            rulesPanel.Controls.Add(rulesExeProcessView);
-            rulesPanel.Location = new Point(18, 18);
-            rulesPanel.Name = "rulesPanel";
-            rulesPanel.Padding = new Padding(18);
-            rulesPanel.Size = new Size(1196, 656);
-            rulesPanel.TabIndex = 6;
-            rulesPanel.Visible = false;
-            // 
-            // rulesToolbar
-            // 
-            rulesToolbar.AutoScroll = true;
-            rulesToolbar.Controls.Add(rulesDirectoryTab);
-            rulesToolbar.Controls.Add(rulesProcessTab);
-            rulesToolbar.Controls.Add(rulesExeTab);
-            rulesToolbar.Dock = DockStyle.Top;
-            rulesToolbar.Location = new Point(18, 18);
-            rulesToolbar.Margin = new Padding(0);
-            rulesToolbar.Name = "rulesToolbar";
-            rulesToolbar.Padding = new Padding(0, 4, 0, 8);
-            rulesToolbar.Size = new Size(1160, 54);
-            rulesToolbar.TabIndex = 0;
-            rulesToolbar.WrapContents = false;
-            // 
-            // rulesDirectoryTab
-            // 
-            rulesDirectoryTab.IconSvg = "FolderOpenOutlined";
-            rulesDirectoryTab.Location = new Point(0, 8);
-            rulesDirectoryTab.Margin = new Padding(0, 4, 8, 0);
-            rulesDirectoryTab.Name = "rulesDirectoryTab";
-            rulesDirectoryTab.Radius = 1;
-            rulesDirectoryTab.Size = new Size(124, 36);
-            rulesDirectoryTab.TabIndex = 0;
-            rulesDirectoryTab.Text = "监控目录";
-            rulesDirectoryTab.Type = AntdUI.TTypeMini.Primary;
-            rulesDirectoryTab.Click += rulesDirectoryTab_Click;
-            // 
-            // rulesProcessTab
-            // 
-            rulesProcessTab.IconSvg = "ControlOutlined";
-            rulesProcessTab.Location = new Point(132, 8);
-            rulesProcessTab.Margin = new Padding(0, 4, 8, 0);
-            rulesProcessTab.Name = "rulesProcessTab";
-            rulesProcessTab.Radius = 1;
-            rulesProcessTab.Size = new Size(113, 36);
-            rulesProcessTab.TabIndex = 1;
-            rulesProcessTab.Text = "忽略进程";
-            rulesProcessTab.Click += rulesProcessTab_Click;
-            // 
-            // rulesExeTab
-            // 
-            rulesExeTab.IconSvg = "ControlOutlined";
-            rulesExeTab.Location = new Point(256, 7);
-            rulesExeTab.Name = "rulesExeTab";
-            rulesExeTab.Radius = 1;
-            rulesExeTab.Size = new Size(113, 36);
-            rulesExeTab.TabIndex = 2;
-            rulesExeTab.Text = "监控应用";
-            rulesExeTab.Click += rulesExeTab_Click;
-            // 
-            // rulesSurface
-            // 
-            rulesSurface.BackColor = Color.White;
-            rulesSurface.Controls.Add(rulesIgnoreProcessView);
-            rulesSurface.Controls.Add(rulesDirectoryView);
-            rulesSurface.Location = new Point(18, 18);
-            rulesSurface.Margin = new Padding(0);
-            rulesSurface.Name = "rulesSurface";
-            rulesSurface.Padding = new Padding(2);
-            rulesSurface.Size = new Size(1160, 620);
-            rulesSurface.TabIndex = 1;
-            // 
-            // rulesIgnoreProcessView
-            // 
-            rulesIgnoreProcessView.BackColor = Color.White;
-            rulesIgnoreProcessView.Controls.Add(ignoreProcessListView);
-            rulesIgnoreProcessView.Controls.Add(rulesIgnoreProcToolbar);
-            rulesIgnoreProcessView.Location = new Point(0, 57);
-            rulesIgnoreProcessView.Margin = new Padding(0);
-            rulesIgnoreProcessView.Name = "rulesIgnoreProcessView";
-            rulesIgnoreProcessView.Size = new Size(1160, 577);
-            rulesIgnoreProcessView.TabIndex = 1;
-            rulesIgnoreProcessView.Visible = false;
-            // 
-            // ignoreProcessListView
-            // 
-            ignoreProcessListView.AllowDrop = true;
-            ignoreProcessListView.Dock = DockStyle.Bottom;
-            ignoreProcessListView.Location = new Point(0, 49);
-            ignoreProcessListView.Margin = new Padding(0);
-            ignoreProcessListView.Name = "ignoreProcessListView";
-            ignoreProcessListView.Size = new Size(1160, 528);
-            ignoreProcessListView.TabIndex = 1;
-            ignoreProcessListView.UseCompatibleStateImageBehavior = false;
-            ignoreProcessListView.ItemSelectionChanged += ignoreProcessView_ItemSelectionChanged;
-            ignoreProcessListView.DragDrop += ignoreProcessView_DragDrop;
-            ignoreProcessListView.DragEnter += ignoreProcessView_DragEnter;
-            ignoreProcessListView.MouseClick += ignoreProcessView_MouseClick;
-            ignoreProcessListView.Resize += ignoreProcessView_Resize;
-            // 
-            // rulesIgnoreProcToolbar
-            // 
-            rulesIgnoreProcToolbar.Controls.Add(manualProcessInput);
-            rulesIgnoreProcToolbar.Controls.Add(rulesProcessAddButton);
-            rulesIgnoreProcToolbar.Controls.Add(betterIngnoreProcAddButton);
-            rulesIgnoreProcToolbar.Dock = DockStyle.Top;
-            rulesIgnoreProcToolbar.Location = new Point(0, 0);
-            rulesIgnoreProcToolbar.Margin = new Padding(0);
-            rulesIgnoreProcToolbar.Name = "rulesIgnoreProcToolbar";
-            rulesIgnoreProcToolbar.Padding = new Padding(0, 2, 0, 7);
-            rulesIgnoreProcToolbar.Size = new Size(1160, 48);
-            rulesIgnoreProcToolbar.TabIndex = 0;
-            rulesIgnoreProcToolbar.WrapContents = false;
-            // 
-            // manualProcessInput
-            // 
-            manualProcessInput.Location = new Point(0, 6);
-            manualProcessInput.Margin = new Padding(0, 4, 8, 0);
-            manualProcessInput.Name = "manualProcessInput";
-            manualProcessInput.PlaceholderText = "输入进程名";
-            manualProcessInput.PrefixSvg = "SearchOutlined";
-            manualProcessInput.Radius = 5;
-            manualProcessInput.Size = new Size(240, 40);
-            manualProcessInput.TabIndex = 0;
-            // 
-            // rulesProcessAddButton
-            // 
-            rulesProcessAddButton.IconSvg = "PlusOutlined";
-            rulesProcessAddButton.Location = new Point(248, 6);
-            rulesProcessAddButton.Margin = new Padding(0, 4, 8, 0);
-            rulesProcessAddButton.Name = "rulesProcessAddButton";
-            rulesProcessAddButton.Radius = 1;
-            rulesProcessAddButton.Size = new Size(126, 36);
-            rulesProcessAddButton.TabIndex = 1;
-            rulesProcessAddButton.Text = "添加";
-            rulesProcessAddButton.Type = AntdUI.TTypeMini.Primary;
-            rulesProcessAddButton.Click += rulesProcessAddButton_Click;
-            // 
-            // betterIngnoreProcAddButton
-            // 
-            betterIngnoreProcAddButton.IconSvg = "ControlOutlined";
-            betterIngnoreProcAddButton.Location = new Point(382, 6);
-            betterIngnoreProcAddButton.Margin = new Padding(0, 4, 8, 0);
-            betterIngnoreProcAddButton.Name = "betterIngnoreProcAddButton";
-            betterIngnoreProcAddButton.Radius = 1;
-            betterIngnoreProcAddButton.Size = new Size(166, 36);
-            betterIngnoreProcAddButton.TabIndex = 2;
-            betterIngnoreProcAddButton.Text = "选择运行进程";
-            betterIngnoreProcAddButton.Click += betterProcessAddButton_Click;
-            // 
-            // rulesDirectoryView
-            // 
-            rulesDirectoryView.BackColor = Color.White;
-            rulesDirectoryView.Controls.Add(rulesDirToolbar);
-            rulesDirectoryView.Controls.Add(watcherDirListView);
-            rulesDirectoryView.Dock = DockStyle.Bottom;
-            rulesDirectoryView.Location = new Point(2, 57);
-            rulesDirectoryView.Margin = new Padding(0);
-            rulesDirectoryView.Name = "rulesDirectoryView";
-            rulesDirectoryView.Size = new Size(1156, 561);
-            rulesDirectoryView.TabIndex = 0;
-            // 
-            // rulesDirToolbar
-            // 
-            rulesDirToolbar.Controls.Add(dirAddButton);
-            rulesDirToolbar.Controls.Add(betterDirAddButton);
-            rulesDirToolbar.Dock = DockStyle.Top;
-            rulesDirToolbar.Location = new Point(0, 0);
-            rulesDirToolbar.Margin = new Padding(0);
-            rulesDirToolbar.Name = "rulesDirToolbar";
-            rulesDirToolbar.Padding = new Padding(0, 2, 0, 7);
-            rulesDirToolbar.Size = new Size(1156, 48);
-            rulesDirToolbar.TabIndex = 0;
-            rulesDirToolbar.WrapContents = false;
-            // 
-            // dirAddButton
-            // 
-            dirAddButton.IconSvg = "PlusOutlined";
-            dirAddButton.Location = new Point(0, 6);
-            dirAddButton.Margin = new Padding(0, 4, 8, 0);
-            dirAddButton.Name = "dirAddButton";
-            dirAddButton.Radius = 1;
-            dirAddButton.Size = new Size(110, 36);
-            dirAddButton.TabIndex = 0;
-            dirAddButton.Text = "添加目录";
-            dirAddButton.Type = AntdUI.TTypeMini.Primary;
-            dirAddButton.Click += dirAddButton_Click;
-            // 
-            // betterDirAddButton
-            // 
-            betterDirAddButton.IconSvg = "FolderOpenOutlined";
-            betterDirAddButton.Location = new Point(118, 6);
-            betterDirAddButton.Margin = new Padding(0, 4, 8, 0);
-            betterDirAddButton.Name = "betterDirAddButton";
-            betterDirAddButton.Radius = 1;
-            betterDirAddButton.Size = new Size(110, 36);
-            betterDirAddButton.TabIndex = 1;
-            betterDirAddButton.Text = "批量选择";
-            betterDirAddButton.Click += betterDirAddButton_Click;
-            // 
-            // watcherDirListView
-            // 
-            watcherDirListView.Dock = DockStyle.Bottom;
-            watcherDirListView.Location = new Point(0, 48);
-            watcherDirListView.Margin = new Padding(0);
-            watcherDirListView.Name = "watcherDirListView";
-            watcherDirListView.Size = new Size(1156, 513);
-            watcherDirListView.TabIndex = 1;
-            watcherDirListView.UseCompatibleStateImageBehavior = false;
-            watcherDirListView.ItemSelectionChanged += watcherDirListView_ItemSelectionChanged;
-            watcherDirListView.MouseClick += watcherDirListView_MouseClick;
-            watcherDirListView.Resize += watcherDirListView_Resize;
-            // 
-            // rulesExeProcessView
-            // 
-            rulesExeProcessView.BackColor = Color.White;
-            rulesExeProcessView.Controls.Add(rulesExeProcViewTable);
-            rulesExeProcessView.Controls.Add(rulesExeProcToolBar);
-            rulesExeProcessView.Location = new Point(16, 75);
-            rulesExeProcessView.Name = "rulesExeProcessView";
-            rulesExeProcessView.Size = new Size(1160, 563);
-            rulesExeProcessView.TabIndex = 2;
-            // 
-            // rulesExeProcViewTable
-            // 
-            rulesExeProcViewTable.Gap = 12;
-            rulesExeProcViewTable.Location = new Point(4, 49);
-            rulesExeProcViewTable.Name = "rulesExeProcViewTable";
-            rulesExeProcViewTable.Size = new Size(901, 293);
-            rulesExeProcViewTable.TabIndex = 1;
-            rulesExeProcViewTable.Text = "table1";
-            // 
-            // rulesExeProcToolBar
-            // 
-            rulesExeProcToolBar.Controls.Add(input1);
-            rulesExeProcToolBar.Controls.Add(rulesExeProcAddButton);
-            rulesExeProcToolBar.Controls.Add(button1);
-            rulesExeProcToolBar.Dock = DockStyle.Top;
-            rulesExeProcToolBar.Location = new Point(0, 0);
-            rulesExeProcToolBar.Name = "rulesExeProcToolBar";
-            rulesExeProcToolBar.Size = new Size(1160, 48);
-            rulesExeProcToolBar.TabIndex = 0;
-            // 
-            // input1
-            // 
-            input1.Location = new Point(3, 3);
-            input1.Name = "input1";
-            input1.PlaceholderText = "输入应用程序名称";
-            input1.PrefixSvg = "SearchOutlined";
-            input1.Size = new Size(240, 40);
-            input1.TabIndex = 0;
-            // 
-            // rulesExeProcAddButton
-            // 
-            rulesExeProcAddButton.IconSvg = "PlusOutlined";
-            rulesExeProcAddButton.Location = new Point(246, 4);
-            rulesExeProcAddButton.Margin = new Padding(0, 4, 8, 0);
-            rulesExeProcAddButton.Name = "rulesExeProcAddButton";
-            rulesExeProcAddButton.Radius = 1;
-            rulesExeProcAddButton.Size = new Size(84, 36);
-            rulesExeProcAddButton.TabIndex = 1;
-            rulesExeProcAddButton.Text = "添加";
-            rulesExeProcAddButton.ToggleType = AntdUI.TTypeMini.Primary;
-            rulesExeProcAddButton.Type = AntdUI.TTypeMini.Primary;
-            // 
-            // button1
-            // 
-            button1.IconSvg = "ControlOutlined";
-            button1.Location = new Point(341, 3);
-            button1.Name = "button1";
-            button1.Size = new Size(139, 34);
-            button1.TabIndex = 2;
-            button1.Text = "选择运行进程";
             // 
             // dashboardPanel
             // 
@@ -2198,6 +2191,15 @@ namespace CdiskClean
             cleanupFrequentPanel.ResumeLayout(false);
             cleanupMethodPanel.ResumeLayout(false);
             cleanupMethodPanel.PerformLayout();
+            rulesPanel.ResumeLayout(false);
+            rulesExeProcessView.ResumeLayout(false);
+            rulesExeProcToolBar.ResumeLayout(false);
+            rulesToolbar.ResumeLayout(false);
+            rulesSurface.ResumeLayout(false);
+            rulesIgnoreProcessView.ResumeLayout(false);
+            rulesIgnoreProcToolbar.ResumeLayout(false);
+            rulesDirectoryView.ResumeLayout(false);
+            rulesDirToolbar.ResumeLayout(false);
             activityPanel.ResumeLayout(false);
             activityToolbar.ResumeLayout(false);
             panel2.ResumeLayout(false);
@@ -2208,15 +2210,6 @@ namespace CdiskClean
             recordsSurface.ResumeLayout(false);
             recordViewHost.ResumeLayout(false);
             cleanupRecordView.ResumeLayout(false);
-            rulesPanel.ResumeLayout(false);
-            rulesToolbar.ResumeLayout(false);
-            rulesSurface.ResumeLayout(false);
-            rulesIgnoreProcessView.ResumeLayout(false);
-            rulesIgnoreProcToolbar.ResumeLayout(false);
-            rulesDirectoryView.ResumeLayout(false);
-            rulesDirToolbar.ResumeLayout(false);
-            rulesExeProcessView.ResumeLayout(false);
-            rulesExeProcToolBar.ResumeLayout(false);
             dashboardPanel.ResumeLayout(false);
             dashboardLayout.ResumeLayout(false);
             dashboardCapacitySurface.ResumeLayout(false);
@@ -2324,7 +2317,7 @@ namespace CdiskClean
         private Button cleanSelectAllBtn;
         private Button cleanSelectNoneBtn;
         private Label cleanupSelectionLabel;
-        private TreeView cleanTreeView;
+        private AntdUI.Tree cleanTreeView;
         private Label cleanStatusLabel;
         private AntdUI.Panel cleanupActionSurface;
         private TableLayoutPanel cleanupActionLayout;
@@ -2394,6 +2387,5 @@ namespace CdiskClean
         private AntdUI.Button button1;
         private AntdUI.Table rulesExeProcViewTable;
         private AntdUI.Button cleanButton;
-        private AntdUI.Tree cleanUpTree;
     }
 }
