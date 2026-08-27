@@ -8,7 +8,9 @@ claude-prompt.txt
 docs/
 cacheRefer/
 icons/
-*-promt.txt
+codex-promt.txt
+claude-prompt.txt
+opencode-promt.txt
 # User-specific files
 *.rsuser
 *.suo
