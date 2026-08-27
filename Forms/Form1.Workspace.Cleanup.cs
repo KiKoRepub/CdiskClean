@@ -398,32 +398,13 @@ public partial class Form1
     }
 
     /// <summary>
-    /// 根据文件类型获取风险等级颜色
+    /// 节点风险等级背景色：目录按常见风险目录清单（段匹配），文件按扩展名，规则见 RiskLevelHelper。
     /// 红色=高风险，黄色=中风险，绿色=低风险
     /// </summary>
-    private static Color GetRiskLevelColor(CleanupFileEntry entry)
-    {
-        if (entry.IsDirectory)
-        {
-            // 目录：根据路径判断风险
-            var path = entry.FullPath.ToLower();
-            if (path.Contains("\\windows\\") || path.Contains("\\program files"))
-                return Color.FromArgb(255, 230, 230); // 红色高风险
-            if (path.Contains("\\temp") || path.Contains("\\cache"))
-                return Color.FromArgb(255, 255, 220); // 黄色中风险
-            return Color.FromArgb(230, 255, 230); // 绿色低风险
-        }
-        else
-        {
-            // 文件：根据扩展名判断风险
-            var ext = Path.GetExtension(entry.FullPath).ToLower();
-            if (ext is ".sys" or ".dll" or ".exe" or ".drv")
-                return Color.FromArgb(255, 230, 230); // 红色高风险
-            if (ext is ".tmp" or ".log" or ".cache" or ".bak" or ".old")
-                return Color.FromArgb(255, 255, 220); // 黄色中风险
-            return Color.FromArgb(230, 255, 230); // 绿色低风险
-        }
-    }
+    private static Color GetRiskLevelColor(CleanupFileEntry entry) =>
+        RiskLevelHelper.GetColor(entry.IsDirectory
+            ? RiskLevelHelper.GetDirectoryRisk(entry.FullPath)
+            : RiskLevelHelper.GetFileRisk(entry.FullPath));
 
     /// <summary>勾选状态变更事件</summary>
     private void cleanTreeView_CheckedChanged(object? sender, TreeCheckedEventArgs e)
@@ -447,7 +428,54 @@ public partial class Form1
         UpdateCleanupSelectionSummary();
     }
 
-    /// <summary>获取所有已勾选的节点</summary>
+    // ==================== 清理树交互（p017 task2） ====================
+
+    /// <summary>节点信息气泡（单击节点显示创建时间），懒创建</summary>
+    private NodeInfoPopover? _nodeInfoPopover;
+
+    /// <summary>
+    /// 单击节点文本：在节点位置弹出创建时间信息框。
+    /// SelectChanged 仅在左键点击节点文本区时触发（勾选框/箭头不会误触）。
+    /// </summary>
+    private void cleanTreeView_SelectChanged(object? sender, AntdUI.TreeSelectEventArgs e)
+    {
+        if (e.Item == null) return;
+        _nodeInfoPopover ??= new NodeInfoPopover();
+        _nodeInfoPopover.ShowAt(cleanTreeView, cleanTreeView.RectangleToScreen(e.Rect));
+        _nodeInfoPopover.BeginLoad(e.Item);
+    }
+
+    /// <summary>滚动清理树时收起信息框，避免气泡位置与节点错位</summary>
+    private void cleanTreeView_MouseWheel(object? sender, MouseEventArgs e)
+    {
+        _nodeInfoPopover?.Hide();
+    }
+
+    /// <summary>
+    /// 右键节点：弹出「选中」菜单，执行逻辑与勾选框一致（勾选并级联子节点）。
+    /// TreeSelectEventArgs 继承 MouseEventArgs，e.Button 可直接判断右键。
+    /// </summary>
+    private void cleanTreeView_NodeMouseClick(object? sender, AntdUI.TreeSelectEventArgs e)
+    {
+        if (e.Button != MouseButtons.Right || e.Item == null) return;
+
+        var menu = new System.Windows.Forms.ContextMenuStrip();
+        menu.Items.Add("选中", null, (_, _) =>
+        {
+            e.Item.SetChecked(true);
+            e.Item.CheckedStrictly(true, true);
+            UpdateCleanupSelectionSummary();
+        });
+        menu.Show(Cursor.Position);
+    }
+
+    /// <summary>目录节点展开/收起时切换图标（收起态 FolderOutlined 为初始值）</summary>
+    private void cleanTreeView_AfterExpand(object? sender, AntdUI.TreeCheckedEventArgs e)
+    {
+        // 根节点 Tag 为路径字符串（必为目录），其余目录为 CleanupFileEntry
+        if (e.Item?.Tag is not (string or CleanupFileEntry { IsDirectory: true })) return;
+        e.Item.SetIcon(e.Value ? "FolderOpenOutlined" : "FolderOutlined");
+    }
     private static void GetCheckedItems(TreeItemCollection items, List<CleanupFileEntry> list)
     {
         foreach (var item in items)
