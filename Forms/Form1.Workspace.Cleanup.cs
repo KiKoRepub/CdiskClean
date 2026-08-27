@@ -11,7 +11,7 @@ namespace CdiskClean;
 public partial class Form1
 {
     /// <summary>清理方式单选按钮与枚举映射（初始化于 SetupCleanPage）</summary>
-    private (RadioButton Radio, CleanupMethod Method)[] _cleanupMethodRadios = Array.Empty<(RadioButton, CleanupMethod)>();
+    private (Radio Radio, CleanupMethod Method)[] _cleanupMethodRadios = Array.Empty<(Radio, CleanupMethod)>();
 
     /// <summary>按面板宽度动态排列清理方式区控件（单选、目标目录、清理按钮）</summary>
     private void LayoutCleanupMethodPanel(Control panel)
@@ -440,9 +440,21 @@ public partial class Form1
     private void cleanTreeView_SelectChanged(object? sender, AntdUI.TreeSelectEventArgs e)
     {
         if (e.Item == null) return;
-        _nodeInfoPopover ??= new NodeInfoPopover();
-        _nodeInfoPopover.ShowAt(cleanTreeView, cleanTreeView.RectangleToScreen(e.Rect));
-        _nodeInfoPopover.BeginLoad(e.Item);
+        TreeItem item = e.Item;
+        CleanupFileEntry entry =  item.Tag as CleanupFileEntry;
+          
+        string toShow = "创建时间：" + (entry.IsDirectory 
+                ?  Directory.GetCreationTime(entry.FullPath).ToString() 
+                : File.GetCreationTime(entry.FullPath).ToString());
+        if (!entry.LastWriteTime.IsNull())
+        {
+            toShow += "\n修改时间：" + entry.LastWriteTime.ToString();
+        }
+
+        Popover.open(cleanTreeView, entry.Name, toShow, TAlign.Top);
+
+
+
     }
 
     /// <summary>滚动清理树时收起信息框，避免气泡位置与节点错位</summary>
@@ -543,7 +555,7 @@ public partial class Form1
             cleanTargetTextBox.Text = dialog.SelectedPath;
     }
 
-    private void cleanMethodRadio_CheckedChanged(object? sender, EventArgs e)
+    private void cleanMethodRadio_CheckedChanged(object sender, BoolEventArgs e)
     {
         UpdateTargetBoxState();
     }

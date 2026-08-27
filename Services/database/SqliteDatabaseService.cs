@@ -295,7 +295,7 @@ public class SqliteDatabaseService : IDatabaseService
 
         var paramList = new List<(string, object)>
         {
-("@Time", record.CleanupTime.ToString("O")),
+        ("@Time", record.CleanupTime.ToString("O")),
         ("@FullPath", record.FullPath),
         ("@FileName", record.FileName),
         ("@Size", record.SizeBytes.HasValue ? (object)record.SizeBytes.Value : DBNull.Value),
@@ -306,6 +306,10 @@ public class SqliteDatabaseService : IDatabaseService
         };
 
 
+        foreach (var item in paramList)
+        {
+            cmd.Parameters.AddWithValue(item.Item1,item.Item2 );
+        }
 
 
         cmd.ExecuteNonQuery();
@@ -319,6 +323,10 @@ public class SqliteDatabaseService : IDatabaseService
         connection.Open();
 
         using var cmd = connection.CreateCommand();
+        //cmd.CommandText = "SELECT COUNT(*) FROM CleanupRecords";
+        //int nums = Convert.ToInt32(cmd.ExecuteScalar());
+
+        //MessageBox.Show(nums.ToString());
         cmd.CommandText = @"SELECT Id, CleanupTime, FullPath, FileName, SizeBytes, Method, Success, Message
                             FROM CleanupRecords ORDER BY Id DESC LIMIT @Limit;";
         cmd.Parameters.AddWithValue("@Limit", limit);

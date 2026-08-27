@@ -109,6 +109,8 @@ namespace CdiskClean
             PopulateProcessListView();
             SetupProcessContextMenu();
 
+
+            ConfigureTableColumns();
             // 初始化磁盘清理页
             SetupCleanPage();
 
@@ -121,7 +123,6 @@ namespace CdiskClean
             ShowRecordView("notifications");
             RefreshWorkspaceStatus();
 
-            ConfigureTableColumns();
         }
 
 
@@ -531,7 +532,7 @@ namespace CdiskClean
         #endregion
 
 
-        
+
         #region 文件夹分析
         private void selectDirBtn_Click(object? sender, EventArgs e)
         {
@@ -824,6 +825,7 @@ namespace CdiskClean
 
         }
         #endregion
+
 
 
     }
