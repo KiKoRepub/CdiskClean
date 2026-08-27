@@ -8,8 +8,6 @@
 docs/
 cacheRefer/
 icons/
-*.iss
-
 # User-specific files
 *.rsuser
 *.suo
