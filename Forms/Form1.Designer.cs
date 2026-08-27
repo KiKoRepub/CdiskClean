@@ -30,12 +30,12 @@ namespace CdiskClean
         {
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
-            AntdUI.MenuItem menuItem13 = new AntdUI.MenuItem();
-            AntdUI.MenuItem menuItem14 = new AntdUI.MenuItem();
-            AntdUI.MenuItem menuItem15 = new AntdUI.MenuItem();
-            AntdUI.MenuItem menuItem16 = new AntdUI.MenuItem();
-            AntdUI.MenuItem menuItem17 = new AntdUI.MenuItem();
-            AntdUI.MenuItem menuItem18 = new AntdUI.MenuItem();
+            AntdUI.MenuItem menuItem7 = new AntdUI.MenuItem();
+            AntdUI.MenuItem menuItem8 = new AntdUI.MenuItem();
+            AntdUI.MenuItem menuItem9 = new AntdUI.MenuItem();
+            AntdUI.MenuItem menuItem10 = new AntdUI.MenuItem();
+            AntdUI.MenuItem menuItem11 = new AntdUI.MenuItem();
+            AntdUI.MenuItem menuItem12 = new AntdUI.MenuItem();
             timer1 = new System.Windows.Forms.Timer(components);
             diskRefreshTimer = new System.Windows.Forms.Timer(components);
             notifyIcon1 = new NotifyIcon(components);
@@ -68,11 +68,17 @@ namespace CdiskClean
             cleanupTreeSurface = new AntdUI.Panel();
             cleanUpTree = new AntdUI.Tree();
             cleanupTreeLayout = new TableLayoutPanel();
+            cleanupSelectionBarRow = new Panel();
             cleanupSelectionBar = new FlowLayoutPanel();
             cleanSelectAllBtn = new Button();
             cleanSelectNoneBtn = new Button();
             cleanupSelectionLabel = new Label();
-            cleanTreeView = new TreeView();
+            cleanTreeView = new AntdUI.Tree();
+            cleanupLayOutStatusPanel = new AntdUI.Panel();
+            panel3 = new AntdUI.Panel();
+            tag2 = new AntdUI.Tag();
+            tag1 = new AntdUI.Tag();
+            safeTag = new AntdUI.Tag();
             cleanStatusLabel = new Label();
             cleanupActionSurface = new AntdUI.Panel();
             cleanupActionLayout = new TableLayoutPanel();
@@ -82,15 +88,15 @@ namespace CdiskClean
             frequentHintLabel = new Label();
             cleanupFrequentTitle = new Label();
             cleanupMethodPanel = new Panel();
+            cleanTargetTextBox = new AntdUI.Input();
+            cleanMklinkRadio = new AntdUI.Radio();
+            cleanCompressRadio = new AntdUI.Radio();
+            cleanMoveRadio = new AntdUI.Radio();
+            cleanPermanentRadio = new AntdUI.Radio();
+            cleanRecycleRadio = new AntdUI.Radio();
             cleanButton = new AntdUI.Button();
             cleanupMethodTitle = new Label();
-            cleanRecycleRadio = new RadioButton();
-            cleanPermanentRadio = new RadioButton();
-            cleanMoveRadio = new RadioButton();
-            cleanCompressRadio = new RadioButton();
-            cleanMklinkRadio = new RadioButton();
             cleanTargetLabel = new Label();
-            cleanTargetTextBox = new TextBox();
             cleanTargetSelectBtn = new Button();
             activityPanel = new Panel();
             activityToolbar = new FlowLayoutPanel();
@@ -201,6 +207,8 @@ namespace CdiskClean
             cleanupTreeSurface.SuspendLayout();
             cleanupTreeLayout.SuspendLayout();
             cleanupSelectionBar.SuspendLayout();
+            cleanupLayOutStatusPanel.SuspendLayout();
+            panel3.SuspendLayout();
             cleanupActionSurface.SuspendLayout();
             cleanupActionLayout.SuspendLayout();
             cleanupFrequentPanel.SuspendLayout();
@@ -379,31 +387,31 @@ namespace CdiskClean
             // workspaceMenu
             // 
             workspaceMenu.BackColor = Color.White;
-            menuItem13.IconSvg = "DashboardOutlined";
-            menuItem13.ID = "dashboard";
-            menuItem13.Select = true;
-            menuItem13.Text = "工作台";
-            menuItem14.IconSvg = "MonitorOutlined";
-            menuItem14.ID = "activity";
-            menuItem14.Text = "实时活动";
-            menuItem15.IconSvg = "ControlOutlined";
-            menuItem15.ID = "rules";
-            menuItem15.Text = "监控规则";
-            menuItem16.IconSvg = "PieChartOutlined";
-            menuItem16.ID = "analyzer";
-            menuItem16.Text = "空间分析";
-            menuItem17.IconSvg = "DeleteOutlined";
-            menuItem17.ID = "cleanup";
-            menuItem17.Text = "清理中心";
-            menuItem18.IconSvg = "HistoryOutlined";
-            menuItem18.ID = "records";
-            menuItem18.Text = "记录中心";
-            workspaceMenu.Items.Add(menuItem13);
-            workspaceMenu.Items.Add(menuItem14);
-            workspaceMenu.Items.Add(menuItem15);
-            workspaceMenu.Items.Add(menuItem16);
-            workspaceMenu.Items.Add(menuItem17);
-            workspaceMenu.Items.Add(menuItem18);
+            menuItem7.IconSvg = "DashboardOutlined";
+            menuItem7.ID = "dashboard";
+            menuItem7.Select = true;
+            menuItem7.Text = "工作台";
+            menuItem8.IconSvg = "MonitorOutlined";
+            menuItem8.ID = "activity";
+            menuItem8.Text = "实时活动";
+            menuItem9.IconSvg = "ControlOutlined";
+            menuItem9.ID = "rules";
+            menuItem9.Text = "监控规则";
+            menuItem10.IconSvg = "PieChartOutlined";
+            menuItem10.ID = "analyzer";
+            menuItem10.Text = "空间分析";
+            menuItem11.IconSvg = "DeleteOutlined";
+            menuItem11.ID = "cleanup";
+            menuItem11.Text = "清理中心";
+            menuItem12.IconSvg = "HistoryOutlined";
+            menuItem12.ID = "records";
+            menuItem12.Text = "记录中心";
+            workspaceMenu.Items.Add(menuItem7);
+            workspaceMenu.Items.Add(menuItem8);
+            workspaceMenu.Items.Add(menuItem9);
+            workspaceMenu.Items.Add(menuItem10);
+            workspaceMenu.Items.Add(menuItem11);
+            workspaceMenu.Items.Add(menuItem12);
             workspaceMenu.Location = new Point(8, 66);
             workspaceMenu.Margin = new Padding(0);
             workspaceMenu.Name = "workspaceMenu";
@@ -616,17 +624,29 @@ namespace CdiskClean
             cleanupTreeLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             cleanupTreeLayout.Controls.Add(cleanupSelectionBar, 0, 0);
             cleanupTreeLayout.Controls.Add(cleanTreeView, 0, 1);
-            cleanupTreeLayout.Controls.Add(cleanStatusLabel, 0, 2);
+            cleanupTreeLayout.Controls.Add(cleanupLayOutStatusPanel, 0, 2);
             cleanupTreeLayout.Dock = DockStyle.Top;
             cleanupTreeLayout.Location = new Point(12, 12);
             cleanupTreeLayout.Margin = new Padding(0);
             cleanupTreeLayout.Name = "cleanupTreeLayout";
-            cleanupTreeLayout.RowCount = 3;
+            cleanupTreeLayout.RowCount = 4;
             cleanupTreeLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 42F));
             cleanupTreeLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             cleanupTreeLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34F));
-            cleanupTreeLayout.Size = new Size(820, 278);
+            cleanupTreeLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            cleanupTreeLayout.Size = new Size(820, 549);
             cleanupTreeLayout.TabIndex = 0;
+            // 
+            // cleanupSelectionBarRow
+            // 
+            cleanupSelectionBarRow.BackColor = Color.White;
+            cleanupSelectionBarRow.Controls.Add(cleanupSelectionBar);
+            cleanupSelectionBarRow.Dock = DockStyle.Fill;
+            cleanupSelectionBarRow.Location = new Point(0, 0);
+            cleanupSelectionBarRow.Margin = new Padding(0);
+            cleanupSelectionBarRow.Name = "cleanupSelectionBarRow";
+            cleanupSelectionBarRow.Size = new Size(820, 42);
+            cleanupSelectionBarRow.TabIndex = 0;
             // 
             // cleanupSelectionBar
             // 
@@ -683,25 +703,138 @@ namespace CdiskClean
             // 
             // cleanTreeView
             // 
-            cleanTreeView.CheckBoxes = true;
-            cleanTreeView.Dock = DockStyle.Top;
+            cleanTreeView.BlockNode = true;
+            cleanTreeView.Checkable = true;
+            cleanTreeView.CheckStrictly = false;
+            cleanTreeView.Dock = DockStyle.Fill;
             cleanTreeView.Location = new Point(0, 42);
             cleanTreeView.Margin = new Padding(0);
             cleanTreeView.Name = "cleanTreeView";
-            cleanTreeView.Size = new Size(820, 202);
+            cleanTreeView.Size = new Size(820, 453);
             cleanTreeView.TabIndex = 1;
-            cleanTreeView.BeforeCheck += cleanTreeView_BeforeCheck;
-            cleanTreeView.AfterCheck += cleanTreeView_AfterCheck;
+            cleanTreeView.SelectChanged += cleanTreeView_SelectChanged;
+            cleanTreeView.AfterExpand += cleanTreeView_AfterExpand;
+            cleanTreeView.CheckedChanged += cleanTreeView_CheckedChanged;
+            cleanTreeView.NodeMouseClick += cleanTreeView_NodeMouseClick;
+            cleanTreeView.MouseWheel += cleanTreeView_MouseWheel;
+            // 
+            // cleanupLayOutStatusPanel
+            // 
+            cleanupLayOutStatusPanel.Controls.Add(panel3);
+            cleanupLayOutStatusPanel.Controls.Add(cleanStatusLabel);
+            cleanupLayOutStatusPanel.Dock = DockStyle.Fill;
+            cleanupLayOutStatusPanel.Location = new Point(3, 498);
+            cleanupLayOutStatusPanel.Name = "cleanupLayOutStatusPanel";
+            cleanupLayOutStatusPanel.Size = new Size(814, 28);
+            cleanupLayOutStatusPanel.TabIndex = 2;
+            cleanupLayOutStatusPanel.Text = "panel3";
+            // 
+            // panel3
+            // 
+            panel3.Controls.Add(tag2);
+            panel3.Controls.Add(tag1);
+            panel3.Controls.Add(safeTag);
+            panel3.Dock = DockStyle.Right;
+            panel3.Location = new Point(527, 0);
+            panel3.Name = "panel3";
+            panel3.Size = new Size(287, 28);
+            panel3.TabIndex = 4;
+            panel3.Text = "panel3";
+            // 
+            // tag2
+            // 
+            tag2.BackColor = Color.Red;
+            tag2.ForeColor = Color.White;
+            tag2.Location = new Point(208, 1);
+            tag2.Name = "tag2";
+            tag2.Radius = 2;
+            tag2.Size = new Size(79, 28);
+            tag2.TabIndex = 4;
+            tag2.Text = "危险";
+            // 
+            // tag1
+            // 
+            tag1.BackColor = Color.Yellow;
+            tag1.Location = new Point(107, 0);
+            tag1.Name = "tag1";
+            tag1.Radius = 2;
+            tag1.Size = new Size(79, 28);
+            tag1.TabIndex = 3;
+            tag1.Text = "警告";
+            // 
+            // safeTag
+            // 
+            safeTag.BackColor = Color.GreenYellow;
+            safeTag.Location = new Point(3, 0);
+            safeTag.Name = "safeTag";
+            safeTag.Radius = 2;
+            safeTag.Size = new Size(79, 28);
+            safeTag.TabIndex = 0;
+            safeTag.Text = "安全";
+            // 
+            // cleanupLayOutStatusPanel
+            // 
+            cleanupLayOutStatusPanel.Controls.Add(panel3);
+            cleanupLayOutStatusPanel.Controls.Add(cleanStatusLabel);
+            cleanupLayOutStatusPanel.Dock = DockStyle.Fill;
+            cleanupLayOutStatusPanel.Location = new Point(3, 498);
+            cleanupLayOutStatusPanel.Name = "cleanupLayOutStatusPanel";
+            cleanupLayOutStatusPanel.Size = new Size(814, 28);
+            cleanupLayOutStatusPanel.TabIndex = 2;
+            cleanupLayOutStatusPanel.Text = "panel3";
+            // 
+            // panel3
+            // 
+            panel3.Controls.Add(tag2);
+            panel3.Controls.Add(tag1);
+            panel3.Controls.Add(safeTag);
+            panel3.Dock = DockStyle.Right;
+            panel3.Location = new Point(527, 0);
+            panel3.Name = "panel3";
+            panel3.Size = new Size(287, 28);
+            panel3.TabIndex = 4;
+            panel3.Text = "panel3";
+            // 
+            // tag2
+            // 
+            tag2.BackColor = Color.Red;
+            tag2.ForeColor = Color.White;
+            tag2.Location = new Point(208, 1);
+            tag2.Name = "tag2";
+            tag2.Radius = 2;
+            tag2.Size = new Size(79, 28);
+            tag2.TabIndex = 4;
+            tag2.Text = "危险";
+            // 
+            // tag1
+            // 
+            tag1.BackColor = Color.Yellow;
+            tag1.Location = new Point(107, 0);
+            tag1.Name = "tag1";
+            tag1.Radius = 2;
+            tag1.Size = new Size(79, 28);
+            tag1.TabIndex = 3;
+            tag1.Text = "警告";
+            // 
+            // safeTag
+            // 
+            safeTag.BackColor = Color.GreenYellow;
+            safeTag.Location = new Point(3, 0);
+            safeTag.Name = "safeTag";
+            safeTag.Radius = 2;
+            safeTag.Size = new Size(79, 28);
+            safeTag.TabIndex = 0;
+            safeTag.Text = "安全";
             // 
             // cleanStatusLabel
             // 
             cleanStatusLabel.AutoEllipsis = true;
-            cleanStatusLabel.Dock = DockStyle.Fill;
-            cleanStatusLabel.Location = new Point(0, 244);
+            cleanStatusLabel.Dock = DockStyle.Left;
+            cleanStatusLabel.Location = new Point(0, 0);
             cleanStatusLabel.Margin = new Padding(0);
             cleanStatusLabel.Name = "cleanStatusLabel";
-            cleanStatusLabel.Size = new Size(820, 34);
-            cleanStatusLabel.TabIndex = 2;
+            cleanStatusLabel.Size = new Size(369, 28);
+            cleanStatusLabel.TabIndex = 3;
             cleanStatusLabel.Text = "请选择目录并开始扫描";
             cleanStatusLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
@@ -801,15 +934,15 @@ namespace CdiskClean
             // cleanupMethodPanel
             // 
             cleanupMethodPanel.BackColor = Color.White;
+            cleanupMethodPanel.Controls.Add(cleanTargetTextBox);
+            cleanupMethodPanel.Controls.Add(cleanMklinkRadio);
+            cleanupMethodPanel.Controls.Add(cleanCompressRadio);
+            cleanupMethodPanel.Controls.Add(cleanMoveRadio);
+            cleanupMethodPanel.Controls.Add(cleanPermanentRadio);
+            cleanupMethodPanel.Controls.Add(cleanRecycleRadio);
             cleanupMethodPanel.Controls.Add(cleanButton);
             cleanupMethodPanel.Controls.Add(cleanupMethodTitle);
-            cleanupMethodPanel.Controls.Add(cleanRecycleRadio);
-            cleanupMethodPanel.Controls.Add(cleanPermanentRadio);
-            cleanupMethodPanel.Controls.Add(cleanMoveRadio);
-            cleanupMethodPanel.Controls.Add(cleanCompressRadio);
-            cleanupMethodPanel.Controls.Add(cleanMklinkRadio);
             cleanupMethodPanel.Controls.Add(cleanTargetLabel);
-            cleanupMethodPanel.Controls.Add(cleanTargetTextBox);
             cleanupMethodPanel.Controls.Add(cleanTargetSelectBtn);
             cleanupMethodPanel.Dock = DockStyle.Fill;
             cleanupMethodPanel.Location = new Point(0, 216);
@@ -817,6 +950,65 @@ namespace CdiskClean
             cleanupMethodPanel.Name = "cleanupMethodPanel";
             cleanupMethodPanel.Size = new Size(312, 321);
             cleanupMethodPanel.TabIndex = 1;
+            // 
+            // cleanTargetTextBox
+            // 
+            cleanTargetTextBox.Font = new Font("Microsoft YaHei UI", 10F);
+            cleanTargetTextBox.Location = new Point(3, 223);
+            cleanTargetTextBox.Name = "cleanTargetTextBox";
+            cleanTargetTextBox.PlaceholderText = "选择目标目录";
+            cleanTargetTextBox.PrefixSvg = "FolderFilled";
+            cleanTargetTextBox.Radius = 0;
+            cleanTargetTextBox.ReadOnly = true;
+            cleanTargetTextBox.Size = new Size(235, 42);
+            cleanTargetTextBox.TabIndex = 16;
+            cleanTargetTextBox.WaveSize = 3;
+            // 
+            // cleanMklinkRadio
+            // 
+            cleanMklinkRadio.Checked = true;
+            cleanMklinkRadio.Location = new Point(3, 162);
+            cleanMklinkRadio.Name = "cleanMklinkRadio";
+            cleanMklinkRadio.Size = new Size(186, 34);
+            cleanMklinkRadio.TabIndex = 15;
+            cleanMklinkRadio.Text = "mklink软链接到";
+            // 
+            // cleanCompressRadio
+            // 
+            cleanCompressRadio.Checked = true;
+            cleanCompressRadio.Location = new Point(3, 133);
+            cleanCompressRadio.Name = "cleanCompressRadio";
+            cleanCompressRadio.Size = new Size(117, 34);
+            cleanCompressRadio.TabIndex = 14;
+            cleanCompressRadio.Text = "压缩到";
+            // 
+            // cleanMoveRadio
+            // 
+            cleanMoveRadio.Checked = true;
+            cleanMoveRadio.Location = new Point(3, 103);
+            cleanMoveRadio.Name = "cleanMoveRadio";
+            cleanMoveRadio.Size = new Size(117, 34);
+            cleanMoveRadio.TabIndex = 13;
+            cleanMoveRadio.Text = "移动到";
+            // 
+            // cleanPermanentRadio
+            // 
+            cleanPermanentRadio.Checked = true;
+            cleanPermanentRadio.Location = new Point(3, 73);
+            cleanPermanentRadio.Name = "cleanPermanentRadio";
+            cleanPermanentRadio.Size = new Size(117, 34);
+            cleanPermanentRadio.TabIndex = 12;
+            cleanPermanentRadio.Text = "永久删除";
+            // 
+            // cleanRecycleRadio
+            // 
+            cleanRecycleRadio.Checked = true;
+            cleanRecycleRadio.Location = new Point(3, 43);
+            cleanRecycleRadio.Name = "cleanRecycleRadio";
+            cleanRecycleRadio.Size = new Size(241, 34);
+            cleanRecycleRadio.TabIndex = 11;
+            cleanRecycleRadio.Text = "回收站删除（可恢复）";
+            cleanRecycleRadio.CheckedChanged += cleanMethodRadio_CheckedChanged;
             // 
             // cleanButton
             // 
@@ -840,67 +1032,6 @@ namespace CdiskClean
             cleanupMethodTitle.TabIndex = 0;
             cleanupMethodTitle.Text = "清理方式";
             // 
-            // cleanRecycleRadio
-            // 
-            cleanRecycleRadio.AutoSize = true;
-            cleanRecycleRadio.Checked = true;
-            cleanRecycleRadio.Location = new Point(4, 46);
-            cleanRecycleRadio.Name = "cleanRecycleRadio";
-            cleanRecycleRadio.Size = new Size(215, 28);
-            cleanRecycleRadio.TabIndex = 1;
-            cleanRecycleRadio.TabStop = true;
-            cleanRecycleRadio.Text = "回收站删除（可恢复）";
-            cleanRecycleRadio.UseVisualStyleBackColor = true;
-            cleanRecycleRadio.CheckedChanged += cleanMethodRadio_CheckedChanged;
-            // 
-            // cleanPermanentRadio
-            // 
-            cleanPermanentRadio.AutoSize = true;
-            cleanPermanentRadio.Location = new Point(4, 75);
-            cleanPermanentRadio.Name = "cleanPermanentRadio";
-            cleanPermanentRadio.Size = new Size(107, 28);
-            cleanPermanentRadio.TabIndex = 2;
-            cleanPermanentRadio.TabStop = true;
-            cleanPermanentRadio.Text = "永久删除";
-            cleanPermanentRadio.UseVisualStyleBackColor = true;
-            cleanPermanentRadio.CheckedChanged += cleanMethodRadio_CheckedChanged;
-            // 
-            // cleanMoveRadio
-            // 
-            cleanMoveRadio.AutoSize = true;
-            cleanMoveRadio.Location = new Point(4, 104);
-            cleanMoveRadio.Name = "cleanMoveRadio";
-            cleanMoveRadio.Size = new Size(89, 28);
-            cleanMoveRadio.TabIndex = 3;
-            cleanMoveRadio.TabStop = true;
-            cleanMoveRadio.Text = "移动到";
-            cleanMoveRadio.UseVisualStyleBackColor = true;
-            cleanMoveRadio.CheckedChanged += cleanMethodRadio_CheckedChanged;
-            // 
-            // cleanCompressRadio
-            // 
-            cleanCompressRadio.AutoSize = true;
-            cleanCompressRadio.Location = new Point(4, 133);
-            cleanCompressRadio.Name = "cleanCompressRadio";
-            cleanCompressRadio.Size = new Size(89, 28);
-            cleanCompressRadio.TabIndex = 4;
-            cleanCompressRadio.TabStop = true;
-            cleanCompressRadio.Text = "压缩到";
-            cleanCompressRadio.UseVisualStyleBackColor = true;
-            cleanCompressRadio.CheckedChanged += cleanMethodRadio_CheckedChanged;
-            // 
-            // cleanMklinkRadio
-            // 
-            cleanMklinkRadio.AutoSize = true;
-            cleanMklinkRadio.Location = new Point(4, 162);
-            cleanMklinkRadio.Name = "cleanMklinkRadio";
-            cleanMklinkRadio.Size = new Size(174, 28);
-            cleanMklinkRadio.TabIndex = 5;
-            cleanMklinkRadio.TabStop = true;
-            cleanMklinkRadio.Text = "mkLink 软链接到";
-            cleanMklinkRadio.UseVisualStyleBackColor = true;
-            cleanMklinkRadio.CheckedChanged += cleanMethodRadio_CheckedChanged;
-            // 
             // cleanTargetLabel
             // 
             cleanTargetLabel.AutoSize = true;
@@ -910,23 +1041,70 @@ namespace CdiskClean
             cleanTargetLabel.TabIndex = 6;
             cleanTargetLabel.Text = "目标目录:";
             // 
-            // cleanTargetTextBox
-            // 
-            cleanTargetTextBox.Location = new Point(4, 224);
-            cleanTargetTextBox.Name = "cleanTargetTextBox";
-            cleanTargetTextBox.Size = new Size(228, 30);
-            cleanTargetTextBox.TabIndex = 7;
-            // 
             // cleanTargetSelectBtn
             // 
             cleanTargetSelectBtn.FlatStyle = FlatStyle.Flat;
-            cleanTargetSelectBtn.Location = new Point(244, 223);
+            cleanTargetSelectBtn.Location = new Point(246, 228);
             cleanTargetSelectBtn.Name = "cleanTargetSelectBtn";
-            cleanTargetSelectBtn.Size = new Size(76, 32);
+            cleanTargetSelectBtn.Size = new Size(72, 32);
             cleanTargetSelectBtn.TabIndex = 8;
             cleanTargetSelectBtn.Text = "浏览";
             cleanTargetSelectBtn.UseVisualStyleBackColor = true;
-            cleanTargetSelectBtn.Click += cleanTargetSelectBtn_Click;
+            cleanTargetSelectBtn.Click += this.cleanTargetSelectBtn_Click;
+            // 
+            // rulesPanel
+            // 
+            rulesPanel.BackColor = Color.FromArgb(245, 247, 250);
+            rulesPanel.Controls.Add(rulesExeProcessView);
+            rulesPanel.Controls.Add(rulesToolbar);
+            rulesPanel.Controls.Add(rulesSurface);
+            rulesPanel.Location = new Point(18, 18);
+            rulesPanel.Name = "rulesPanel";
+            rulesPanel.Padding = new Padding(18);
+            rulesPanel.Size = new Size(1196, 656);
+            rulesPanel.TabIndex = 6;
+            rulesPanel.Visible = false;
+            // 
+            // rulesExeProcessView
+            // 
+            rulesExeProcessView.BackColor = Color.White;
+            rulesExeProcessView.Controls.Add(rulesExeProcViewTable);
+            rulesExeProcessView.Controls.Add(rulesExeProcToolBar);
+            rulesExeProcessView.Location = new Point(16, 75);
+            rulesExeProcessView.Name = "rulesExeProcessView";
+            rulesExeProcessView.Size = new Size(1160, 563);
+            rulesExeProcessView.TabIndex = 2;
+            // 
+            // rulesExeProcViewTable
+            // 
+            rulesExeProcViewTable.Dock = DockStyle.Bottom;
+            rulesExeProcViewTable.EmptyHeader = true;
+            rulesExeProcViewTable.Gap = 12;
+            rulesExeProcViewTable.Location = new Point(0, 49);
+            rulesExeProcViewTable.Name = "rulesExeProcViewTable";
+            rulesExeProcViewTable.Size = new Size(1160, 514);
+            rulesExeProcViewTable.TabIndex = 1;
+            rulesExeProcViewTable.Text = "table1";
+            // 
+            // rulesExeProcToolBar
+            // 
+            rulesExeProcToolBar.Controls.Add(input1);
+            rulesExeProcToolBar.Controls.Add(rulesExeProcAddButton);
+            rulesExeProcToolBar.Controls.Add(button1);
+            rulesExeProcToolBar.Dock = DockStyle.Top;
+            rulesExeProcToolBar.Location = new Point(0, 0);
+            rulesExeProcToolBar.Name = "rulesExeProcToolBar";
+            rulesExeProcToolBar.Size = new Size(1160, 48);
+            rulesExeProcToolBar.TabIndex = 0;
+            // 
+            // input1
+            // 
+            input1.Location = new Point(3, 3);
+            input1.Name = "input1";
+            input1.PlaceholderText = "输入应用程序名称";
+            input1.PrefixSvg = "SearchOutlined";
+            input1.Size = new Size(240, 40);
+            input1.TabIndex = 0;
             // 
             // activityPanel
             // 
@@ -2193,6 +2371,8 @@ namespace CdiskClean
             cleanupTreeSurface.ResumeLayout(false);
             cleanupTreeLayout.ResumeLayout(false);
             cleanupSelectionBar.ResumeLayout(false);
+            cleanupLayOutStatusPanel.ResumeLayout(false);
+            panel3.ResumeLayout(false);
             cleanupActionSurface.ResumeLayout(false);
             cleanupActionLayout.ResumeLayout(false);
             cleanupFrequentPanel.ResumeLayout(false);
@@ -2321,11 +2501,11 @@ namespace CdiskClean
         private AntdUI.Panel cleanupTreeSurface;
         private TableLayoutPanel cleanupTreeLayout;
         private FlowLayoutPanel cleanupSelectionBar;
+        private Panel cleanupSelectionBarRow;
         private Button cleanSelectAllBtn;
         private Button cleanSelectNoneBtn;
         private Label cleanupSelectionLabel;
-        private TreeView cleanTreeView;
-        private Label cleanStatusLabel;
+        private AntdUI.Tree cleanTreeView;
         private AntdUI.Panel cleanupActionSurface;
         private TableLayoutPanel cleanupActionLayout;
         private Panel cleanupFrequentPanel;
@@ -2335,13 +2515,7 @@ namespace CdiskClean
         private Label cleanupFrequentTitle;
         private Panel cleanupMethodPanel;
         private Label cleanupMethodTitle;
-        private RadioButton cleanRecycleRadio;
-        private RadioButton cleanPermanentRadio;
-        private RadioButton cleanMoveRadio;
-        private RadioButton cleanCompressRadio;
-        private RadioButton cleanMklinkRadio;
         private Label cleanTargetLabel;
-        private TextBox cleanTargetTextBox;
         private Button cleanTargetSelectBtn;
         private Panel analyzerPanel;
         private TableLayoutPanel analyzerToolbar;
@@ -2394,6 +2568,17 @@ namespace CdiskClean
         private AntdUI.Button button1;
         private AntdUI.Table rulesExeProcViewTable;
         private AntdUI.Button cleanButton;
-        private AntdUI.Tree cleanUpTree;
+        private AntdUI.Panel cleanupLayOutStatusPanel;
+        private AntdUI.Panel panel3;
+        private AntdUI.Tag safeTag;
+        private Label cleanStatusLabel;
+        private AntdUI.Tag tag2;
+        private AntdUI.Tag tag1;
+        private AntdUI.Radio cleanRecycleRadio;
+        private AntdUI.Radio cleanPermanentRadio;
+        private AntdUI.Radio cleanMklinkRadio;
+        private AntdUI.Radio cleanCompressRadio;
+        private AntdUI.Radio cleanMoveRadio;
+        private AntdUI.Input cleanTargetTextBox;
     }
 }
