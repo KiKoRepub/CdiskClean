@@ -1,6 +1,6 @@
 using CdiskClean.Helpers;
 
-namespace CdiskClean.Models;
+namespace CdiskClean.Models.cleanUp;
 
 /// <summary>
 /// 清理历史记录（CleanupRecords 表）

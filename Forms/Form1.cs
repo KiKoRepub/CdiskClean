@@ -1,6 +1,10 @@
+using AntdUI;
 using CdiskClean.Forms;
 using CdiskClean.Helpers;
 using CdiskClean.Models;
+using CdiskClean.Models.cleanUp;
+using CdiskClean.Models.rules;
+using CdiskClean.Services.database;
 using CdiskClean.Services;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -391,11 +395,11 @@ namespace CdiskClean
         }
 
         /// <summary>按记录状态构建统一的"禁用/启用/删除"右键菜单</summary>
-        private static ContextMenuStrip BuildStatusContextMenu(
+        private static System.Windows.Forms.ContextMenuStrip BuildStatusContextMenu(
             RecordStatusEnum status,
             Action<RecordStatusEnum> changeStatus)
         {
-            var menu = new ContextMenuStrip();
+            var menu = new System.Windows.Forms.ContextMenuStrip();
 
             if (status == RecordStatusEnum.USING)
                 menu.Items.Add("禁用监测").Click += (_, _) => changeStatus(RecordStatusEnum.FORBIDDEN);
@@ -527,11 +531,11 @@ namespace CdiskClean
         #endregion
 
 
-
+        
         #region 文件夹分析
         private void selectDirBtn_Click(object? sender, EventArgs e)
         {
-            using var dialog = new FolderBrowserDialog
+            using var dialog = new System.Windows.Forms.FolderBrowserDialog
             {
                 Description = "选择要分析的文件夹",
                 ShowNewFolderButton = false
@@ -626,6 +630,7 @@ namespace CdiskClean
         }
 
         #endregion
+
 
 
         // ==================== 时钟 ====================
@@ -821,14 +826,5 @@ namespace CdiskClean
         #endregion
 
 
-
-        private void cleanTargetSelectBtn_Click(object sender, EventArgs e)
-        {
-
-
-        private void cleanTargetSelectBtn_Click(object sender, EventArgs e)
-        {
-
-        }
     }
 }

@@ -1,4 +1,4 @@
-namespace CdiskClean.Models;
+namespace CdiskClean.Models.cleanUp;
 
 /// <summary>
 /// 一次清理执行的汇总结果

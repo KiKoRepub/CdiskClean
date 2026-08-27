@@ -40,7 +40,25 @@ public partial class Form1
     }
 
 
+    public void  BindRulesTableCenter() 
+    { 
+        
+    
+        // 应用程序
 
+        rulesExeProcViewTable.Columns = new AntdUI.ColumnCollection
+        {
+            MakeColumn("exeName", "应用程序名", "15%", AntdUI.ColumnAlign.Center),
+            MakeColumn("fullPath", "路径", "30%", AntdUI.ColumnAlign.Left),
+            MakeColumn("sizeBytes", "大小", "35%", AntdUI.ColumnAlign.Center),
+            MakeColumn("RunningState", "运行状态", "10%", AntdUI.ColumnAlign.Center),
+            MakeColumn("MonitoringState", "监测状态", "10%", AntdUI.ColumnAlign.Center),
+        };
+
+
+        //rulesExeProcViewTable.DataSource = 
+
+    }
 
     private void AddManualIgnoreProcess()
     {

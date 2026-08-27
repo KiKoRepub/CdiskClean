@@ -1,4 +1,4 @@
-namespace CdiskClean.Models;
+namespace CdiskClean.Models.cleanUp;
 
 /// <summary>
 /// 扫描得到的可清理文件/目录条目

@@ -1,5 +1,9 @@
+using AntdUI;
 using CdiskClean.Helpers;
+using CdiskClean.Models;
+using CdiskClean.Models.cleanUp;
 using CdiskClean.Services;
+using System.Diagnostics;
 
 namespace CdiskClean;
 
@@ -436,24 +440,9 @@ public partial class Form1
     private void cleanTreeView_SelectChanged(object? sender, AntdUI.TreeSelectEventArgs e)
     {
         if (e.Item == null) return;
-
-
-        TreeItem item = e.Item;
-        CleanupFileEntry cleanupEntry = item.Tag as CleanupFileEntry;
-
-        string toShow = "创建时间:" + (cleanupEntry.IsDirectory ?
-                        Directory.GetCreationTime(cleanupEntry.FullPath).ToString() :
-                        File.GetCreationTime(cleanupEntry.FullPath).ToString());
-
-        if (!cleanupEntry.LastWriteTime.IsNull())
-        {
-            toShow += "\n修改时间:" + cleanupEntry.LastWriteTime.ToString();
-        }
-        
-       
-
-        Popover.open(cleanTreeView,cleanupEntry.Name,toShow,TAlign.Top);
-
+        _nodeInfoPopover ??= new NodeInfoPopover();
+        _nodeInfoPopover.ShowAt(cleanTreeView, cleanTreeView.RectangleToScreen(e.Rect));
+        _nodeInfoPopover.BeginLoad(e.Item);
     }
 
     /// <summary>滚动清理树时收起信息框，避免气泡位置与节点错位</summary>
@@ -491,7 +480,6 @@ public partial class Form1
     {
         foreach (var item in items)
         {
-          
             if (item.Checked && item.Tag is CleanupFileEntry entry)
             {
                 // 如果是目录且不是部分勾选状态，则整体添加
@@ -558,11 +546,6 @@ public partial class Form1
     private void cleanMethodRadio_CheckedChanged(object? sender, EventArgs e)
     {
         UpdateTargetBoxState();
-    }
-    private void cleanMethodRadio_CheckedChanged(object sender, BoolEventArgs e)
-    {
-        UpdateTargetBoxState();
-
     }
 
     /// <summary>仅需要目标目录的清理方式才启用目标目录输入</summary>

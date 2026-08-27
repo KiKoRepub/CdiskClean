@@ -64,7 +64,8 @@
       "Bash(python -)",
       "Bash(grep -v \"^.*//\")",
       "Bash(grep -v \"^\\\\s*//\")",
-      "Bash(grep -v \"/\\\\*\")"
+      "Bash(grep -v \"/\\\\*\")",
+      "Bash(taskkill //PID 24892 //F)"
     ]
   }
 }

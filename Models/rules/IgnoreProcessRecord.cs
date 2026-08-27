@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CdiskClean.Models;
+namespace CdiskClean.Models.rules;
 
 // This class represents a record of a process that should be ignored during monitoring or logging. It contains the name of the process to be ignored.
 public class IgnoreProcessRecord
