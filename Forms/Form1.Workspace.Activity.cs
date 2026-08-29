@@ -1,6 +1,7 @@
 using AntdUI;
 using CdiskClean.Helpers;
 using CdiskClean.Models;
+using CdiskClean.Models.rules;
 using System.ComponentModel;
 
 namespace CdiskClean;
@@ -49,10 +50,25 @@ public partial class Form1
 
     private void pauseBtn_Click(object? sender, EventArgs e)
     {
-        string processName = "Notepad";
         if (!_monitorService.IsRunning)
         {
-            _monitorService.StartMonitor(processName);
+            if (exeModeRadio.Checked)
+            {
+                if (!_monitorService.WatchingApplications.Any(application => application.Status == RecordStatusEnum.USING))
+                {
+                    MessageBox.Show("请先在“监控应用”中添加至少一个启用的应用程序。", "提示",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                _monitorService.EnableExeMode();
+            }
+            else
+            {
+                _monitorService.EnableDefaultMode();
+            }
+
+            _monitorService.StartMonitor(string.Empty);
+            if (!_monitorService.IsRunning) return;
             _notificationService.Start();
             notifyIcon1.Text = "C盘管理工具\r\n监测中";
         }
@@ -156,13 +172,38 @@ public partial class Form1
 
     private void typeFilterCombo_SelectedIndexChanged(object? sender, EventArgs e)
     {
-        //ApplyFilter();
+        ApplyFilter();
     }
     /// <summary>
     /// 添加类型过滤器的逻辑，根据选择的类型过滤显示的记录
     /// </summary>
     private void ApplyFilter()
     {
+        var filterIndex = typeFilterCombo.SelectedIndex;
+        var searchText = recordSearchBox.Text.Trim();
+        var targetType = filterIndex switch
+        {
+            1 => ChangeType.Created,
+            2 => ChangeType.Changed,
+            3 => ChangeType.Deleted,
+            4 => ChangeType.Renamed,
+            _ => (ChangeType?)null
+        };
+        List<FileChangeRecord> snapshot;
+        lock (_recordsLock) snapshot = _records.ToList();
+        var filtered = snapshot.Where(record =>
+            (!targetType.HasValue || record.ChangeType == targetType.Value) &&
+            (searchText.Length == 0 || record.FileName.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+             record.FullPath.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+             record.Directory.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+             (record.SourceProcess?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false)))
+            .ToList();
+        if (IsHandleCreated && !IsDisposed)
+        {
+            activityRecordTable.DataSource = new BindingList<FileChangeRecord>(filtered);
+            activityRecordTable.Refresh();
+        }
+        return;
         /*            var filterIndex = typeFilterCombo.SelectedIndex;
                     var searchText = recordSearchBox.Text.Trim();
                     var hasSearch = !string.IsNullOrWhiteSpace(searchText);
@@ -215,7 +256,11 @@ public partial class Form1
     {
         // DiskMonitorService 已完成延迟归因与忽略过滤；已知进程可直接进入提醒聚合。
         if (record.SourceProcess != null)
+        {
             _notificationService.RecordChange(record);
+            try { _databaseService.UpdateWatchingApplicationActivity(record.SourceProcess, record.Timestamp); }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"更新应用监测活动失败: {ex.Message}"); }
+        }
 
         BeginInvoke(() =>
         {
@@ -253,10 +298,7 @@ public partial class Form1
 
         UpdateRecordCount();
 
-        // 过滤模式下重建过滤快照以包含新记录；全部模式下 BindingList 自动通知网格
-        if (typeFilterCombo.SelectedIndex > 0 ||
-            !string.IsNullOrWhiteSpace(recordSearchBox.Text))
-            //ApplyFilter();
+        ApplyFilter();
 
             RefreshDashboardMetrics();
     }

@@ -43,7 +43,31 @@ public class SqliteDatabaseService : IDatabaseService
             CleanupRecord.GetCreateSQL());
 
         cmd.ExecuteNonQuery();
+        EnsureWatchingApplicationColumns(connection);
         TrimHistoryTables(connection);
+    }
+
+    private static void EnsureWatchingApplicationColumns(SqliteConnection connection)
+    {
+        var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        using (var query = connection.CreateCommand())
+        {
+            query.CommandText = "PRAGMA table_info(WatchingExeInfo);";
+            using var reader = query.ExecuteReader();
+            while (reader.Read()) columns.Add(reader.GetString(1));
+        }
+
+        if (!columns.Contains("UpdatedAt"))
+            AddWatchingApplicationColumn(connection, "UpdatedAt TEXT NULL");
+        if (!columns.Contains("LastActivityAt"))
+            AddWatchingApplicationColumn(connection, "LastActivityAt TEXT NULL");
+    }
+
+    private static void AddWatchingApplicationColumn(SqliteConnection connection, string definition)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = $"ALTER TABLE WatchingExeInfo ADD COLUMN {definition};";
+        command.ExecuteNonQuery();
     }
 
     private static void TrimHistoryTables(SqliteConnection connection)
@@ -353,8 +377,106 @@ public class SqliteDatabaseService : IDatabaseService
 
 
     #region MonitoringExeInfo
+    public List<WatchingExeInfo> GetWatchingApplications()
+    {
+        var list = new List<WatchingExeInfo>();
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT ExeName, FullPath, SizeBytes, RunningState, MonitoringState, LastActivityAt FROM WatchingExeInfo ORDER BY Id DESC;";
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            long? size = null;
+            if (!reader.IsDBNull(2) && long.TryParse(reader.GetValue(2)?.ToString(), out var parsed)) size = parsed;
+            var runningState = reader.IsDBNull(3) ? "未知" : reader.GetString(3);
+            var statusText = reader.IsDBNull(4) ? string.Empty : reader.GetString(4);
+            list.Add(new WatchingExeInfo
+            {
+                ExeName = reader.GetString(0),
+                FullPath = reader.GetString(1),
+                SizeBytes = size,
+                RunningState = runningState,
+                Status = statusText.Equals("USING", StringComparison.OrdinalIgnoreCase) || statusText.Equals("运行中", StringComparison.OrdinalIgnoreCase)
+                    ? RecordStatusEnum.USING : RecordStatusEnum.FORBIDDEN,
+                LastActivityAt = reader.IsDBNull(5) || !DateTime.TryParse(reader.GetString(5), out var activity) ? null : activity
+            });
+        }
+        return list;
+    }
 
+    public List<FileChangeRecord> GetChangeRecordsUnderPath(string path, int limit = 100)
+    {
+        var list = new List<FileChangeRecord>();
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = @"SELECT Timestamp, ChangeType, FullPath, FileName, Directory, SizeBytes, SourceProcess
+                                FROM ChangeRecords
+                                WHERE FullPath = @Path OR FullPath LIKE @Prefix ESCAPE '\'
+                                ORDER BY Id DESC LIMIT @Limit;";
+        command.Parameters.AddWithValue("@Path", path);
+        command.Parameters.AddWithValue("@Prefix", EscapeLikePattern(path.TrimEnd('\\')) + "\\%");
+        command.Parameters.AddWithValue("@Limit", Math.Clamp(limit, 1, 5000));
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            list.Add(new FileChangeRecord
+            {
+                Timestamp = DateTime.Parse(reader.GetString(0)),
+                ChangeType = Enum.Parse<ChangeType>(reader.GetString(1)),
+                FullPath = reader.GetString(2),
+                FileName = reader.GetString(3),
+                Directory = reader.GetString(4),
+                SizeBytes = reader.IsDBNull(5) ? null : reader.GetInt64(5),
+                SourceProcess = reader.IsDBNull(6) ? null : reader.GetString(6)
+            });
+        }
+        return list;
+    }
 
+    private static string EscapeLikePattern(string value) =>
+        value.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_");
+
+    public void SaveWatchingApplication(WatchingExeInfo application)
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = @"INSERT INTO WatchingExeInfo (ExeName, FullPath, SizeBytes, RunningState, MonitoringState, CreatedAt, UpdatedAt, LastActivityAt)
+            VALUES (@Name, @Path, @Size, @Running, @Status, @Now, @Now, @Activity)
+            ON CONFLICT(FullPath) DO UPDATE SET ExeName = @Name, SizeBytes = @Size, MonitoringState = @Status, UpdatedAt = @Now, LastActivityAt = @Activity;";
+        command.Parameters.AddWithValue("@Name", application.ExeName);
+        command.Parameters.AddWithValue("@Path", application.FullPath);
+        command.Parameters.AddWithValue("@Size", application.SizeBytes.HasValue ? application.SizeBytes.Value : 0L);
+        command.Parameters.AddWithValue("@Running", application.UsesProcessIdentity && System.Diagnostics.Process.GetProcessesByName(application.ExeName).Length > 0 ? "运行中" : "未运行");
+        command.Parameters.AddWithValue("@Status", application.Status.ToString());
+        command.Parameters.AddWithValue("@Now", DateTime.Now.ToString("O"));
+        command.Parameters.AddWithValue("@Activity", application.LastActivityAt?.ToString("O") ?? (object)DBNull.Value);
+        command.ExecuteNonQuery();
+    }
+
+    public void DeleteWatchingApplication(string fullPath)
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM WatchingExeInfo WHERE FullPath = @Path;";
+        command.Parameters.AddWithValue("@Path", fullPath);
+        command.ExecuteNonQuery();
+    }
+
+    public void UpdateWatchingApplicationActivity(string exeName, DateTime activityTime)
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE WatchingExeInfo SET LastActivityAt = @Activity, UpdatedAt = @Now WHERE ExeName = @Name;";
+        command.Parameters.AddWithValue("@Name", WatchingExeInfo.NormalizeProcessName(exeName));
+        command.Parameters.AddWithValue("@Activity", activityTime.ToString("O"));
+        command.Parameters.AddWithValue("@Now", DateTime.Now.ToString("O"));
+        command.ExecuteNonQuery();
+    }
 
     #endregion
 

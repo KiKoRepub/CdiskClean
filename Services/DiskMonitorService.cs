@@ -21,6 +21,8 @@ public class DiskMonitorService : IDisposable
 
     public List<IgnoreProcessRecord> IgnoreProcessRecords { get; } = new();
 
+    public List<WatchingExeInfo> WatchingApplications { get; } = new();
+
     private readonly ConcurrentDictionary<string, FileSystemWatcher> _watcherMap =
         new(StringComparer.OrdinalIgnoreCase);
 
@@ -56,7 +58,9 @@ public class DiskMonitorService : IDisposable
         // 存进 监视列表，ETW 白名单
         WatchDirectories.AddRange(usingFolderList);
         // 原子操作
-        _etwService.OperateWriteFolderArr(usingFolderList.Select(f => f.Path).ToArray());
+        _etwService.OperateWriteFolderArr(usingFolderList
+            .Where(f => f.Status == RecordStatusEnum.USING)
+            .Select(f => f.Path).ToArray());
     }
 
     /// <summary>初始化默认监视目录（数据库为空时使用）</summary>
@@ -64,7 +68,9 @@ public class DiskMonitorService : IDisposable
     {
         WatchDirectories.Clear();
         WatchDirectories.AddRange(WatchingDirectory.GetDefaultDirectories());
-        _etwService.OperateWriteFolderArr(WatchDirectories.Select(d => d.Path).ToArray());
+        _etwService.OperateWriteFolderArr(WatchDirectories
+            .Where(d => d.Status == RecordStatusEnum.USING)
+            .Select(d => d.Path).ToArray());
     }
 
     public void Start(string processName)
@@ -155,9 +161,18 @@ public class DiskMonitorService : IDisposable
         if (item != null)
         {
             if (status == RecordStatusEnum.DELETED)
+            {
                 WatchDirectories.Remove(item);
+                _etwService.OperateWriteFolderArr(path, EtwListOperation.Remove);
+            }
             else
+            {
                 item.Status = status;
+                if (status == RecordStatusEnum.USING)
+                    _etwService.OperateWriteFolderArr(path, EtwListOperation.Add);
+                else
+                    _etwService.OperateWriteFolderArr(path, EtwListOperation.Remove);
+            }
         }
 
         if (status == RecordStatusEnum.USING && IsRunning)
@@ -200,6 +215,56 @@ public class DiskMonitorService : IDisposable
         _etwService.OperateIgnoreProcessArr(
             records.Where(r => r.Status == RecordStatusEnum.USING)
                    .Select(r => r.ProcessName).ToArray());
+    }
+
+    public void LoadWatchingApplications(List<WatchingExeInfo> applications)
+    {
+        lock (_lock)
+        {
+            WatchingApplications.Clear();
+            WatchingApplications.AddRange(applications.Where(a => a.Status != RecordStatusEnum.DELETED));
+        }
+    }
+
+    public WatchingExeInfo AddWatchingApplication(string value)
+    {
+        var application = WatchingExeInfo.Create(value);
+        if (string.IsNullOrWhiteSpace(application.ExeName))
+            throw new ArgumentException("应用程序名不能为空", nameof(value));
+
+        lock (_lock)
+        {
+            var existing = WatchingApplications.FirstOrDefault(item =>
+                string.Equals(item.FullPath, application.FullPath, StringComparison.OrdinalIgnoreCase));
+            if (existing != null) return existing;
+            WatchingApplications.Add(application);
+        }
+        return application;
+    }
+
+    public void SetWatchingApplicationStatus(string fullPath, RecordStatusEnum status)
+    {
+        lock (_lock)
+        {
+            var item = WatchingApplications.FirstOrDefault(application =>
+                string.Equals(application.FullPath, fullPath, StringComparison.OrdinalIgnoreCase));
+            if (item == null) return;
+            if (status == RecordStatusEnum.DELETED) WatchingApplications.Remove(item);
+            else item.Status = status;
+        }
+    }
+
+    private bool IsApplicationAllowed(string? processName)
+    {
+        if (_currentMode != MonitorMode.EXE) return true;
+        if (string.IsNullOrWhiteSpace(processName)) return false;
+        var normalized = WatchingExeInfo.NormalizeProcessName(processName);
+        lock (_lock)
+        {
+            return WatchingApplications.Any(application =>
+                application.Status == RecordStatusEnum.USING &&
+                string.Equals(WatchingExeInfo.NormalizeProcessName(application.ExeName), normalized, StringComparison.OrdinalIgnoreCase));
+        }
     }
 
     /// <summary>添加忽略进程并同步 ETW 黑名单（已存在则返回现有记录）</summary>
@@ -300,14 +365,16 @@ public class DiskMonitorService : IDisposable
             SourceProcess = processName
         };
 
-        if (processName != null)
-        {
-            if (needIgnoreProcess(processName)) return;
+            if (processName != null)
+            {
+            if (needIgnoreProcess(processName) || !IsApplicationAllowed(processName)) return;
             PublishRecord(record);
             return;
-        }
+            }
 
-        EnqueuePending(record, e.FullPath, attributionNotBefore);
+            if (_currentMode == MonitorMode.EXE) return;
+
+            EnqueuePending(record, e.FullPath, attributionNotBefore);
     }
 
     private bool needIgnoreProcess(string processName)
@@ -443,9 +510,11 @@ public class DiskMonitorService : IDisposable
             if (processName != null)
             {
                 query.Record.SourceProcess = processName;
-                if (needIgnoreProcess(processName))
+                if (needIgnoreProcess(processName) || !IsApplicationAllowed(processName))
                     return;
             }
+
+            if (_currentMode == MonitorMode.EXE) return;
 
             PublishRecord(query.Record);
         }
@@ -504,7 +573,15 @@ public class DiskMonitorService : IDisposable
 
     private void StartOnExeMode(string processName)
     {
-        _etwService.setWatchProcess(processName);   
+        _etwService.setWatchProcess(processName);
+        lock (_lock)
+        {
+            foreach (var item in WatchDirectories)
+            {
+                if (item.Status == RecordStatusEnum.USING)
+                    StartWatchingInternal(item.Path, item.IncludeSubdirs);
+            }
+        }
     }
 
     internal void StartMonitor(string processName)

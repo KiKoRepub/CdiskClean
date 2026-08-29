@@ -1,4 +1,5 @@
 using CdiskClean.Helpers;
+using CdiskClean.Models.rules;
 
 namespace CdiskClean;
 
@@ -42,21 +43,37 @@ public partial class Form1
 
     public void  BindRulesTableCenter() 
     { 
-        
-    
         // 应用程序
 
         rulesExeProcViewTable.Columns = new AntdUI.ColumnCollection
         {
-            MakeColumn("exeName", "应用程序名", "15%", AntdUI.ColumnAlign.Center),
-            MakeColumn("fullPath", "路径", "30%", AntdUI.ColumnAlign.Left),
-            MakeColumn("sizeBytes", "大小", "35%", AntdUI.ColumnAlign.Center),
+            MakeColumn("ExeName", "应用程序名", "15%", AntdUI.ColumnAlign.Center),
+            MakeColumn("DisplayPath", "路径", "30%", AntdUI.ColumnAlign.Left),
+            MakeColumn("SizeBytes", "大小", "20%", AntdUI.ColumnAlign.Center),
             MakeColumn("RunningState", "运行状态", "10%", AntdUI.ColumnAlign.Center),
             MakeColumn("MonitoringState", "监测状态", "10%", AntdUI.ColumnAlign.Center),
         };
 
+        rulesExeProcViewTable.Columns["SizeBytes"]?.SetRender((value, record, _) =>
+            record is WatchingExeInfo app ? app.SizeText : value);
+        rulesExeProcViewTable.Columns["MonitoringState"]?.SetRender((value, record, _) =>
+            record is WatchingExeInfo app ? app.MonitoringState : value);
 
-        //rulesExeProcViewTable.DataSource = 
+        var keyword = input1.Text.Trim();
+        var rows = _monitorService.WatchingApplications
+            .Where(application => keyword.Length == 0
+                || application.ExeName.Contains(keyword, StringComparison.OrdinalIgnoreCase)
+                || application.FullPath.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+            .Select(application =>
+            {
+                application.RunningState = application.UsesProcessIdentity
+                    ? (System.Diagnostics.Process.GetProcessesByName(application.ExeName).Length > 0 ? "运行中" : "未运行")
+                    : (File.Exists(application.FullPath) ? "可用" : "文件不存在");
+                return application;
+            })
+            .ToList();
+        rulesExeProcViewTable.DataSource = new System.ComponentModel.BindingList<WatchingExeInfo>(rows);
+        rulesExeProcViewTable.Refresh();
 
     }
 

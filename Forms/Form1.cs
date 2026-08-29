@@ -20,10 +20,13 @@ namespace CdiskClean
         private readonly DiskMonitorService _monitorService;
         private readonly DiskSpaceService _diskSpaceService;
         private readonly FolderSizeAnalyzer _folderAnalyzer;
+        private readonly FolderPermissionAnalyzer _folderPermissionAnalyzer;
         private readonly NotificationService _notificationService;
         private readonly CleanupService _cleanupService;
         private readonly BindingList<FileChangeRecord> _exeChangeRecords;
         private readonly BindingList<FileChangeRecord> _records;
+        private CancellationTokenSource? _analyzerScanCts;
+        private int _analyzerScanVersion;
 
         private readonly object _recordsLock = new();
         private const int MaxRecords = 5000;
@@ -38,6 +41,7 @@ namespace CdiskClean
         public Form1()
         {
             InitializeComponent();
+            InitializeAnalyzerDetails();
 
             // 记录批量刷新定时器：合并 150ms 内到达的变更记录，避免高频事件逐条刷新网格
             _recordFlushTimer = new System.Windows.Forms.Timer { Interval = 150 };
@@ -78,9 +82,12 @@ namespace CdiskClean
                     _databaseService.SaveIgnoreProcessRecord(process);
             }
 
+            _monitorService.LoadWatchingApplications(_databaseService.GetWatchingApplications());
+
             // 初始化磁盘空间服务和文件夹分析器
             _diskSpaceService = new DiskSpaceService();
             _folderAnalyzer = new FolderSizeAnalyzer();
+            _folderPermissionAnalyzer = new FolderPermissionAnalyzer();
 
             // 初始化右下角提醒服务（与统计按钮相互独立）
             _notificationService = new NotificationService();
@@ -88,6 +95,7 @@ namespace CdiskClean
 
             // 设置数据绑定（关闭自动生成列，使用设计器定义的手动列）
             _records = new BindingList<FileChangeRecord>();
+            _exeChangeRecords = new BindingList<FileChangeRecord>();
             //changesDataGrid.AutoGenerateColumns = false;
             //changesDataGrid.DataSource = _records;
             _gridBoundToRecords = true;
@@ -109,8 +117,14 @@ namespace CdiskClean
             PopulateProcessListView();
             SetupProcessContextMenu();
 
+            input1.TextChanged += rulesExeProcInput_TextChanged;
+            rulesExeProcAddButton.Click += rulesExeProcAddButton_Click;
+            button1.Click += rulesExeProcSelectButton_Click;
+            rulesExeProcViewTable.CellClick += rulesExeProcViewTable_CellClick;
+
 
             ConfigureTableColumns();
+            BindRulesTableCenter();
             // 初始化磁盘清理页
             SetupCleanPage();
 
@@ -565,6 +579,11 @@ namespace CdiskClean
                 return;
             }
 
+            _analyzerScanCts?.Cancel();
+            var cts = new CancellationTokenSource();
+            _analyzerScanCts = cts;
+            var scanVersion = ++_analyzerScanVersion;
+
             scanBtn.Enabled = false;
             selectDirBtn.Enabled = false;
             stopBtn.Enabled = true;
@@ -573,16 +592,27 @@ namespace CdiskClean
 
             try
             {
-                var cts = new CancellationTokenSource();
                 stopBtn.Tag = cts;
 
                 var result = await _folderAnalyzer.ScanFolderAsync(path, cts.Token);
+                cts.Token.ThrowIfCancellationRequested();
+                var permission = await Task.Run(() => _folderPermissionAnalyzer.Analyze(path), cts.Token);
+                cts.Token.ThrowIfCancellationRequested();
+                if (scanVersion != _analyzerScanVersion) return;
+                result.AccessStatus = permission.CanRead
+                    ? result.AccessStatus
+                    : FolderAccessStatus.Denied;
+                result.ErrorMessage ??= permission.ErrorMessage;
+                result.LastScannedAt = DateTime.Now;
 
                 PopulateTreeView(result);
+                UpdateAnalyzerPermission(permission);
             }
             catch (OperationCanceledException)
             {
                 scanProgressBar.Style = ProgressBarStyle.Blocks;
+                if (scanVersion == _analyzerScanVersion)
+                    _analyzerAccessValue.Text = "访问状态：扫描已取消";
             }
             catch (Exception ex)
             {
@@ -592,11 +622,16 @@ namespace CdiskClean
             }
             finally
             {
-                scanProgressBar.Style = ProgressBarStyle.Blocks;
-                scanBtn.Enabled = true;
-                selectDirBtn.Enabled = true;
-                stopBtn.Enabled = false;
-                stopBtn.Tag = null;
+                if (ReferenceEquals(_analyzerScanCts, cts))
+                {
+                    scanProgressBar.Style = ProgressBarStyle.Blocks;
+                    scanBtn.Enabled = true;
+                    selectDirBtn.Enabled = true;
+                    stopBtn.Enabled = false;
+                    _analyzerScanCts = null;
+                    stopBtn.Tag = null;
+                }
+                cts.Dispose();
             }
         }
 
@@ -619,7 +654,8 @@ namespace CdiskClean
 
         private static TreeNode CreateTreeNode(FolderSizeInfo info)
         {
-            var displayText = $"{info.Name}  [{FormatHelper.FormatBytes(info.SizeBytes)}, {info.FileCount} 个文件]";
+            var accessSuffix = info.InaccessibleCount > 0 ? $"，不可访问 {info.InaccessibleCount} 项" : string.Empty;
+            var displayText = $"{info.Name}  [{FormatHelper.FormatBytes(info.SizeBytes)}, {info.FileCount} 个文件{accessSuffix}]";
             var node = new TreeNode(displayText) { Tag = info };
 
             foreach (var sub in info.SubFolders.OrderByDescending(s => s.SizeBytes))
@@ -663,6 +699,7 @@ namespace CdiskClean
         public void closeApplication()
         {
             _isExiting = true;
+            _analyzerScanCts?.Cancel();
             _monitorService.Dispose();
             _etwService.Dispose();
             _notificationService.Dispose();
@@ -761,6 +798,76 @@ namespace CdiskClean
             //ApplyFilter();
         }
 
+        private void rulesExeProcInput_TextChanged(object? sender, EventArgs e) => BindRulesTableCenter();
+
+        private void rulesExeProcAddButton_Click(object? sender, EventArgs e)
+        {
+            var value = input1.Text.Trim();
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                MessageBox.Show("请输入应用程序名或可执行文件路径。", "提示",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            try
+            {
+                var application = _monitorService.AddWatchingApplication(value);
+                _databaseService.SaveWatchingApplication(application);
+                input1.Text = string.Empty;
+                BindRulesTableCenter();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"添加监控应用失败: {ex.Message}", "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void rulesExeProcSelectButton_Click(object? sender, EventArgs e)
+        {
+            using var form = new ProcessPickForm();
+            if (form.ShowDialog() != DialogResult.OK) return;
+            foreach (var processName in form.SelectedProcessNames)
+            {
+                try
+                {
+                    var application = _monitorService.AddWatchingApplication(processName);
+                    _databaseService.SaveWatchingApplication(application);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"添加监控应用失败: {ex.Message}", "错误",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    break;
+                }
+            }
+            BindRulesTableCenter();
+        }
+
+        private void rulesExeProcViewTable_CellClick(object? sender, AntdUI.TableClickEventArgs e)
+        {
+            if (e.Button != MouseButtons.Right || e.Record is not WatchingExeInfo application) return;
+            rulesExeProcViewTable.SetSelected(application);
+            var menu = new System.Windows.Forms.ContextMenuStrip();
+            var nextStatus = application.Status == RecordStatusEnum.USING
+                ? RecordStatusEnum.FORBIDDEN : RecordStatusEnum.USING;
+            menu.Items.Add(nextStatus == RecordStatusEnum.USING ? "启用监控" : "暂停监控").Click += (_, _) =>
+            {
+                application.Status = nextStatus;
+                _databaseService.SaveWatchingApplication(application);
+                _monitorService.SetWatchingApplicationStatus(application.FullPath, nextStatus);
+                BindRulesTableCenter();
+            };
+            menu.Items.Add("从列表删除").Click += (_, _) =>
+            {
+                _databaseService.DeleteWatchingApplication(application.FullPath);
+                _monitorService.SetWatchingApplicationStatus(application.FullPath, RecordStatusEnum.DELETED);
+                BindRulesTableCenter();
+            };
+            menu.Show(Cursor.Position);
+        }
+
         #region 托盘
         int cycleCount = 0;
         private void notifyRotateTimer_Tick(object sender, EventArgs e)
@@ -809,14 +916,15 @@ namespace CdiskClean
 
         private void exeModeRadio_CheckedChanged(object sender, AntdUI.BoolEventArgs e)
         {
-            /*
-             需要 一个组件来向 ETW 获取 记录。
-                FSW 不能满足
-
-
-            BindingList
-             */
-            LogHelper.showDefaultToDoMessage("exeModeRadio_CheckedChanged");
+            if (!exeModeRadio.Checked) return;
+            if (_monitorService.IsRunning)
+            {
+                MessageBox.Show("需要暂停监测才能选择模式。", "提示",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                defaultModeRadio.Checked = true;
+                return;
+            }
+            _monitorService.EnableExeMode();
         }
 
         private void notifyIcon1_MouseDoubleClick(object sender, MouseEventArgs e)

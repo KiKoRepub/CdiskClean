@@ -15,6 +15,7 @@ public interface IDatabaseService
     #region FileChangeRecord
     void SaveChangeRecord(FileChangeRecord record);
     List<FileChangeRecord> GetChangeRecords(int limit = 1000);
+    List<FileChangeRecord> GetChangeRecordsUnderPath(string path, int limit = 100);
     #endregion
     #region ProcessNotificationRecord
     void SaveProcessNotification(ProcessNotificationRecord record);
@@ -24,6 +25,12 @@ public interface IDatabaseService
     void SaveIgnoreProcessRecord(IgnoreProcessRecord record);
     List<IgnoreProcessRecord> GetIgnoreProcessRecords(int limit = 200);
     void DeleteIgnoreProcessRecord(string processName);
+    #endregion
+    #region WatchingExeInfo
+    List<WatchingExeInfo> GetWatchingApplications();
+    void SaveWatchingApplication(WatchingExeInfo application);
+    void DeleteWatchingApplication(string fullPath);
+    void UpdateWatchingApplicationActivity(string exeName, DateTime activityTime);
     #endregion
     #region CleanupRecord
     void SaveCleanupRecord(CleanupRecord record);

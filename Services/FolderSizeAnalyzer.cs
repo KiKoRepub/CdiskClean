@@ -15,7 +15,8 @@ public class FolderSizeAnalyzer
         var result = new FolderSizeInfo
         {
             Path = rootPath,
-            Name = root.Name
+            Name = root.Name,
+            LastScannedAt = DateTime.Now
         };
 
         await Task.Run(() => ScanRecursive(root, result, cancellationToken), cancellationToken);
@@ -38,17 +39,32 @@ public class FolderSizeAnalyzer
                 if (ct.IsCancellationRequested) return;
                 try
                 {
-                    info.SizeBytes += file.Length;
+                    var length = file.Length;
+                    info.SizeBytes += length;
                     info.FileCount++;
+                    var extension = string.IsNullOrWhiteSpace(file.Extension) ? "(无扩展名)" : file.Extension.ToLowerInvariant();
+                    info.ExtensionSizes[extension] = info.ExtensionSizes.GetValueOrDefault(extension) + length;
                 }
                 catch
                 {
-                    // 跳过无权限的文件
+                    info.InaccessibleCount++;
+                    info.AccessStatus = FolderAccessStatus.Partial;
                 }
             }
         }
-        catch (UnauthorizedAccessException) { return; }
-        catch (DirectoryNotFoundException) { return; }
+        catch (UnauthorizedAccessException ex)
+        {
+            info.AccessStatus = FolderAccessStatus.Denied;
+            info.ErrorMessage = ex.Message;
+            info.InaccessibleCount++;
+            return;
+        }
+        catch (DirectoryNotFoundException ex)
+        {
+            info.AccessStatus = FolderAccessStatus.Missing;
+            info.ErrorMessage = ex.Message;
+            return;
+        }
 
         // 扫描子文件夹
         try
@@ -68,7 +84,8 @@ public class FolderSizeAnalyzer
                 var subInfo = new FolderSizeInfo
                 {
                     Path = subDir.FullName,
-                    Name = subDir.Name
+                    Name = subDir.Name,
+                    LastScannedAt = DateTime.Now
                 };
 
                 try
@@ -80,9 +97,23 @@ public class FolderSizeAnalyzer
                 info.SubFolders.Add(subInfo);
                 info.SizeBytes += subInfo.SizeBytes;
                 info.FileCount += subInfo.FileCount;
+                info.InaccessibleCount += subInfo.InaccessibleCount;
+                foreach (var pair in subInfo.ExtensionSizes)
+                    info.ExtensionSizes[pair.Key] = info.ExtensionSizes.GetValueOrDefault(pair.Key) + pair.Value;
+                if (subInfo.AccessStatus != FolderAccessStatus.Accessible)
+                    info.AccessStatus = FolderAccessStatus.Partial;
             }
         }
-        catch (UnauthorizedAccessException) { }
-        catch (DirectoryNotFoundException) { }
+        catch (UnauthorizedAccessException ex)
+        {
+            info.AccessStatus = FolderAccessStatus.Partial;
+            info.ErrorMessage ??= ex.Message;
+            info.InaccessibleCount++;
+        }
+        catch (DirectoryNotFoundException ex)
+        {
+            info.AccessStatus = FolderAccessStatus.Missing;
+            info.ErrorMessage ??= ex.Message;
+        }
     }
 }
