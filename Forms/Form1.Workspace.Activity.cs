@@ -332,6 +332,7 @@ public partial class Form1
                 "进程操作提醒",
                 $"进程 {record.ProcessName} 在 {record.DurationSeconds} 秒 内 对监控目录 执行了 {record.OperationCount} 次操作。",
                 ToolTipIcon.Info);
+            RefreshDashboardInsightsAsync();
         });
     }
 

@@ -44,7 +44,24 @@ public class SqliteDatabaseService : IDatabaseService
 
         cmd.ExecuteNonQuery();
         EnsureWatchingApplicationColumns(connection);
+        EnsureCleanupRecordColumns(connection);
         TrimHistoryTables(connection);
+    }
+
+    private static void EnsureCleanupRecordColumns(SqliteConnection connection)
+    {
+        var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        using (var query = connection.CreateCommand())
+        {
+            query.CommandText = "PRAGMA table_info(CleanupRecords);";
+            using var reader = query.ExecuteReader();
+            while (reader.Read()) columns.Add(reader.GetString(1));
+        }
+
+        if (columns.Contains("Category")) return;
+        using var command = connection.CreateCommand();
+        command.CommandText = "ALTER TABLE CleanupRecords ADD COLUMN Category TEXT NOT NULL DEFAULT '其他';";
+        command.ExecuteNonQuery();
     }
 
     private static void EnsureWatchingApplicationColumns(SqliteConnection connection)
@@ -314,8 +331,8 @@ public class SqliteDatabaseService : IDatabaseService
         connection.Open();
 
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = @"INSERT INTO CleanupRecords (CleanupTime, FullPath, FileName, SizeBytes, Method, Success, Message, CreatedAt)
-                            VALUES (@Time, @FullPath, @FileName, @Size, @Method, @Success, @Message, @Now);";
+        cmd.CommandText = @"INSERT INTO CleanupRecords (CleanupTime, FullPath, FileName, SizeBytes, Method, Category, Success, Message, CreatedAt)
+                            VALUES (@Time, @FullPath, @FileName, @Size, @Method, @Category, @Success, @Message, @Now);";
 
         var paramList = new List<(string, object)>
         {
@@ -324,6 +341,7 @@ public class SqliteDatabaseService : IDatabaseService
         ("@FileName", record.FileName),
         ("@Size", record.SizeBytes.HasValue ? (object)record.SizeBytes.Value : DBNull.Value),
         ("@Method", record.Method),
+        ("@Category", record.Category),
         ("@Success", record.Success ? 1 : 0),
         ("@Message", record.Message ?? (object)DBNull.Value),
         ("@Now", DateTime.Now.ToString("O"))
@@ -351,7 +369,7 @@ public class SqliteDatabaseService : IDatabaseService
         //int nums = Convert.ToInt32(cmd.ExecuteScalar());
 
         //MessageBox.Show(nums.ToString());
-        cmd.CommandText = @"SELECT Id, CleanupTime, FullPath, FileName, SizeBytes, Method, Success, Message
+        cmd.CommandText = @"SELECT Id, CleanupTime, FullPath, FileName, SizeBytes, Method, Category, Success, Message
                             FROM CleanupRecords ORDER BY Id DESC LIMIT @Limit;";
         cmd.Parameters.AddWithValue("@Limit", limit);
 
@@ -366,8 +384,9 @@ public class SqliteDatabaseService : IDatabaseService
                 FileName = reader.GetString(3),
                 SizeBytes = reader.IsDBNull(4) ? null : reader.GetInt64(4),
                 Method = reader.GetString(5),
-                Success = reader.GetInt32(6) != 0,
-                Message = reader.IsDBNull(7) ? null : reader.GetString(7)
+                Category = reader.IsDBNull(6) ? CleanupCategory.Other.GetDisplayName() : reader.GetString(6),
+                Success = reader.GetInt32(7) != 0,
+                Message = reader.IsDBNull(8) ? null : reader.GetString(8)
             });
         }
 

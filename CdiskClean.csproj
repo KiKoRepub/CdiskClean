@@ -13,7 +13,10 @@
 
   <ItemGroup>
     <Compile Remove="docs\**" />
+    <Compile Remove="testCases\**" />
     <EmbeddedResource Remove="docs\**" />
+    <EmbeddedResource Remove="testCases\**" />
+    <None Remove="testCases\**" />
   </ItemGroup>
 
   <ItemGroup>

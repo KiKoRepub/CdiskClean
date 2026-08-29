@@ -20,6 +20,8 @@ public class CleanupRecord
     /// <summary>清理方式显示名（回收站/永久删除/移动/压缩/mkLink）</summary>
     public string Method { get; set; } = string.Empty;
 
+    public string Category { get; set; } = CleanupCategory.Other.GetDisplayName();
+
     public bool Success { get; set; }
 
     public string? Message { get; set; }
@@ -37,6 +39,7 @@ public class CleanupRecord
                 FileName TEXT NOT NULL,
                 SizeBytes INTEGER,
                 Method TEXT NOT NULL,
+                Category TEXT NOT NULL DEFAULT '其他',
                 Success INTEGER NOT NULL,
                 Message TEXT,
                 CreatedAt TEXT NOT NULL

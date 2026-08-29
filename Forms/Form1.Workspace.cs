@@ -75,7 +75,10 @@ public partial class Form1
         workspacePageSubtitle.Text = subtitle;
 
         if (id == DashboardPageId)
+        {
             RefreshDashboardMetrics();
+            if (IsHandleCreated) RefreshDashboardInsightsAsync();
+        }
         else if (id == RecordsPageId)
             RefreshRecordsCenter();
     }
@@ -101,6 +104,7 @@ public partial class Form1
     {
         var selected = GetCheckedEntries();
         cleanupSelectionLabel.Text = $"已选择 {selected.Count:N0} 项 / {FormatHelper.FormatBytes(selected.Sum(e => e.SizeBytes))}";
+        UpdateCleanupCategoryCheckStates();
     }
 
     private void WorkspaceFormClosing(object? sender, FormClosingEventArgs e)
@@ -197,13 +201,14 @@ public partial class Form1
         // 记录中心-清理历史
         cleanHistoryTable.Columns = new AntdUI.ColumnCollection
             {
-                MakeColumn("CleanupTime", "清理时间", "16%"),
-                MakeColumn("FullPath", "原始路径", "28%", AntdUI.ColumnAlign.Left),
-                MakeColumn("FileName", "文件名", "16%"),
-                MakeColumn("Method", "清理方式", "10%"),
-                MakeColumn("Message", "处理结果", "14%", AntdUI.ColumnAlign.Left),
+                MakeColumn("CleanupTime", "清理时间", "14%"),
+                MakeColumn("FullPath", "原始路径", "22%", AntdUI.ColumnAlign.Left),
+                MakeColumn("FileName", "文件名", "13%"),
+                MakeColumn("Method", "清理方式", "9%"),
+                MakeColumn("Category", "分类", "13%"),
+                MakeColumn("Message", "处理结果", "12%", AntdUI.ColumnAlign.Left),
                 MakeColumn("SizeText", "文件大小", "10%"),
-                MakeColumn("ResultText", "状态", "6%")
+                MakeColumn("ResultText", "状态", "7%")
             };
         cleanHistoryTable.Columns["CleanupTime"]?.SetDisplayFormat("yyyy-MM-dd HH:mm:ss");
     }

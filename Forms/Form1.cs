@@ -23,6 +23,7 @@ namespace CdiskClean
         private readonly FolderPermissionAnalyzer _folderPermissionAnalyzer;
         private readonly NotificationService _notificationService;
         private readonly CleanupService _cleanupService;
+        private readonly DashboardQueryService _dashboardQueryService;
         private readonly BindingList<FileChangeRecord> _exeChangeRecords;
         private readonly BindingList<FileChangeRecord> _records;
         private CancellationTokenSource? _analyzerScanCts;
@@ -57,6 +58,7 @@ namespace CdiskClean
 
             // 清理服务（清理期间监控联动过滤自身动作）
             _cleanupService = new CleanupService(_databaseService);
+            _dashboardQueryService = new DashboardQueryService(_databaseService);
 
             // 从数据库加载监视目录（空则用默认列表）
             var savedDirs = _databaseService.GetWatchDirectories();
@@ -127,6 +129,7 @@ namespace CdiskClean
             BindRulesTableCenter();
             // 初始化磁盘清理页
             SetupCleanPage();
+            SetupDashboardEnhancements();
 
             // 统一外观：设计器布局 + 原生控件样式（AntdUI 控件样式由自身 Type 管理）
             UiTheme.Apply(this);
@@ -151,6 +154,7 @@ namespace CdiskClean
             RefreshDiskInfo();
 
             BindActivityCenter(_records);
+            RefreshDashboardInsightsAsync();
         }
 
         // ==================== 监视目录列表 ====================
@@ -700,6 +704,13 @@ namespace CdiskClean
         {
             _isExiting = true;
             _analyzerScanCts?.Cancel();
+            _cleanScanCts?.Cancel();
+            _cleanExecCts?.Cancel();
+            _dashboardQuickCleanupCts?.Cancel();
+            _recordFlushTimer.Stop();
+            _recordFlushTimer.Dispose();
+            _cleanupCategoryToolTip?.Dispose();
+            _dashboardToolTip?.Dispose();
             _monitorService.Dispose();
             _etwService.Dispose();
             _notificationService.Dispose();

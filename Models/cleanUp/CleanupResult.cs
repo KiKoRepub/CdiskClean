@@ -13,4 +13,6 @@ public class CleanupResult
 
     /// <summary>估算释放的空间（永久删除=文件大小；压缩=原大小-压缩包大小）</summary>
     public long FreedBytes { get; set; }
+
+    public Dictionary<CleanupCategory, CleanupCategoryResult> CategoryResults { get; } = new();
 }

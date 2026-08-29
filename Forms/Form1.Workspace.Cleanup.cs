@@ -46,6 +46,14 @@ public partial class Form1
     private CancellationTokenSource? _cleanScanCts;
     private CancellationTokenSource? _cleanExecCts;
     private bool _treeUpdating;
+    private bool _categoryUpdating;
+    private IReadOnlyList<CleanupCandidate> _cleanCandidates = Array.Empty<CleanupCandidate>();
+    private IReadOnlyDictionary<string, CleanupCandidate> _cleanCandidatesByPath =
+        new Dictionary<string, CleanupCandidate>(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<CleanupCategory, System.Windows.Forms.CheckBox> _cleanupCategoryChecks = new();
+    private FlowLayoutPanel? _cleanupCategoryPanel;
+    private System.Windows.Forms.ComboBox? _cleanupCategoryFilter;
+    private ToolTip? _cleanupCategoryToolTip;
 
     /// <summary>树节点数量上限，超过则仅显示目录节点（文件通过勾选目录整体清理）</summary>
     private const int MaxCleanTreeNodes = 50000;
@@ -61,10 +69,80 @@ public partial class Form1
                 (cleanMklinkRadio, CleanupMethod.Mklink)
             };
         SetupFrequentListView();
+        SetupCleanupCategoryControls();
         LayoutCleanupMethodPanel(cleanupMethodPanel);
         UpdateTargetBoxState();
         RefreshFrequentPaths();
         RefreshCleanHistory();
+    }
+
+    private void SetupCleanupCategoryControls()
+    {
+        cleanSelectAllBtn.Text = "推荐全选";
+        cleanSelectAllBtn.Width = 92;
+        cleanupSelectionBar.Width = 530;
+
+        cleanupTreeLayout.SetRow(cleanTreeView, 2);
+        cleanupTreeLayout.SetRow(cleanupStatusPanel, 3);
+        cleanupTreeLayout.RowCount = 4;
+        cleanupTreeLayout.RowStyles.Clear();
+        cleanupTreeLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 42F));
+        cleanupTreeLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 72F));
+        cleanupTreeLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        cleanupTreeLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34F));
+
+        _cleanupCategoryPanel = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            BackColor = Color.White,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = true,
+            Padding = new Padding(0, 4, 0, 2),
+            Margin = new Padding(0)
+        };
+        _cleanupCategoryFilter = new System.Windows.Forms.ComboBox
+        {
+            DropDownStyle = ComboBoxStyle.DropDownList,
+            Width = 128,
+            Height = 30,
+            Margin = new Padding(0, 2, 8, 2)
+        };
+        _cleanupCategoryFilter.Items.Add("全部分类");
+        foreach (var category in Enum.GetValues<CleanupCategory>())
+            _cleanupCategoryFilter.Items.Add(category.GetDisplayName());
+        _cleanupCategoryFilter.SelectedIndexChanged += (_, _) => ApplyCleanupCategoryFilter();
+        _cleanupCategoryFilter.SelectedIndex = 0;
+        _cleanupCategoryPanel.Controls.Add(_cleanupCategoryFilter);
+
+        _cleanupCategoryToolTip = new ToolTip();
+        foreach (var category in Enum.GetValues<CleanupCategory>())
+        {
+            var checkBox = new System.Windows.Forms.CheckBox
+            {
+                Appearance = Appearance.Button,
+                AutoCheck = false,
+                AutoSize = false,
+                TextAlign = ContentAlignment.MiddleCenter,
+                ThreeState = true,
+                Width = category == CleanupCategory.Installers ? 146 : 106,
+                Height = 30,
+                Margin = new Padding(0, 2, 6, 2),
+                Tag = category,
+                Text = category.GetDisplayName()
+            };
+            checkBox.Click += (_, _) =>
+            {
+                if (_categoryUpdating) return;
+                checkBox.CheckState = checkBox.CheckState == CheckState.Checked
+                    ? CheckState.Unchecked
+                    : CheckState.Checked;
+            };
+            checkBox.CheckStateChanged += cleanupCategoryCheckBox_CheckStateChanged;
+            _cleanupCategoryChecks[category] = checkBox;
+            _cleanupCategoryPanel.Controls.Add(checkBox);
+        }
+
+        cleanupTreeLayout.Controls.Add(_cleanupCategoryPanel, 0, 1);
     }
 
 
@@ -221,11 +299,14 @@ public partial class Form1
         cleanScanProgressBar.Style = ProgressBarStyle.Marquee;
         cleanStatusLabel.Text = "正在扫描...";
         cleanTreeView.Items.Clear();
+        ApplyCleanupCandidates(Array.Empty<CleanupCandidate>());
 
         try
         {
             var entries = await _cleanupService.ScanDirectoryAsync(path, cts.Token);
             if (cts.IsCancellationRequested) return;
+
+            ApplyCleanupCandidates(_cleanupService.Classify(entries));
 
             // 根目录条目（首个目录）已递归汇总全部子项大小，直接取它避免重复累加
             var totalSize = entries.FirstOrDefault(e => e.IsDirectory)?.SizeBytes ?? 0;
@@ -271,11 +352,12 @@ public partial class Form1
     {
         var rootFull = rootPath.TrimEnd('\\');
         var rootItem = await Task.Run(() =>
-            BuildCleanTreeItems(entries, rootFull, totalSize, dirOnly), ct);
+            BuildCleanTreeItems(entries, rootFull, totalSize, dirOnly, _cleanCandidatesByPath), ct);
 
         cleanTreeView.Items.Clear();
         cleanTreeView.Items.Add(rootItem);
         rootItem.Expand = true;
+        ApplyCleanupCategoryFilter();
         UpdateCleanupSelectionSummary();
     }
 
@@ -287,9 +369,11 @@ public partial class Form1
         List<CleanupFileEntry> entries,
         string rootFull,
         long totalSize,
-        bool dirOnly)
+        bool dirOnly,
+        IReadOnlyDictionary<string, CleanupCandidate> candidates)
     {
         var rootName = Path.GetFileName(rootFull);
+        if (string.IsNullOrWhiteSpace(rootName)) rootName = rootFull;
         var rootItem = new TreeItem
         {
             Text = rootName,
@@ -311,7 +395,7 @@ public partial class Form1
             if (string.Equals(entryFull, rootFull, StringComparison.OrdinalIgnoreCase))
                 continue;
 
-            var item = CreateFileTreeItem(entry);
+            var item = CreateFileTreeItem(entry, candidates);
             dirNodes[entryFull] = item;
 
             var parentDir = Path.GetDirectoryName(entryFull) ?? "";
@@ -326,7 +410,7 @@ public partial class Form1
             // 文件节点
             foreach (var entry in entries.Where(e => !e.IsDirectory))
             {
-                var item = CreateFileTreeItem(entry);
+                var item = CreateFileTreeItem(entry, candidates);
 
                 var parentDir = Path.GetDirectoryName(entry.FullPath) ?? "";
                 if (dirNodes.TryGetValue(parentDir.TrimEnd('\\'), out var parent))
@@ -371,12 +455,17 @@ public partial class Form1
     /// <summary>
     /// 创建文件/目录的TreeItem
     /// </summary>
-    private static TreeItem CreateFileTreeItem(CleanupFileEntry entry)
+    private static TreeItem CreateFileTreeItem(
+        CleanupFileEntry entry,
+        IReadOnlyDictionary<string, CleanupCandidate> candidates)
     {
+        candidates.TryGetValue(NormalizeCleanupPath(entry.FullPath), out var candidate);
         var item = new TreeItem
         {
             Text = entry.Name,
-            SubTitle = FormatHelper.FormatBytes(entry.SizeBytes),
+            SubTitle = candidate == null
+                ? FormatHelper.FormatBytes(entry.SizeBytes)
+                : $"{FormatHelper.FormatBytes(entry.SizeBytes)} · {candidate.CategoryText}",
             Tag = entry,
             Checkable = true
         };
@@ -392,7 +481,9 @@ public partial class Form1
         }
 
         // 设置风险等级背景色（简化逻辑：根据文件扩展名判断）
-        item.SetBack(GetRiskLevelColor(entry));
+        item.SetBack(candidate == null
+            ? GetRiskLevelColor(entry)
+            : RiskLevelHelper.GetColor(candidate.RiskLevel));
 
         return item;
     }
@@ -412,6 +503,32 @@ public partial class Form1
         if (_treeUpdating) return;
         if (e.Item == null) return;
 
+        if (e.Item.CheckState == CheckState.Checked && ContainsHighRiskCleanupItem(e.Item))
+        {
+            var confirmed = MessageBox.Show(
+                "当前选择包含高风险文件或目录，可能影响系统、应用修复或卸载。\n\n仍要保留这些选择吗？",
+                "高风险项目确认",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning) == DialogResult.Yes;
+            if (!confirmed)
+            {
+                _treeUpdating = true;
+                try
+                {
+                    e.Item.SetChecked(false);
+                    e.Item.CheckedStrictly(false, true);
+                    if (e.Item.ParentItem != null)
+                        RecalculateCleanupCheckState(e.Item.ParentItem);
+                }
+                finally
+                {
+                    _treeUpdating = false;
+                }
+                UpdateCleanupSelectionSummary();
+                return;
+            }
+        }
+
         _treeUpdating = true;
         try
         {
@@ -428,6 +545,18 @@ public partial class Form1
         UpdateCleanupSelectionSummary();
     }
 
+    private bool ContainsHighRiskCleanupItem(TreeItem item)
+    {
+        if (item.Tag is CleanupFileEntry entry &&
+            _cleanCandidatesByPath.TryGetValue(NormalizeCleanupPath(entry.FullPath), out var candidate) &&
+            candidate.RiskLevel == RiskLevel.High)
+        {
+            return true;
+        }
+
+        return item.Sub.Any(ContainsHighRiskCleanupItem);
+    }
+
     // ==================== 清理树交互（p017 task2） ====================
 
     /// <summary>节点信息气泡（单击节点显示创建时间），懒创建</summary>
@@ -441,15 +570,19 @@ public partial class Form1
     {
         if (e.Item == null) return;
         TreeItem item = e.Item;
-        CleanupFileEntry entry =  item.Tag as CleanupFileEntry;
-          
-        string toShow = "创建时间：" + (entry.IsDirectory 
-                ?  Directory.GetCreationTime(entry.FullPath).ToString() 
-                : File.GetCreationTime(entry.FullPath).ToString());
-        if (!entry.LastWriteTime.IsNull())
+        if (item.Tag is not CleanupFileEntry entry) return;
+
+        var createdAt = entry.IsDirectory
+            ? Directory.GetCreationTime(entry.FullPath)
+            : File.GetCreationTime(entry.FullPath);
+        string toShow = $"创建时间：{createdAt}";
+        if (entry.LastWriteTime.HasValue)
         {
-            toShow += "\n修改时间：" + entry.LastWriteTime.ToString();
+            toShow += "\n修改时间：" + entry.LastWriteTime;
         }
+
+        if (_cleanCandidatesByPath.TryGetValue(NormalizeCleanupPath(entry.FullPath), out var candidate))
+            toShow += $"\n分类：{candidate.CategoryText} · {candidate.RiskText}\n建议：{candidate.Recommendation}";
 
         Popover.open(cleanTreeView, entry.Name, toShow, TAlign.Top);
 
@@ -515,7 +648,7 @@ public partial class Form1
 
     private void cleanSelectAllBtn_Click(object? sender, EventArgs e)
     {
-        SetAllCleanNodesChecked(true);
+        SelectRecommendedCleanNodes();
     }
 
     private void cleanSelectNoneBtn_Click(object? sender, EventArgs e)
@@ -541,6 +674,42 @@ public partial class Form1
             _treeUpdating = false;
         }
         UpdateCleanupSelectionSummary();
+    }
+
+    private void SelectRecommendedCleanNodes()
+    {
+        if (cleanTreeView.Items.Count == 0) return;
+
+        _treeUpdating = true;
+        try
+        {
+            foreach (var root in cleanTreeView.Items)
+            {
+                SetRecommendedState(root);
+                RecalculateCleanupCheckState(root);
+            }
+        }
+        finally
+        {
+            _treeUpdating = false;
+        }
+        UpdateCleanupSelectionSummary();
+    }
+
+    private void SetRecommendedState(TreeItem item)
+    {
+        if (item.Sub.Count > 0)
+        {
+            foreach (var child in item.Sub)
+                SetRecommendedState(child);
+            return;
+        }
+
+        if (item.Tag is CleanupFileEntry entry &&
+            _cleanCandidatesByPath.TryGetValue(NormalizeCleanupPath(entry.FullPath), out var candidate))
+        {
+            item.SetChecked(candidate.RiskLevel != RiskLevel.High);
+        }
     }
 
     private void cleanTargetSelectBtn_Click(object? sender, EventArgs e)
@@ -583,7 +752,9 @@ public partial class Form1
         var list = new List<CleanupFileEntry>();
         if (cleanTreeView.Items.Count > 0)
             GetCheckedItems(cleanTreeView.Items[0].Sub, list);
-        return list;
+        return list
+            .DistinctBy(entry => NormalizeCleanupPath(entry.FullPath), StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     private async void cleanBtn_Click(object? sender, EventArgs e)
@@ -649,8 +820,14 @@ public partial class Form1
         _cleanExecCts = new CancellationTokenSource();
         var cts = _cleanExecCts;
 
-        cleanButton.Enabled = false;
+        cleanButton.Enabled = true;
         cleanButton.Text = "取消清理";
+        cleanScanBtn.Enabled = false;
+        cleanTreeView.Enabled = false;
+        if (_cleanupCategoryPanel != null) _cleanupCategoryPanel.Enabled = false;
+        foreach (var (radio, _) in _cleanupMethodRadios) radio.Enabled = false;
+        cleanTargetTextBox.Enabled = false;
+        cleanTargetSelectBtn.Enabled = false;
         cleanScanProgressBar.Style = ProgressBarStyle.Marquee;
         var progress = new Progress<string>(s => cleanStatusLabel.Text = s);
 
@@ -665,6 +842,11 @@ public partial class Form1
             long freedDelta = Math.Max(0, GetFreeSpaceSafe(freedDriveRoot) - freeBefore);
 
             var summary = $"清理完成：成功 {result.Success} 项，失败 {result.Fail} 项";
+            var categorySummary = string.Join("，", result.CategoryResults.Values
+                .OrderBy(item => item.Category)
+                .Select(item => $"{item.Category.GetDisplayName()} {item.Success}/{item.Success + item.Fail}"));
+            if (!string.IsNullOrWhiteSpace(categorySummary))
+                summary += $"\n分类结果：{categorySummary}";
             if (method is CleanupMethod.PermanentDelete or CleanupMethod.Compress)
                 summary += $"\n释放空间约 {FormatHelper.FormatBytes(freedDelta)}";
             MessageBox.Show(summary, "清理完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -673,6 +855,7 @@ public partial class Form1
             RefreshDiskInfo();
             RefreshCleanHistory();
             RefreshFrequentPaths();
+            RefreshDashboardInsightsAsync();
 
             // 清理后自动重新扫描，刷新剩余文件
             if (Directory.Exists(cleanPathTextBox.Text.Trim()))
@@ -684,6 +867,7 @@ public partial class Form1
             RefreshDiskInfo();
             RefreshCleanHistory();
             RefreshFrequentPaths();
+            RefreshDashboardInsightsAsync();
         }
         catch (Exception ex)
         {
@@ -695,6 +879,11 @@ public partial class Form1
             if (_cleanExecCts == cts) _cleanExecCts = null;
             cleanButton.Enabled = true;
             cleanButton.Text = "清理选中文件";
+            cleanScanBtn.Enabled = true;
+            cleanTreeView.Enabled = true;
+            if (_cleanupCategoryPanel != null) _cleanupCategoryPanel.Enabled = true;
+            foreach (var (radio, _) in _cleanupMethodRadios) radio.Enabled = true;
+            UpdateTargetBoxState();
             cleanScanProgressBar.Style = ProgressBarStyle.Blocks;
         }
     }
@@ -737,6 +926,189 @@ public partial class Form1
         cleanHistoryEmptyLabel.Visible = records.Count == 0;
 
         // 列配置统一在 ConfigureTableColumns() 中完成，此处只需绑定数据
+    }
+
+    private void ApplyCleanupCandidates(IReadOnlyList<CleanupCandidate> candidates)
+    {
+        _cleanCandidates = candidates;
+        _cleanCandidatesByPath = candidates.ToDictionary(
+            candidate => NormalizeCleanupPath(candidate.Entry.FullPath),
+            candidate => candidate,
+            StringComparer.OrdinalIgnoreCase);
+
+        _categoryUpdating = true;
+        try
+        {
+            foreach (var category in Enum.GetValues<CleanupCategory>())
+            {
+                var items = candidates
+                    .Where(candidate => !candidate.Entry.IsDirectory && candidate.Category == category)
+                    .ToList();
+                var checkBox = _cleanupCategoryChecks[category];
+                checkBox.CheckState = CheckState.Unchecked;
+                checkBox.Text = $"{category.GetDisplayName()} {items.Count}";
+                checkBox.Enabled = items.Count > 0;
+                var riskText = items.Any(item => item.RiskLevel == RiskLevel.High)
+                    ? "包含高风险项，整类选择前会再次确认。"
+                    : "整类选择会同步清理树三态。";
+                _cleanupCategoryToolTip?.SetToolTip(checkBox,
+                    $"{items.Count} 项 / {FormatHelper.FormatBytes(items.Sum(item => item.Entry.SizeBytes))}\n{riskText}");
+            }
+        }
+        finally
+        {
+            _categoryUpdating = false;
+        }
+    }
+
+    private void cleanupCategoryCheckBox_CheckStateChanged(object? sender, EventArgs e)
+    {
+        if (_categoryUpdating || sender is not System.Windows.Forms.CheckBox { Tag: CleanupCategory category } checkBox)
+            return;
+        if (checkBox.CheckState == CheckState.Indeterminate) return;
+
+        var shouldCheck = checkBox.Checked;
+        if (shouldCheck && _cleanCandidates.Any(candidate =>
+                candidate.Category == category && candidate.RiskLevel == RiskLevel.High) &&
+            MessageBox.Show(
+                $"“{category.GetDisplayName()}”中包含高风险项，可能影响系统、应用修复或卸载。\n\n仍要选择整个分类吗？",
+                "高风险分类确认",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning) != DialogResult.Yes)
+        {
+            _categoryUpdating = true;
+            checkBox.CheckState = CheckState.Unchecked;
+            _categoryUpdating = false;
+            return;
+        }
+
+        _treeUpdating = true;
+        try
+        {
+            foreach (var root in cleanTreeView.Items)
+            {
+                SetCleanupCategoryState(root, category, shouldCheck);
+                RecalculateCleanupCheckState(root);
+            }
+        }
+        finally
+        {
+            _treeUpdating = false;
+        }
+        UpdateCleanupSelectionSummary();
+    }
+
+    private void SetCleanupCategoryState(TreeItem item, CleanupCategory category, bool isChecked)
+    {
+        if (item.Sub.Count > 0)
+        {
+            foreach (var child in item.Sub)
+                SetCleanupCategoryState(child, category, isChecked);
+            return;
+        }
+
+        if (item.Tag is CleanupFileEntry entry &&
+            _cleanCandidatesByPath.TryGetValue(NormalizeCleanupPath(entry.FullPath), out var candidate) &&
+            candidate.Category == category)
+        {
+            item.SetChecked(isChecked);
+        }
+    }
+
+    private static CheckState RecalculateCleanupCheckState(TreeItem item)
+    {
+        if (item.Sub.Count == 0) return item.CheckState;
+
+        var childStates = item.Sub
+            .Select(RecalculateCleanupCheckState)
+            .ToList();
+        var state = childStates.All(child => child == CheckState.Checked)
+            ? CheckState.Checked
+            : childStates.All(child => child == CheckState.Unchecked)
+                ? CheckState.Unchecked
+                : CheckState.Indeterminate;
+        if (item.Checkable) item.SetChecked(state);
+        return state;
+    }
+
+    private void ApplyCleanupCategoryFilter()
+    {
+        if (_cleanupCategoryFilter == null || cleanTreeView.Items.Count == 0) return;
+        CleanupCategory? category = _cleanupCategoryFilter.SelectedIndex <= 0
+            ? null
+            : Enum.GetValues<CleanupCategory>()[_cleanupCategoryFilter.SelectedIndex - 1];
+        foreach (var root in cleanTreeView.Items)
+        {
+            root.Visible = true;
+            ApplyCleanupCategoryVisibility(root.Sub, category);
+        }
+    }
+
+    private bool ApplyCleanupCategoryVisibility(TreeItemCollection items, CleanupCategory? category)
+    {
+        var anyVisible = false;
+        foreach (var item in items)
+        {
+            var childVisible = ApplyCleanupCategoryVisibility(item.Sub, category);
+            var ownVisible = category == null ||
+                item.Tag is CleanupFileEntry entry &&
+                _cleanCandidatesByPath.TryGetValue(NormalizeCleanupPath(entry.FullPath), out var candidate) &&
+                candidate.Category == category;
+            item.Visible = ownVisible || childVisible;
+            anyVisible |= item.Visible;
+        }
+        return anyVisible;
+    }
+
+    private void UpdateCleanupCategoryCheckStates()
+    {
+        _categoryUpdating = true;
+        try
+        {
+            foreach (var category in Enum.GetValues<CleanupCategory>())
+            {
+                var items = new List<TreeItem>();
+                foreach (var root in cleanTreeView.Items)
+                    CollectCleanupCategoryLeafItems(root, category, items);
+                if (items.Count == 0) continue;
+
+                _cleanupCategoryChecks[category].CheckState = items.All(item => item.CheckState == CheckState.Checked)
+                    ? CheckState.Checked
+                    : items.All(item => item.CheckState == CheckState.Unchecked)
+                        ? CheckState.Unchecked
+                        : CheckState.Indeterminate;
+            }
+        }
+        finally
+        {
+            _categoryUpdating = false;
+        }
+    }
+
+    private void CollectCleanupCategoryLeafItems(
+        TreeItem item,
+        CleanupCategory category,
+        List<TreeItem> target)
+    {
+        if (item.Sub.Count > 0)
+        {
+            foreach (var child in item.Sub)
+                CollectCleanupCategoryLeafItems(child, category, target);
+            return;
+        }
+
+        if (item.Tag is CleanupFileEntry entry &&
+            _cleanCandidatesByPath.TryGetValue(NormalizeCleanupPath(entry.FullPath), out var candidate) &&
+            candidate.Category == category)
+        {
+            target.Add(item);
+        }
+    }
+
+    private static string NormalizeCleanupPath(string path)
+    {
+        try { return Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar); }
+        catch { return path.TrimEnd(Path.DirectorySeparatorChar); }
     }
 
     /// <summary>

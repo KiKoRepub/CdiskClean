@@ -26,15 +26,22 @@ public enum CleanupMethod
 public class CleanupService
 {
     private readonly IDatabaseService _databaseService;
+    private readonly CleanupClassifier _classifier;
 
     // 清理期间被操作的原路径快照 + 目标目录，用于让 FSW/ETW 监控忽略本次清理产生的事件
     private volatile string[] _activePathSnapshot = Array.Empty<string>();
     private volatile string? _activeTargetDir;
 
-    public CleanupService(IDatabaseService databaseService)
+    public CleanupService(IDatabaseService databaseService, CleanupClassifier? classifier = null)
     {
         _databaseService = databaseService;
+        _classifier = classifier ?? new CleanupClassifier();
     }
+
+    public CleanupCandidate Classify(CleanupFileEntry entry) => _classifier.Classify(entry);
+
+    public IReadOnlyList<CleanupCandidate> Classify(IEnumerable<CleanupFileEntry> entries) =>
+        _classifier.Classify(entries);
 
     #region 监控联动（清理期间过滤自身事件）
 
@@ -234,6 +241,7 @@ public class CleanupService
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     var entry = entries[i];
+                    var candidate = _classifier.Classify(entry);
                     progress?.Report($"正在清理 ({i + 1}/{entries.Count}): {entry.FullPath}");
 
                     var ok = ExecuteSingle(entry, method, targetDir, out var error, out var freed);
@@ -247,6 +255,14 @@ public class CleanupService
                         result.Fail++;
                         progress?.Report($"清理失败: {entry.FullPath} - {error}");
                     }
+
+                    if (!result.CategoryResults.TryGetValue(candidate.Category, out var categoryResult))
+                    {
+                        categoryResult = new CleanupCategoryResult { Category = candidate.Category };
+                        result.CategoryResults[candidate.Category] = categoryResult;
+                    }
+                    if (ok) categoryResult.Success++;
+                    else categoryResult.Fail++;
 
                     SaveRecord(entry, method, ok, error);
                 }
@@ -285,6 +301,9 @@ public class CleanupService
             error = "文件已不存在";
             return true;
         }
+
+        if (!ValidateSnapshot(entry, full, out error))
+            return false;
 
         try
         {
@@ -345,6 +364,48 @@ public class CleanupService
         }
 
         return true;
+    }
+
+    private static bool ValidateSnapshot(CleanupFileEntry entry, string fullPath, out string? error)
+    {
+        error = null;
+        try
+        {
+            var attributes = File.GetAttributes(fullPath);
+            if (attributes.HasFlag(FileAttributes.ReparsePoint))
+            {
+                error = "重解析点不会被自动清理";
+                return false;
+            }
+
+            if (entry.IsDirectory) return true;
+
+            var info = new FileInfo(fullPath);
+            if (info.Length != entry.SizeBytes)
+            {
+                error = "扫描后文件大小已变化，请重新扫描";
+                return false;
+            }
+
+            if (entry.LastWriteTime.HasValue &&
+                Math.Abs((info.LastWriteTime - entry.LastWriteTime.Value).TotalSeconds) > 2)
+            {
+                error = "扫描后文件内容已变化，请重新扫描";
+                return false;
+            }
+
+            return true;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            error = $"无权限复核: {ex.Message}";
+            return false;
+        }
+        catch (IOException ex)
+        {
+            error = $"无法复核文件状态: {ex.Message}";
+            return false;
+        }
     }
 
     /// <summary>把文件/目录移动到目标目录（重名时自动加时间戳后缀）</summary>
@@ -678,6 +739,7 @@ public class CleanupService
     {
         try
         {
+            var candidate = _classifier.Classify(entry);
             _databaseService.SaveCleanupRecord(new CleanupRecord
             {
                 CleanupTime = DateTime.Now,
@@ -685,6 +747,7 @@ public class CleanupService
                 FileName = entry.Name,
                 SizeBytes = entry.IsDirectory ? (long?)null : entry.SizeBytes,
                 Method = GetMethodDisplayName(method),
+                Category = candidate.CategoryText,
                 Success = success,
                 Message = message
             });
