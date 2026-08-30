@@ -5,7 +5,7 @@
 ;   dotnet publish CdiskClean.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -o publish\win-x64
 
 #define MyAppName "CdiskClean"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "2.0.0"
 #define MyAppExeName "CdiskClean.exe"
 
 [Setup]
@@ -23,7 +23,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=publish
 OutputBaseFilename=CdiskClean-Setup-{#MyAppVersion}
-SetupIconFile=hfGrandTheatre.ico
+SetupIconFile=./icons/default.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2/ultra64
 SolidCompression=yes

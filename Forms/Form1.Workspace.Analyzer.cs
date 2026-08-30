@@ -111,10 +111,10 @@ public partial class Form1
     private static string FormatExtensionSummary(FolderSizeInfo info)
     {
         if (info.ExtensionSizes.Count == 0) return "暂无文件";
-        return string.Join("、", info.ExtensionSizes
+        var largest = info.ExtensionSizes
             .OrderByDescending(pair => pair.Value)
-            .Take(4)
-            .Select(pair => $"{pair.Key} {FormatHelper.FormatBytes(pair.Value)}"));
+            .First();
+        return $"{largest.Key} {FormatHelper.FormatBytes(largest.Value)}";
     }
 
     private void UseAnalyzerPathForCleanup()

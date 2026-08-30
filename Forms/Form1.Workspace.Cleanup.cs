@@ -447,7 +447,7 @@ public partial class Form1
         if (_treeUpdating) return;
         if (e.Item == null) return;
 
-        if (e.Item.CheckState == CheckState.Checked && ContainsHighRiskCleanupItem(e.Item))
+        if (e.Value && ContainsHighRiskCleanupItem(e.Item))
         {
             var confirmed = MessageBox.Show(
                 "当前选择包含高风险文件或目录，可能影响系统、应用修复或卸载。\n\n仍要保留这些选择吗？",
@@ -459,10 +459,10 @@ public partial class Form1
                 _treeUpdating = true;
                 try
                 {
-                    e.Item.SetChecked(false);
-                    e.Item.CheckedStrictly(false, true);
-                    if (e.Item.ParentItem != null)
-                        RecalculateCleanupCheckState(e.Item.ParentItem);
+                    // 仅取消勾选高风险项，保留用户此前已勾选的低风险项，
+                    // 避免级联取消导致之前选择的节点被一并清掉。
+                    UncheckHighRiskSubtree(e.Item);
+                    RecalculateCleanupCheckState(e.Item.ParentItem ?? e.Item);
                 }
                 finally
                 {
@@ -476,10 +476,8 @@ public partial class Form1
         _treeUpdating = true;
         try
         {
-            // AntdUI.Tree 在 CheckStrictly=false 时自动处理父子关联
+            // AntdUI.Tree 在 CheckStrictly=true 时自动处理父子关联
             // 这里只需要更新选中摘要
-
-
 
         }
         finally
@@ -499,6 +497,24 @@ public partial class Form1
         }
 
         return item.Sub.Any(ContainsHighRiskCleanupItem);
+    }
+
+    private bool IsHighRiskCleanupItem(TreeItem item) =>
+        item.Tag is CleanupFileEntry entry &&
+        _cleanCandidatesByPath.TryGetValue(NormalizeCleanupPath(entry.FullPath), out var candidate) &&
+        candidate.RiskLevel == RiskLevel.High;
+
+    /// <summary>
+    /// 从指定节点开始，将高风险项取消勾选，而保留其余（低/中风险）节点的既有勾选状态。
+    /// 用于用户在危险提示中取消选择时，不误清除之前已单独勾选的节点。
+    /// </summary>
+    private void UncheckHighRiskSubtree(TreeItem item)
+    {
+        foreach (var child in item.Sub)
+            UncheckHighRiskSubtree(child);
+
+        if (IsHighRiskCleanupItem(item) && item.Checkable && item.Checked)
+            item.SetChecked(false);
     }
 
     // ==================== 清理树交互（p017 task2） ====================
@@ -592,7 +608,7 @@ public partial class Form1
 
     private void cleanSelectAllBtn_Click(object? sender, EventArgs e)
     {
-        SelectRecommendedCleanNodes();
+        SetAllCleanNodesChecked(true);
     }
 
     private void cleanSelectNoneBtn_Click(object? sender, EventArgs e)
@@ -607,10 +623,13 @@ public partial class Form1
         _treeUpdating = true;
         try
         {
-            foreach (var item in cleanTreeView.Items[0].Sub)
+            foreach (var root in cleanTreeView.Items)
             {
-                item.SetChecked(check);
-                item.CheckedStrictly(check, true);
+                foreach (var item in root.Sub)
+                {
+                    SetCleanItemCheckedRecursive(item, check);
+                    RecalculateCleanupCheckState(item);
+                }
             }
         }
         finally
@@ -618,6 +637,13 @@ public partial class Form1
             _treeUpdating = false;
         }
         UpdateCleanupSelectionSummary();
+    }
+
+    private static void SetCleanItemCheckedRecursive(TreeItem item, bool check)
+    {
+        foreach (var child in item.Sub)
+            SetCleanItemCheckedRecursive(child, check);
+        if (item.Checkable) item.SetChecked(check);
     }
 
     private void SelectRecommendedCleanNodes()
