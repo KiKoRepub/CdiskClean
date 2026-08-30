@@ -65,7 +65,8 @@
       "Bash(grep -v \"^.*//\")",
       "Bash(grep -v \"^\\\\s*//\")",
       "Bash(grep -v \"/\\\\*\")",
-      "Bash(taskkill //PID 24892 //F)"
+      "Bash(taskkill //PID 24892 //F)",
+      "Bash(gh release *)"
     ]
   }
 }
