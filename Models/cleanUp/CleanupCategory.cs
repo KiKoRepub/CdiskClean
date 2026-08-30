@@ -21,4 +21,8 @@ public static class CleanupCategoryExtensions
         CleanupCategory.Installers => "安装包/更新残留",
         _ => "其他"
     };
+    
+
 }
+
+

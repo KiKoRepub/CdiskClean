@@ -50,9 +50,8 @@ public partial class Form1
     private IReadOnlyList<CleanupCandidate> _cleanCandidates = Array.Empty<CleanupCandidate>();
     private IReadOnlyDictionary<string, CleanupCandidate> _cleanCandidatesByPath =
         new Dictionary<string, CleanupCandidate>(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<CleanupCategory, System.Windows.Forms.CheckBox> _cleanupCategoryChecks = new();
+    private readonly Dictionary<CleanupCategory, System.Windows.Forms.CheckBox> cleanupCategoryChecks = new();
     private FlowLayoutPanel? _cleanupCategoryPanel;
-    private System.Windows.Forms.ComboBox? _cleanupCategoryFilter;
     private ToolTip? _cleanupCategoryToolTip;
 
     /// <summary>树节点数量上限，超过则仅显示目录节点（文件通过勾选目录整体清理）</summary>
@@ -78,71 +77,16 @@ public partial class Form1
 
     private void SetupCleanupCategoryControls()
     {
-        cleanSelectAllBtn.Text = "推荐全选";
-        cleanSelectAllBtn.Width = 92;
-        cleanupSelectionBar.Width = 530;
+        //cleanSelectAllBtn.Text = "推荐全选";
+        //cleanSelectAllBtn.Width = 92;
+        //cleanupSelectionBar.Width = 530;
 
-        cleanupTreeLayout.SetRow(cleanTreeView, 2);
-        cleanupTreeLayout.SetRow(cleanupStatusPanel, 3);
-        cleanupTreeLayout.RowCount = 4;
-        cleanupTreeLayout.RowStyles.Clear();
-        cleanupTreeLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 42F));
-        cleanupTreeLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 72F));
-        cleanupTreeLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-        cleanupTreeLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34F));
+        // 在这里面做  _cleanupCategoryChecks 的赋值
 
-        _cleanupCategoryPanel = new FlowLayoutPanel
+        foreach (CheckBox checkBox in categoryCheckBoxPanel.Controls)
         {
-            Dock = DockStyle.Fill,
-            BackColor = Color.White,
-            FlowDirection = FlowDirection.LeftToRight,
-            WrapContents = true,
-            Padding = new Padding(0, 4, 0, 2),
-            Margin = new Padding(0)
-        };
-        _cleanupCategoryFilter = new System.Windows.Forms.ComboBox
-        {
-            DropDownStyle = ComboBoxStyle.DropDownList,
-            Width = 128,
-            Height = 30,
-            Margin = new Padding(0, 2, 8, 2)
-        };
-        _cleanupCategoryFilter.Items.Add("全部分类");
-        foreach (var category in Enum.GetValues<CleanupCategory>())
-            _cleanupCategoryFilter.Items.Add(category.GetDisplayName());
-        _cleanupCategoryFilter.SelectedIndexChanged += (_, _) => ApplyCleanupCategoryFilter();
-        _cleanupCategoryFilter.SelectedIndex = 0;
-        _cleanupCategoryPanel.Controls.Add(_cleanupCategoryFilter);
-
-        _cleanupCategoryToolTip = new ToolTip();
-        foreach (var category in Enum.GetValues<CleanupCategory>())
-        {
-            var checkBox = new System.Windows.Forms.CheckBox
-            {
-                Appearance = Appearance.Button,
-                AutoCheck = false,
-                AutoSize = false,
-                TextAlign = ContentAlignment.MiddleCenter,
-                ThreeState = true,
-                Width = category == CleanupCategory.Installers ? 146 : 106,
-                Height = 30,
-                Margin = new Padding(0, 2, 6, 2),
-                Tag = category,
-                Text = category.GetDisplayName()
-            };
-            checkBox.Click += (_, _) =>
-            {
-                if (_categoryUpdating) return;
-                checkBox.CheckState = checkBox.CheckState == CheckState.Checked
-                    ? CheckState.Unchecked
-                    : CheckState.Checked;
-            };
-            checkBox.CheckStateChanged += cleanupCategoryCheckBox_CheckStateChanged;
-            _cleanupCategoryChecks[category] = checkBox;
-            _cleanupCategoryPanel.Controls.Add(checkBox);
+            cleanupCategoryChecks[((CleanupCategory)Enum.Parse(typeof(CleanupCategory), checkBox.Tag.ToString()))] = checkBox;
         }
-
-        cleanupTreeLayout.Controls.Add(_cleanupCategoryPanel, 0, 1);
     }
 
 
@@ -944,7 +888,7 @@ public partial class Form1
                 var items = candidates
                     .Where(candidate => !candidate.Entry.IsDirectory && candidate.Category == category)
                     .ToList();
-                var checkBox = _cleanupCategoryChecks[category];
+                var checkBox = cleanupCategoryChecks[category];
                 checkBox.CheckState = CheckState.Unchecked;
                 checkBox.Text = $"{category.GetDisplayName()} {items.Count}";
                 checkBox.Enabled = items.Count > 0;
@@ -961,42 +905,7 @@ public partial class Form1
         }
     }
 
-    private void cleanupCategoryCheckBox_CheckStateChanged(object? sender, EventArgs e)
-    {
-        if (_categoryUpdating || sender is not System.Windows.Forms.CheckBox { Tag: CleanupCategory category } checkBox)
-            return;
-        if (checkBox.CheckState == CheckState.Indeterminate) return;
-
-        var shouldCheck = checkBox.Checked;
-        if (shouldCheck && _cleanCandidates.Any(candidate =>
-                candidate.Category == category && candidate.RiskLevel == RiskLevel.High) &&
-            MessageBox.Show(
-                $"“{category.GetDisplayName()}”中包含高风险项，可能影响系统、应用修复或卸载。\n\n仍要选择整个分类吗？",
-                "高风险分类确认",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Warning) != DialogResult.Yes)
-        {
-            _categoryUpdating = true;
-            checkBox.CheckState = CheckState.Unchecked;
-            _categoryUpdating = false;
-            return;
-        }
-
-        _treeUpdating = true;
-        try
-        {
-            foreach (var root in cleanTreeView.Items)
-            {
-                SetCleanupCategoryState(root, category, shouldCheck);
-                RecalculateCleanupCheckState(root);
-            }
-        }
-        finally
-        {
-            _treeUpdating = false;
-        }
-        UpdateCleanupSelectionSummary();
-    }
+    
 
     private void SetCleanupCategoryState(TreeItem item, CleanupCategory category, bool isChecked)
     {
@@ -1072,7 +981,7 @@ public partial class Form1
                     CollectCleanupCategoryLeafItems(root, category, items);
                 if (items.Count == 0) continue;
 
-                _cleanupCategoryChecks[category].CheckState = items.All(item => item.CheckState == CheckState.Checked)
+                cleanupCategoryChecks[category].CheckState = items.All(item => item.CheckState == CheckState.Checked)
                     ? CheckState.Checked
                     : items.All(item => item.CheckState == CheckState.Unchecked)
                         ? CheckState.Unchecked

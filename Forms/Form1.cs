@@ -591,7 +591,7 @@ namespace CdiskClean
             scanBtn.Enabled = false;
             selectDirBtn.Enabled = false;
             stopBtn.Enabled = true;
-            folderTreeView.Nodes.Clear();
+            folderTreeView.Items.Clear();
             scanProgressBar.Style = ProgressBarStyle.Marquee;
 
             try
@@ -616,7 +616,7 @@ namespace CdiskClean
             {
                 scanProgressBar.Style = ProgressBarStyle.Blocks;
                 if (scanVersion == _analyzerScanVersion)
-                    _analyzerAccessValue.Text = "访问状态：扫描已取消";
+                    analyzerAccessValue.Text = "访问状态：扫描已取消";
             }
             catch (Exception ex)
             {
@@ -650,24 +650,28 @@ namespace CdiskClean
 
         private void PopulateTreeView(FolderSizeInfo info)
         {
-            folderTreeView.Nodes.Clear();
-            var rootNode = CreateTreeNode(info);
-            folderTreeView.Nodes.Add(rootNode);
-            rootNode.Expand();
+            folderTreeView.Items.Clear();
+            var rootItem = CreateTreeItem(info);
+            folderTreeView.Items.Add(rootItem);
+            rootItem.Expand = true;
         }
 
-        private static TreeNode CreateTreeNode(FolderSizeInfo info)
+        private static TreeItem CreateTreeItem(FolderSizeInfo info)
         {
             var accessSuffix = info.InaccessibleCount > 0 ? $"，不可访问 {info.InaccessibleCount} 项" : string.Empty;
-            var displayText = $"{info.Name}  [{FormatHelper.FormatBytes(info.SizeBytes)}, {info.FileCount} 个文件{accessSuffix}]";
-            var node = new TreeNode(displayText) { Tag = info };
+            var item = new TreeItem
+            {
+                Text = info.Name,
+                SubTitle = $"{FormatHelper.FormatBytes(info.SizeBytes)}, {info.FileCount} 个文件{accessSuffix}",
+                Tag = info
+            };
 
             foreach (var sub in info.SubFolders.OrderByDescending(s => s.SizeBytes))
             {
-                node.Nodes.Add(CreateTreeNode(sub));
+                item.Sub.Add(CreateTreeItem(sub));
             }
 
-            return node;
+            return item;
         }
 
         #endregion
@@ -947,6 +951,59 @@ namespace CdiskClean
         #endregion
 
 
+
+
+
+        private void categoryCheckBox_Click(object? sender, EventArgs e)
+        {
+            //var checkBox = sender as Checkbox;
+            //if (_categoryUpdating) return;
+            //checkBox.CheckState = checkBox.CheckState == CheckState.Checked
+            //    ? CheckState.Unchecked
+            //    : CheckState.Checked;
+
+        }
+        private void cleanupCategoryCheckBox_CheckStateChanged(object? sender, EventArgs e)
+        {
+            if (_categoryUpdating || sender is not System.Windows.Forms.CheckBox { Tag: CleanupCategory category } checkBox)
+                return;
+            if (checkBox.CheckState == CheckState.Indeterminate) return;
+
+            var shouldCheck = checkBox.Checked;
+            if (shouldCheck && _cleanCandidates.Any(candidate =>
+                    candidate.Category == category && candidate.RiskLevel == RiskLevel.High) &&
+                MessageBox.Show(
+                    $"“{category.GetDisplayName()}”中包含高风险项，可能影响系统、应用修复或卸载。\n\n仍要选择整个分类吗？",
+                    "高风险分类确认",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning) != DialogResult.Yes)
+            {
+                _categoryUpdating = true;
+                checkBox.CheckState = CheckState.Unchecked;
+                _categoryUpdating = false;
+                return;
+            }
+
+            _treeUpdating = true;
+            try
+            {
+                foreach (var root in cleanTreeView.Items)
+                {
+                    SetCleanupCategoryState(root, category, shouldCheck);
+                    RecalculateCleanupCheckState(root);
+                }
+            }
+            finally
+            {
+                _treeUpdating = false;
+            }
+            UpdateCleanupSelectionSummary();
+        }
+
+        private void ApplyCleanupCategoryFilter(object sender, EventArgs e)
+        {
+            ApplyCleanupCategoryFilter();
+        }
 
     }
 }

@@ -7,68 +7,19 @@ namespace CdiskClean;
 /// <summary>工作区「空间分析」页逻辑：选中节点详情展示与带入清理流程</summary>
 public partial class Form1
 {
-    private Label _analyzerAccessValue = null!;
-    private Label _analyzerExtensionValue = null!;
-    private TextBox _analyzerRelatedValue = null!;
-    private AntdUI.Button _analyzerOpenRecordsButton = null!;
-    private AntdUI.Button _analyzerOpenHistoryButton = null!;
+    //private Label analyzerAccessValue = null!;
+    //private Label analyzerExtensionValue = null!;
+
     private bool _analyzerSelectedCanRead;
 
     private void InitializeAnalyzerDetails()
     {
-        analyzerDetailsSurface.AutoScroll = true;
-        analyzerUseForCleanupButton.Location = new Point(18, 545);
-        analyzerUseForCleanupButton.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+        analyzerDetailsSurface.AutoScroll = false;
 
-        _analyzerAccessValue = CreateAnalyzerLabel("访问权限：未分析", 270, Color.FromArgb(102, 112, 133));
-        _analyzerExtensionValue = CreateAnalyzerLabel("文件类型：未分析", 300, Color.FromArgb(102, 112, 133));
-        analyzerDetailsSurface.Controls.Add(_analyzerAccessValue);
-        analyzerDetailsSurface.Controls.Add(_analyzerExtensionValue);
+        //analyzerAccessValue = CreateAnalyzerLabel("访问权限：未分析", 270, Color.FromArgb(102, 112, 133));
+        //analyzerExtensionValue = CreateAnalyzerLabel("文件类型：未分析", 300, Color.FromArgb(102, 112, 133));
 
-        var relatedTitle = CreateAnalyzerLabel("最近关联变更", 332, Color.FromArgb(31, 41, 55));
-        relatedTitle.Font = new Font(relatedTitle.Font, FontStyle.Bold);
-        analyzerDetailsSurface.Controls.Add(relatedTitle);
 
-        _analyzerRelatedValue = new TextBox
-        {
-            Location = new Point(18, 360),
-            Size = new Size(300, 100),
-            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
-            Multiline = true,
-            ReadOnly = true,
-            ScrollBars = ScrollBars.Vertical,
-            BorderStyle = BorderStyle.FixedSingle,
-            BackColor = Color.White,
-            ForeColor = Color.FromArgb(102, 112, 133),
-            Text = "扫描后显示最近变更"
-        };
-        analyzerDetailsSurface.Controls.Add(_analyzerRelatedValue);
-
-        _analyzerOpenRecordsButton = new AntdUI.Button
-        {
-            Location = new Point(190, 500),
-            Size = new Size(130, 38),
-            Anchor = AnchorStyles.Left | AnchorStyles.Bottom,
-            Text = "实时活动",
-            IconSvg = "HistoryOutlined",
-            Type = AntdUI.TTypeMini.Default,
-            Radius = 1
-        };
-        _analyzerOpenRecordsButton.Click += analyzerOpenRecordsButton_Click;
-        analyzerDetailsSurface.Controls.Add(_analyzerOpenRecordsButton);
-
-        _analyzerOpenHistoryButton = new AntdUI.Button
-        {
-            Location = new Point(18, 500),
-            Size = new Size(160, 38),
-            Anchor = AnchorStyles.Left | AnchorStyles.Bottom,
-            Text = "记录中心",
-            IconSvg = "HistoryOutlined",
-            Type = AntdUI.TTypeMini.Default,
-            Radius = 1
-        };
-        _analyzerOpenHistoryButton.Click += analyzerOpenHistoryButton_Click;
-        analyzerDetailsSurface.Controls.Add(_analyzerOpenHistoryButton);
     }
 
     private static Label CreateAnalyzerLabel(string text, int top, Color color) => new()
@@ -81,21 +32,21 @@ public partial class Form1
         Text = text
     };
 
-    private void folderTreeView_AfterSelect(object? sender, TreeViewEventArgs e)
+    private void folderTreeView_SelectChanged(object? sender, AntdUI.TreeSelectEventArgs e)
     {
-        if (e.Node?.Tag is not FolderSizeInfo info) return;
+        if (e.Item?.Tag is not FolderSizeInfo info) return;
         analyzerPathValue.Text = info.Path;
         analyzerSizeValue.Text = $"大小：{FormatHelper.FormatBytes(info.SizeBytes)}";
         analyzerFilesValue.Text = $"文件：{info.FileCount:N0}";
         analyzerFoldersValue.Text = $"子目录：{info.SubFolders.Count:N0}";
         var inaccessibleText = info.InaccessibleCount == 0 ? "" : $"，不可访问 {info.InaccessibleCount:N0} 项";
-        _analyzerAccessValue.Text = $"访问状态：{GetAccessStatusText(info.AccessStatus)}{inaccessibleText}";
+        analyzerAccessValue.Text = $"访问状态：{GetAccessStatusText(info.AccessStatus)}{inaccessibleText}";
         _analyzerSelectedCanRead = info.AccessStatus is not (FolderAccessStatus.Denied or FolderAccessStatus.Missing or FolderAccessStatus.Error);
-        _analyzerAccessValue.ForeColor = info.AccessStatus is FolderAccessStatus.Denied or FolderAccessStatus.Error
+        analyzerAccessValue.ForeColor = info.AccessStatus is FolderAccessStatus.Denied or FolderAccessStatus.Error
             ? UiTheme.Danger
             : info.AccessStatus == FolderAccessStatus.Partial ? Color.FromArgb(217, 119, 6) : UiTheme.TextSecondary;
-        _analyzerExtensionValue.Text = $"文件类型：{FormatExtensionSummary(info)}";
-        _analyzerRelatedValue.Text = "正在读取关联变更…";
+        analyzerExtensionValue.Text = $"文件类型：{FormatExtensionSummary(info)}";
+        analyzerRelatedValue.Text = "正在读取关联变更…";
         var version = ++_analyzerScanVersion;
         _ = LoadAnalyzerRelationsAsync(info.Path, version);
     }
@@ -110,7 +61,7 @@ public partial class Form1
         catch (Exception ex)
         {
             records = new List<FileChangeRecord>();
-            if (version == _analyzerScanVersion) _analyzerRelatedValue.Text = $"读取失败：{ex.Message}";
+            if (version == _analyzerScanVersion) analyzerRelatedValue.Text = $"读取失败：{ex.Message}";
             return;
         }
 
@@ -121,7 +72,7 @@ public partial class Form1
             var process = string.IsNullOrWhiteSpace(record.SourceProcess) ? "未知进程" : record.SourceProcess;
             builder.AppendLine($"{record.Timestamp:MM-dd HH:mm}  {process}  {record.FileName}");
         }
-        _analyzerRelatedValue.Text = builder.Length == 0 ? "暂无关联变更记录" : builder.ToString().TrimEnd();
+        analyzerRelatedValue.Text = builder.Length == 0 ? "暂无关联变更记录" : builder.ToString().TrimEnd();
     }
 
     private void analyzerOpenRecordsButton_Click(object? sender, EventArgs e)
@@ -153,8 +104,8 @@ public partial class Form1
     {
         _analyzerSelectedCanRead = permission.CanRead;
         var ownerText = string.IsNullOrWhiteSpace(permission.Owner) ? "未知所有者" : permission.Owner;
-        _analyzerAccessValue.Text = $"访问状态：{permission.Status} · ACL {permission.RuleCount} 条 · {ownerText}";
-        _analyzerAccessValue.ForeColor = permission.CanRead ? UiTheme.Success : UiTheme.Danger;
+        analyzerAccessValue.Text = $"访问状态：{permission.Status} · ACL {permission.RuleCount} 条 · {ownerText}";
+        analyzerAccessValue.ForeColor = permission.CanRead ? UiTheme.Success : UiTheme.Danger;
     }
 
     private static string FormatExtensionSummary(FolderSizeInfo info)
