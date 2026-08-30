@@ -58,21 +58,21 @@ namespace CdiskClean
             workspacePageTitle = new Label();
             workspacePageSubtitle = new Label();
             workspacePageContainer = new Panel();
-            activityPanel = new Panel();
-            activityToolbar = new FlowLayoutPanel();
-            panel2 = new AntdUI.Panel();
-            workspaceMonitorToggleButton = new AntdUI.Button();
-            clearBtn = new AntdUI.Button();
-            activityRecordCenterButton = new AntdUI.Button();
-            typeFilterCombo = new ComboBox();
-            exportBtn = new AntdUI.Button();
-            recordSearchBox = new AntdUI.Input();
-            panel1 = new AntdUI.Panel();
-            label1 = new AntdUI.Label();
-            exeModeRadio = new AntdUI.Radio();
-            defaultModeRadio = new AntdUI.Radio();
-            activitySurface = new AntdUI.Panel();
-            activityRecordTable = new AntdUI.Table();
+            recordsPanel = new Panel();
+            recordsToolbar = new FlowLayoutPanel();
+            recordsNotificationTab = new AntdUI.Button();
+            recordsStatsTab = new AntdUI.Button();
+            recordsDetailsTab = new AntdUI.Button();
+            recordsCleanupTab = new AntdUI.Button();
+            recordsRefreshButton = new AntdUI.Button();
+            recordsSurface = new AntdUI.Panel();
+            cleanupRecordView = new Panel();
+            cleanHistoryTable = new AntdUI.Table();
+            cleanHistoryEmptyLabel = new Label();
+            recordViewHost = new Panel();
+            detailRecordsTable = new AntdUI.Table();
+            processStatsTable = new AntdUI.Table();
+            notificationRecordsTable = new AntdUI.Table();
             cleanupPanel = new Panel();
             cleanupToolbar = new TableLayoutPanel();
             cleanPathTextBox = new TextBox();
@@ -121,6 +121,21 @@ namespace CdiskClean
             cleanupMethodTitle = new Label();
             cleanTargetLabel = new Label();
             cleanTargetSelectBtn = new Button();
+            activityPanel = new Panel();
+            activityToolbar = new FlowLayoutPanel();
+            panel2 = new AntdUI.Panel();
+            workspaceMonitorToggleButton = new AntdUI.Button();
+            clearBtn = new AntdUI.Button();
+            activityRecordCenterButton = new AntdUI.Button();
+            typeFilterCombo = new ComboBox();
+            exportBtn = new AntdUI.Button();
+            recordSearchBox = new AntdUI.Input();
+            panel1 = new AntdUI.Panel();
+            label1 = new AntdUI.Label();
+            exeModeRadio = new AntdUI.Radio();
+            defaultModeRadio = new AntdUI.Radio();
+            activitySurface = new AntdUI.Panel();
+            activityRecordTable = new AntdUI.Table();
             analyzerPanel = new Panel();
             analyzerToolbar = new TableLayoutPanel();
             selectedPathTextBox = new TextBox();
@@ -144,21 +159,6 @@ namespace CdiskClean
             analyzerRelatedValue = new AntdUI.Input();
             analyzerOpenRecordsButton = new AntdUI.Button();
             relatedTitle = new Label();
-            recordsPanel = new Panel();
-            recordsToolbar = new FlowLayoutPanel();
-            recordsNotificationTab = new AntdUI.Button();
-            recordsStatsTab = new AntdUI.Button();
-            recordsDetailsTab = new AntdUI.Button();
-            recordsCleanupTab = new AntdUI.Button();
-            recordsRefreshButton = new AntdUI.Button();
-            recordsSurface = new AntdUI.Panel();
-            cleanupRecordView = new Panel();
-            cleanHistoryTable = new AntdUI.Table();
-            cleanHistoryEmptyLabel = new Label();
-            recordViewHost = new Panel();
-            detailRecordsTable = new AntdUI.Table();
-            processStatsTable = new AntdUI.Table();
-            notificationRecordsTable = new AntdUI.Table();
             rulesPanel = new Panel();
             rulesExeProcessView = new Panel();
             rulesExeProcViewTable = new AntdUI.Table();
@@ -215,11 +215,11 @@ namespace CdiskClean
             workspaceMain.SuspendLayout();
             workspacePageHeader.SuspendLayout();
             workspacePageContainer.SuspendLayout();
-            activityPanel.SuspendLayout();
-            activityToolbar.SuspendLayout();
-            panel2.SuspendLayout();
-            panel1.SuspendLayout();
-            activitySurface.SuspendLayout();
+            recordsPanel.SuspendLayout();
+            recordsToolbar.SuspendLayout();
+            recordsSurface.SuspendLayout();
+            cleanupRecordView.SuspendLayout();
+            recordViewHost.SuspendLayout();
             cleanupPanel.SuspendLayout();
             cleanupToolbar.SuspendLayout();
             cleanupContent.SuspendLayout();
@@ -235,16 +235,16 @@ namespace CdiskClean
             cleanupActionLayout.SuspendLayout();
             cleanupFrequentPanel.SuspendLayout();
             cleanupMethodPanel.SuspendLayout();
+            activityPanel.SuspendLayout();
+            activityToolbar.SuspendLayout();
+            panel2.SuspendLayout();
+            panel1.SuspendLayout();
+            activitySurface.SuspendLayout();
             analyzerPanel.SuspendLayout();
             analyzerToolbar.SuspendLayout();
             analyzerContent.SuspendLayout();
             analyzerTreeSurface.SuspendLayout();
             analyzerDetailsSurface.SuspendLayout();
-            recordsPanel.SuspendLayout();
-            recordsToolbar.SuspendLayout();
-            recordsSurface.SuspendLayout();
-            cleanupRecordView.SuspendLayout();
-            recordViewHost.SuspendLayout();
             rulesPanel.SuspendLayout();
             rulesExeProcessView.SuspendLayout();
             rulesExeProcToolBar.SuspendLayout();
@@ -508,10 +508,10 @@ namespace CdiskClean
             // workspacePageContainer
             // 
             workspacePageContainer.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            workspacePageContainer.Controls.Add(activityPanel);
-            workspacePageContainer.Controls.Add(cleanupPanel);
-            workspacePageContainer.Controls.Add(analyzerPanel);
             workspacePageContainer.Controls.Add(recordsPanel);
+            workspacePageContainer.Controls.Add(cleanupPanel);
+            workspacePageContainer.Controls.Add(activityPanel);
+            workspacePageContainer.Controls.Add(analyzerPanel);
             workspacePageContainer.Controls.Add(rulesPanel);
             workspacePageContainer.Controls.Add(dashboardPanel);
             workspacePageContainer.Location = new Point(0, 90);
@@ -520,190 +520,204 @@ namespace CdiskClean
             workspacePageContainer.Size = new Size(1232, 692);
             workspacePageContainer.TabIndex = 0;
             // 
-            // activityPanel
+            // recordsPanel
             // 
-            activityPanel.BackColor = Color.FromArgb(245, 247, 250);
-            activityPanel.Controls.Add(activityToolbar);
-            activityPanel.Controls.Add(activitySurface);
-            activityPanel.Dock = DockStyle.Fill;
-            activityPanel.Location = new Point(0, 0);
-            activityPanel.Name = "activityPanel";
-            activityPanel.Padding = new Padding(18);
-            activityPanel.Size = new Size(1232, 692);
-            activityPanel.TabIndex = 3;
-            activityPanel.Visible = false;
+            recordsPanel.BackColor = Color.FromArgb(245, 247, 250);
+            recordsPanel.Controls.Add(recordsToolbar);
+            recordsPanel.Controls.Add(recordsSurface);
+            recordsPanel.Dock = DockStyle.Fill;
+            recordsPanel.Location = new Point(0, 0);
+            recordsPanel.Name = "recordsPanel";
+            recordsPanel.Padding = new Padding(18);
+            recordsPanel.Size = new Size(1232, 692);
+            recordsPanel.TabIndex = 9;
+            recordsPanel.Visible = false;
             // 
-            // activityToolbar
+            // recordsToolbar
             // 
-            activityToolbar.AutoScroll = true;
-            activityToolbar.Controls.Add(panel2);
-            activityToolbar.Controls.Add(panel1);
-            activityToolbar.Dock = DockStyle.Top;
-            activityToolbar.FlowDirection = FlowDirection.TopDown;
-            activityToolbar.Location = new Point(18, 18);
-            activityToolbar.Margin = new Padding(0);
-            activityToolbar.Name = "activityToolbar";
-            activityToolbar.Padding = new Padding(0, 4, 0, 8);
-            activityToolbar.Size = new Size(1196, 113);
-            activityToolbar.TabIndex = 0;
-            activityToolbar.WrapContents = false;
+            recordsToolbar.AutoScroll = true;
+            recordsToolbar.Controls.Add(recordsNotificationTab);
+            recordsToolbar.Controls.Add(recordsStatsTab);
+            recordsToolbar.Controls.Add(recordsDetailsTab);
+            recordsToolbar.Controls.Add(recordsCleanupTab);
+            recordsToolbar.Controls.Add(recordsRefreshButton);
+            recordsToolbar.Dock = DockStyle.Top;
+            recordsToolbar.Location = new Point(18, 18);
+            recordsToolbar.Margin = new Padding(0);
+            recordsToolbar.Name = "recordsToolbar";
+            recordsToolbar.Padding = new Padding(0, 4, 0, 8);
+            recordsToolbar.Size = new Size(1196, 54);
+            recordsToolbar.TabIndex = 0;
+            recordsToolbar.WrapContents = false;
             // 
-            // panel2
+            // recordsNotificationTab
             // 
-            panel2.Controls.Add(workspaceMonitorToggleButton);
-            panel2.Controls.Add(clearBtn);
-            panel2.Controls.Add(activityRecordCenterButton);
-            panel2.Controls.Add(typeFilterCombo);
-            panel2.Controls.Add(exportBtn);
-            panel2.Controls.Add(recordSearchBox);
-            panel2.Location = new Point(3, 7);
-            panel2.Name = "panel2";
-            panel2.Size = new Size(1158, 45);
-            panel2.TabIndex = 7;
-            panel2.Text = "panel2";
+            recordsNotificationTab.IconSvg = "MonitorOutlined";
+            recordsNotificationTab.Location = new Point(0, 8);
+            recordsNotificationTab.Margin = new Padding(0, 4, 8, 0);
+            recordsNotificationTab.Name = "recordsNotificationTab";
+            recordsNotificationTab.Radius = 1;
+            recordsNotificationTab.Size = new Size(123, 36);
+            recordsNotificationTab.TabIndex = 0;
+            recordsNotificationTab.Text = "提醒记录";
+            recordsNotificationTab.Type = AntdUI.TTypeMini.Primary;
+            recordsNotificationTab.Click += recordsNotificationTab_Click;
             // 
-            // workspaceMonitorToggleButton
+            // recordsStatsTab
             // 
-            workspaceMonitorToggleButton.IconSvg = "PlayCircleOutlined";
-            workspaceMonitorToggleButton.Location = new Point(5, -1);
-            workspaceMonitorToggleButton.Margin = new Padding(0, 4, 8, 0);
-            workspaceMonitorToggleButton.Name = "workspaceMonitorToggleButton";
-            workspaceMonitorToggleButton.Radius = 1;
-            workspaceMonitorToggleButton.Size = new Size(121, 36);
-            workspaceMonitorToggleButton.TabIndex = 0;
-            workspaceMonitorToggleButton.Text = "开始监测";
-            workspaceMonitorToggleButton.Type = AntdUI.TTypeMini.Primary;
-            workspaceMonitorToggleButton.Click += pauseBtn_Click;
+            recordsStatsTab.IconSvg = "LineChartOutlined";
+            recordsStatsTab.Location = new Point(131, 8);
+            recordsStatsTab.Margin = new Padding(0, 4, 8, 0);
+            recordsStatsTab.Name = "recordsStatsTab";
+            recordsStatsTab.Radius = 1;
+            recordsStatsTab.Size = new Size(117, 36);
+            recordsStatsTab.TabIndex = 1;
+            recordsStatsTab.Text = "进程统计";
+            recordsStatsTab.Click += recordsStatsTab_Click;
             // 
-            // clearBtn
+            // recordsDetailsTab
             // 
-            clearBtn.IconSvg = "ClearOutlined";
-            clearBtn.Location = new Point(674, 1);
-            clearBtn.Margin = new Padding(0, 4, 8, 0);
-            clearBtn.Name = "clearBtn";
-            clearBtn.Radius = 1;
-            clearBtn.Size = new Size(97, 36);
-            clearBtn.TabIndex = 4;
-            clearBtn.Text = "清空";
-            clearBtn.Type = AntdUI.TTypeMini.Error;
-            clearBtn.Click += clearBtn_Click;
+            recordsDetailsTab.IconSvg = "DatabaseOutlined";
+            recordsDetailsTab.Location = new Point(256, 8);
+            recordsDetailsTab.Margin = new Padding(0, 4, 8, 0);
+            recordsDetailsTab.Name = "recordsDetailsTab";
+            recordsDetailsTab.Radius = 1;
+            recordsDetailsTab.Size = new Size(117, 36);
+            recordsDetailsTab.TabIndex = 2;
+            recordsDetailsTab.Text = "变更明细";
+            recordsDetailsTab.Click += recordsDetailsTab_Click;
             // 
-            // activityRecordCenterButton
+            // recordsCleanupTab
             // 
-            activityRecordCenterButton.IconSvg = "HistoryOutlined";
-            activityRecordCenterButton.Location = new Point(788, 3);
-            activityRecordCenterButton.Margin = new Padding(0, 4, 8, 0);
-            activityRecordCenterButton.Name = "activityRecordCenterButton";
-            activityRecordCenterButton.Radius = 1;
-            activityRecordCenterButton.Size = new Size(100, 36);
-            activityRecordCenterButton.TabIndex = 5;
-            activityRecordCenterButton.Text = "记录中心";
-            activityRecordCenterButton.Click += activityRecordCenterButton_Click;
+            recordsCleanupTab.IconSvg = "HistoryOutlined";
+            recordsCleanupTab.Location = new Point(381, 8);
+            recordsCleanupTab.Margin = new Padding(0, 4, 8, 0);
+            recordsCleanupTab.Name = "recordsCleanupTab";
+            recordsCleanupTab.Radius = 1;
+            recordsCleanupTab.Size = new Size(115, 36);
+            recordsCleanupTab.TabIndex = 3;
+            recordsCleanupTab.Text = "清理历史";
+            recordsCleanupTab.Click += recordsCleanupTab_Click;
             // 
-            // typeFilterCombo
+            // recordsRefreshButton
             // 
-            typeFilterCombo.DropDownStyle = ComboBoxStyle.DropDownList;
-            typeFilterCombo.FormattingEnabled = true;
-            typeFilterCombo.Items.AddRange(new object[] { "全部", "创建", "修改", "删除", "重命名" });
-            typeFilterCombo.Location = new Point(147, 3);
-            typeFilterCombo.Margin = new Padding(8, 6, 0, 0);
-            typeFilterCombo.Name = "typeFilterCombo";
-            typeFilterCombo.Size = new Size(126, 32);
-            typeFilterCombo.TabIndex = 1;
-            typeFilterCombo.SelectedIndexChanged += typeFilterCombo_SelectedIndexChanged;
+            recordsRefreshButton.IconSvg = "ReloadOutlined";
+            recordsRefreshButton.Location = new Point(504, 8);
+            recordsRefreshButton.Margin = new Padding(0, 4, 8, 0);
+            recordsRefreshButton.Name = "recordsRefreshButton";
+            recordsRefreshButton.Radius = 1;
+            recordsRefreshButton.Size = new Size(84, 36);
+            recordsRefreshButton.TabIndex = 4;
+            recordsRefreshButton.Text = "刷新";
+            recordsRefreshButton.Click += recordsRefreshButton_Click;
             // 
-            // exportBtn
+            // recordsSurface
             // 
-            exportBtn.IconSvg = "ExportOutlined";
-            exportBtn.Location = new Point(572, 2);
-            exportBtn.Margin = new Padding(12, 4, 8, 0);
-            exportBtn.Name = "exportBtn";
-            exportBtn.Radius = 1;
-            exportBtn.Size = new Size(94, 36);
-            exportBtn.TabIndex = 3;
-            exportBtn.Text = "导出";
-            exportBtn.Click += exportBtn_Click;
+            recordsSurface.BackColor = Color.White;
+            recordsSurface.Controls.Add(cleanupRecordView);
+            recordsSurface.Controls.Add(recordViewHost);
+            recordsSurface.Dock = DockStyle.Bottom;
+            recordsSurface.Location = new Point(18, 77);
+            recordsSurface.Margin = new Padding(0);
+            recordsSurface.Name = "recordsSurface";
+            recordsSurface.Padding = new Padding(12);
+            recordsSurface.Size = new Size(1196, 597);
+            recordsSurface.TabIndex = 1;
             // 
-            // recordSearchBox
+            // cleanupRecordView
             // 
-            recordSearchBox.Location = new Point(287, 2);
-            recordSearchBox.Margin = new Padding(10, 4, 0, 0);
-            recordSearchBox.Name = "recordSearchBox";
-            recordSearchBox.PlaceholderText = "搜索文件、路径或来源进程";
-            recordSearchBox.PrefixSvg = "SearchOutlined";
-            recordSearchBox.Radius = 5;
-            recordSearchBox.Size = new Size(282, 36);
-            recordSearchBox.TabIndex = 2;
-            recordSearchBox.TextChanged += recordSearchBox_TextChanged;
-            recordSearchBox.KeyDown += recordSearchBox_KeyDown;
+            cleanupRecordView.BackColor = Color.White;
+            cleanupRecordView.Controls.Add(cleanHistoryTable);
+            cleanupRecordView.Controls.Add(cleanHistoryEmptyLabel);
+            cleanupRecordView.Location = new Point(6, 6);
+            cleanupRecordView.Margin = new Padding(0);
+            cleanupRecordView.Name = "cleanupRecordView";
+            cleanupRecordView.Size = new Size(1172, 565);
+            cleanupRecordView.TabIndex = 3;
+            cleanupRecordView.Visible = false;
             // 
-            // panel1
+            // cleanHistoryTable
             // 
-            panel1.Controls.Add(label1);
-            panel1.Controls.Add(exeModeRadio);
-            panel1.Controls.Add(defaultModeRadio);
-            panel1.Location = new Point(3, 58);
-            panel1.Name = "panel1";
-            panel1.Size = new Size(1158, 41);
-            panel1.TabIndex = 6;
-            panel1.Text = "panel1";
+            cleanHistoryTable.AutoSizeColumnsMode = AntdUI.ColumnsMode.Fill;
+            cleanHistoryTable.Dock = DockStyle.Bottom;
+            cleanHistoryTable.EmptyHeader = true;
+            cleanHistoryTable.EmptyText = "暂无清理记录";
+            cleanHistoryTable.FixedHeader = false;
+            cleanHistoryTable.Gap = 12;
+            cleanHistoryTable.Location = new Point(0, 6);
+            cleanHistoryTable.Margin = new Padding(0);
+            cleanHistoryTable.Name = "cleanHistoryTable";
+            cleanHistoryTable.Radius = 6;
+            cleanHistoryTable.Size = new Size(1172, 559);
+            cleanHistoryTable.TabIndex = 0;
+            cleanHistoryTable.CellClick += cleanHistoryGrid_CellClick;
             // 
-            // label1
+            // cleanHistoryEmptyLabel
             // 
-            label1.BackColor = Color.Transparent;
-            label1.Location = new Point(13, 3);
-            label1.Name = "label1";
-            label1.Size = new Size(105, 34);
-            label1.TabIndex = 2;
-            label1.Text = "监测模式";
-            label1.TextAlign = ContentAlignment.MiddleCenter;
+            cleanHistoryEmptyLabel.BackColor = Color.White;
+            cleanHistoryEmptyLabel.Dock = DockStyle.Fill;
+            cleanHistoryEmptyLabel.ForeColor = Color.Gray;
+            cleanHistoryEmptyLabel.Location = new Point(0, 0);
+            cleanHistoryEmptyLabel.Name = "cleanHistoryEmptyLabel";
+            cleanHistoryEmptyLabel.Size = new Size(1172, 565);
+            cleanHistoryEmptyLabel.TabIndex = 1;
+            cleanHistoryEmptyLabel.Text = "暂无清理记录";
+            cleanHistoryEmptyLabel.TextAlign = ContentAlignment.MiddleCenter;
+            cleanHistoryEmptyLabel.Visible = false;
             // 
-            // exeModeRadio
+            // recordViewHost
             // 
-            exeModeRadio.BackColor = Color.Transparent;
-            exeModeRadio.Location = new Point(240, 3);
-            exeModeRadio.Name = "exeModeRadio";
-            exeModeRadio.Size = new Size(149, 34);
-            exeModeRadio.TabIndex = 1;
-            exeModeRadio.Text = "应用程序";
-            exeModeRadio.CheckedChanged += exeModeRadio_CheckedChanged;
+            recordViewHost.BackColor = Color.White;
+            recordViewHost.Controls.Add(detailRecordsTable);
+            recordViewHost.Controls.Add(processStatsTable);
+            recordViewHost.Controls.Add(notificationRecordsTable);
+            recordViewHost.Dock = DockStyle.Fill;
+            recordViewHost.Location = new Point(12, 12);
+            recordViewHost.Margin = new Padding(0);
+            recordViewHost.Name = "recordViewHost";
+            recordViewHost.Size = new Size(1172, 573);
+            recordViewHost.TabIndex = 0;
             // 
-            // defaultModeRadio
+            // detailRecordsTable
             // 
-            defaultModeRadio.BackColor = Color.Transparent;
-            defaultModeRadio.Checked = true;
-            defaultModeRadio.Location = new Point(124, 3);
-            defaultModeRadio.Name = "defaultModeRadio";
-            defaultModeRadio.Size = new Size(93, 34);
-            defaultModeRadio.TabIndex = 0;
-            defaultModeRadio.Text = "默认";
-            defaultModeRadio.CheckedChanged += defaultModeRadio_CheckedChanged;
+            detailRecordsTable.AutoSizeColumnsMode = AntdUI.ColumnsMode.Fill;
+            detailRecordsTable.Dock = DockStyle.Fill;
+            detailRecordsTable.EmptyText = "暂无变更记录";
+            detailRecordsTable.Gap = 12;
+            detailRecordsTable.Location = new Point(0, 0);
+            detailRecordsTable.Margin = new Padding(0);
+            detailRecordsTable.Name = "detailRecordsTable";
+            detailRecordsTable.Radius = 6;
+            detailRecordsTable.Size = new Size(1172, 573);
+            detailRecordsTable.TabIndex = 2;
+            detailRecordsTable.Visible = false;
             // 
-            // activitySurface
+            // processStatsTable
             // 
-            activitySurface.BackColor = Color.White;
-            activitySurface.Controls.Add(activityRecordTable);
-            activitySurface.Dock = DockStyle.Fill;
-            activitySurface.Location = new Point(18, 18);
-            activitySurface.Margin = new Padding(0);
-            activitySurface.Name = "activitySurface";
-            activitySurface.Padding = new Padding(12);
-            activitySurface.Size = new Size(1196, 656);
-            activitySurface.TabIndex = 1;
+            processStatsTable.AutoSizeColumnsMode = AntdUI.ColumnsMode.Fill;
+            processStatsTable.Dock = DockStyle.Fill;
+            processStatsTable.EmptyText = "暂无统计记录";
+            processStatsTable.Gap = 12;
+            processStatsTable.Location = new Point(0, 0);
+            processStatsTable.Margin = new Padding(0);
+            processStatsTable.Name = "processStatsTable";
+            processStatsTable.Radius = 6;
+            processStatsTable.Size = new Size(1172, 573);
+            processStatsTable.TabIndex = 1;
+            processStatsTable.Visible = false;
             // 
-            // activityRecordTable
+            // notificationRecordsTable
             // 
-            activityRecordTable.ColumnBack = SystemColors.ActiveBorder;
-            activityRecordTable.ColumnFont = new Font("微软雅黑", 9F, FontStyle.Regular, GraphicsUnit.Point, 134);
-            activityRecordTable.ColumnFore = Color.Aqua;
-            activityRecordTable.Dock = DockStyle.Bottom;
-            activityRecordTable.EmptyHeader = true;
-            activityRecordTable.EmptyText = "-";
-            activityRecordTable.Gap = 12;
-            activityRecordTable.Location = new Point(12, 117);
-            activityRecordTable.Name = "activityRecordTable";
-            activityRecordTable.Size = new Size(1172, 527);
-            activityRecordTable.TabIndex = 1;
+            notificationRecordsTable.AutoSizeColumnsMode = AntdUI.ColumnsMode.Fill;
+            notificationRecordsTable.Dock = DockStyle.Fill;
+            notificationRecordsTable.EmptyText = "暂无提醒记录";
+            notificationRecordsTable.Gap = 12;
+            notificationRecordsTable.Location = new Point(0, 0);
+            notificationRecordsTable.Margin = new Padding(0);
+            notificationRecordsTable.Name = "notificationRecordsTable";
+            notificationRecordsTable.Radius = 6;
+            notificationRecordsTable.Size = new Size(1172, 573);
+            notificationRecordsTable.TabIndex = 0;
             // 
             // cleanupPanel
             // 
@@ -992,7 +1006,7 @@ namespace CdiskClean
             // _cleanupCategoryFilter
             // 
             _cleanupCategoryFilter.FormattingEnabled = true;
-            _cleanupCategoryFilter.Items.AddRange(new object[] { "临时文件", " ", "缓存", " ", "日志", "崩溃转储", "", "安装包/更新残留", " ", "其他" });
+            _cleanupCategoryFilter.Items.AddRange(new object[] { "临时文件", "缓存", "日志", "崩溃转储", "安装包/更新残留", "其他" });
             _cleanupCategoryFilter.Location = new Point(0, 6);
             _cleanupCategoryFilter.Name = "_cleanupCategoryFilter";
             _cleanupCategoryFilter.Size = new Size(170, 32);
@@ -1320,6 +1334,191 @@ namespace CdiskClean
             cleanTargetSelectBtn.UseVisualStyleBackColor = true;
             cleanTargetSelectBtn.Click += cleanTargetSelectBtn_Click;
             // 
+            // activityPanel
+            // 
+            activityPanel.BackColor = Color.FromArgb(245, 247, 250);
+            activityPanel.Controls.Add(activityToolbar);
+            activityPanel.Controls.Add(activitySurface);
+            activityPanel.Dock = DockStyle.Fill;
+            activityPanel.Location = new Point(0, 0);
+            activityPanel.Name = "activityPanel";
+            activityPanel.Padding = new Padding(18);
+            activityPanel.Size = new Size(1232, 692);
+            activityPanel.TabIndex = 3;
+            activityPanel.Visible = false;
+            // 
+            // activityToolbar
+            // 
+            activityToolbar.AutoScroll = true;
+            activityToolbar.Controls.Add(panel2);
+            activityToolbar.Controls.Add(panel1);
+            activityToolbar.Dock = DockStyle.Top;
+            activityToolbar.FlowDirection = FlowDirection.TopDown;
+            activityToolbar.Location = new Point(18, 18);
+            activityToolbar.Margin = new Padding(0);
+            activityToolbar.Name = "activityToolbar";
+            activityToolbar.Padding = new Padding(0, 4, 0, 8);
+            activityToolbar.Size = new Size(1196, 113);
+            activityToolbar.TabIndex = 0;
+            activityToolbar.WrapContents = false;
+            // 
+            // panel2
+            // 
+            panel2.Controls.Add(workspaceMonitorToggleButton);
+            panel2.Controls.Add(clearBtn);
+            panel2.Controls.Add(activityRecordCenterButton);
+            panel2.Controls.Add(typeFilterCombo);
+            panel2.Controls.Add(exportBtn);
+            panel2.Controls.Add(recordSearchBox);
+            panel2.Location = new Point(3, 7);
+            panel2.Name = "panel2";
+            panel2.Size = new Size(1158, 45);
+            panel2.TabIndex = 7;
+            panel2.Text = "panel2";
+            // 
+            // workspaceMonitorToggleButton
+            // 
+            workspaceMonitorToggleButton.IconSvg = "PlayCircleOutlined";
+            workspaceMonitorToggleButton.Location = new Point(5, -1);
+            workspaceMonitorToggleButton.Margin = new Padding(0, 4, 8, 0);
+            workspaceMonitorToggleButton.Name = "workspaceMonitorToggleButton";
+            workspaceMonitorToggleButton.Radius = 1;
+            workspaceMonitorToggleButton.Size = new Size(121, 36);
+            workspaceMonitorToggleButton.TabIndex = 0;
+            workspaceMonitorToggleButton.Text = "开始监测";
+            workspaceMonitorToggleButton.Type = AntdUI.TTypeMini.Primary;
+            workspaceMonitorToggleButton.Click += pauseBtn_Click;
+            // 
+            // clearBtn
+            // 
+            clearBtn.IconSvg = "ClearOutlined";
+            clearBtn.Location = new Point(674, 1);
+            clearBtn.Margin = new Padding(0, 4, 8, 0);
+            clearBtn.Name = "clearBtn";
+            clearBtn.Radius = 1;
+            clearBtn.Size = new Size(97, 36);
+            clearBtn.TabIndex = 4;
+            clearBtn.Text = "清空";
+            clearBtn.Type = AntdUI.TTypeMini.Error;
+            clearBtn.Click += clearBtn_Click;
+            // 
+            // activityRecordCenterButton
+            // 
+            activityRecordCenterButton.IconSvg = "HistoryOutlined";
+            activityRecordCenterButton.Location = new Point(788, 3);
+            activityRecordCenterButton.Margin = new Padding(0, 4, 8, 0);
+            activityRecordCenterButton.Name = "activityRecordCenterButton";
+            activityRecordCenterButton.Radius = 1;
+            activityRecordCenterButton.Size = new Size(100, 36);
+            activityRecordCenterButton.TabIndex = 5;
+            activityRecordCenterButton.Text = "记录中心";
+            activityRecordCenterButton.Click += activityRecordCenterButton_Click;
+            // 
+            // typeFilterCombo
+            // 
+            typeFilterCombo.DropDownStyle = ComboBoxStyle.DropDownList;
+            typeFilterCombo.FormattingEnabled = true;
+            typeFilterCombo.Items.AddRange(new object[] { "全部", "创建", "修改", "删除", "重命名" });
+            typeFilterCombo.Location = new Point(147, 3);
+            typeFilterCombo.Margin = new Padding(8, 6, 0, 0);
+            typeFilterCombo.Name = "typeFilterCombo";
+            typeFilterCombo.Size = new Size(126, 32);
+            typeFilterCombo.TabIndex = 1;
+            typeFilterCombo.SelectedIndexChanged += typeFilterCombo_SelectedIndexChanged;
+            // 
+            // exportBtn
+            // 
+            exportBtn.IconSvg = "ExportOutlined";
+            exportBtn.Location = new Point(572, 2);
+            exportBtn.Margin = new Padding(12, 4, 8, 0);
+            exportBtn.Name = "exportBtn";
+            exportBtn.Radius = 1;
+            exportBtn.Size = new Size(94, 36);
+            exportBtn.TabIndex = 3;
+            exportBtn.Text = "导出";
+            exportBtn.Click += exportBtn_Click;
+            // 
+            // recordSearchBox
+            // 
+            recordSearchBox.Location = new Point(287, 2);
+            recordSearchBox.Margin = new Padding(10, 4, 0, 0);
+            recordSearchBox.Name = "recordSearchBox";
+            recordSearchBox.PlaceholderText = "搜索文件、路径或来源进程";
+            recordSearchBox.PrefixSvg = "SearchOutlined";
+            recordSearchBox.Radius = 5;
+            recordSearchBox.Size = new Size(282, 36);
+            recordSearchBox.TabIndex = 2;
+            recordSearchBox.TextChanged += recordSearchBox_TextChanged;
+            recordSearchBox.KeyDown += recordSearchBox_KeyDown;
+            // 
+            // panel1
+            // 
+            panel1.Controls.Add(label1);
+            panel1.Controls.Add(exeModeRadio);
+            panel1.Controls.Add(defaultModeRadio);
+            panel1.Location = new Point(3, 58);
+            panel1.Name = "panel1";
+            panel1.Size = new Size(1158, 41);
+            panel1.TabIndex = 6;
+            panel1.Text = "panel1";
+            // 
+            // label1
+            // 
+            label1.BackColor = Color.Transparent;
+            label1.Location = new Point(13, 3);
+            label1.Name = "label1";
+            label1.Size = new Size(105, 34);
+            label1.TabIndex = 2;
+            label1.Text = "监测模式";
+            label1.TextAlign = ContentAlignment.MiddleCenter;
+            // 
+            // exeModeRadio
+            // 
+            exeModeRadio.BackColor = Color.Transparent;
+            exeModeRadio.Location = new Point(240, 3);
+            exeModeRadio.Name = "exeModeRadio";
+            exeModeRadio.Size = new Size(149, 34);
+            exeModeRadio.TabIndex = 1;
+            exeModeRadio.Text = "应用程序";
+            exeModeRadio.CheckedChanged += exeModeRadio_CheckedChanged;
+            // 
+            // defaultModeRadio
+            // 
+            defaultModeRadio.BackColor = Color.Transparent;
+            defaultModeRadio.Checked = true;
+            defaultModeRadio.Location = new Point(124, 3);
+            defaultModeRadio.Name = "defaultModeRadio";
+            defaultModeRadio.Size = new Size(93, 34);
+            defaultModeRadio.TabIndex = 0;
+            defaultModeRadio.Text = "默认";
+            defaultModeRadio.CheckedChanged += defaultModeRadio_CheckedChanged;
+            // 
+            // activitySurface
+            // 
+            activitySurface.BackColor = Color.White;
+            activitySurface.Controls.Add(activityRecordTable);
+            activitySurface.Dock = DockStyle.Fill;
+            activitySurface.Location = new Point(18, 18);
+            activitySurface.Margin = new Padding(0);
+            activitySurface.Name = "activitySurface";
+            activitySurface.Padding = new Padding(12);
+            activitySurface.Size = new Size(1196, 656);
+            activitySurface.TabIndex = 1;
+            // 
+            // activityRecordTable
+            // 
+            activityRecordTable.ColumnBack = SystemColors.ActiveBorder;
+            activityRecordTable.ColumnFont = new Font("微软雅黑", 9F, FontStyle.Regular, GraphicsUnit.Point, 134);
+            activityRecordTable.ColumnFore = Color.Aqua;
+            activityRecordTable.Dock = DockStyle.Bottom;
+            activityRecordTable.EmptyHeader = true;
+            activityRecordTable.EmptyText = "-";
+            activityRecordTable.Gap = 12;
+            activityRecordTable.Location = new Point(12, 117);
+            activityRecordTable.Name = "activityRecordTable";
+            activityRecordTable.Size = new Size(1172, 527);
+            activityRecordTable.TabIndex = 1;
+            // 
             // analyzerPanel
             // 
             analyzerPanel.BackColor = Color.FromArgb(245, 247, 250);
@@ -1630,205 +1829,6 @@ namespace CdiskClean
             relatedTitle.Size = new Size(155, 31);
             relatedTitle.TabIndex = 7;
             relatedTitle.Text = "最近关联变更";
-            // 
-            // recordsPanel
-            // 
-            recordsPanel.BackColor = Color.FromArgb(245, 247, 250);
-            recordsPanel.Controls.Add(recordsToolbar);
-            recordsPanel.Controls.Add(recordsSurface);
-            recordsPanel.Dock = DockStyle.Fill;
-            recordsPanel.Location = new Point(0, 0);
-            recordsPanel.Name = "recordsPanel";
-            recordsPanel.Padding = new Padding(18);
-            recordsPanel.Size = new Size(1232, 692);
-            recordsPanel.TabIndex = 9;
-            recordsPanel.Visible = false;
-            // 
-            // recordsToolbar
-            // 
-            recordsToolbar.AutoScroll = true;
-            recordsToolbar.Controls.Add(recordsNotificationTab);
-            recordsToolbar.Controls.Add(recordsStatsTab);
-            recordsToolbar.Controls.Add(recordsDetailsTab);
-            recordsToolbar.Controls.Add(recordsCleanupTab);
-            recordsToolbar.Controls.Add(recordsRefreshButton);
-            recordsToolbar.Dock = DockStyle.Top;
-            recordsToolbar.Location = new Point(18, 18);
-            recordsToolbar.Margin = new Padding(0);
-            recordsToolbar.Name = "recordsToolbar";
-            recordsToolbar.Padding = new Padding(0, 4, 0, 8);
-            recordsToolbar.Size = new Size(1196, 54);
-            recordsToolbar.TabIndex = 0;
-            recordsToolbar.WrapContents = false;
-            // 
-            // recordsNotificationTab
-            // 
-            recordsNotificationTab.IconSvg = "MonitorOutlined";
-            recordsNotificationTab.Location = new Point(0, 8);
-            recordsNotificationTab.Margin = new Padding(0, 4, 8, 0);
-            recordsNotificationTab.Name = "recordsNotificationTab";
-            recordsNotificationTab.Radius = 1;
-            recordsNotificationTab.Size = new Size(123, 36);
-            recordsNotificationTab.TabIndex = 0;
-            recordsNotificationTab.Text = "提醒记录";
-            recordsNotificationTab.Type = AntdUI.TTypeMini.Primary;
-            recordsNotificationTab.Click += recordsNotificationTab_Click;
-            // 
-            // recordsStatsTab
-            // 
-            recordsStatsTab.IconSvg = "LineChartOutlined";
-            recordsStatsTab.Location = new Point(131, 8);
-            recordsStatsTab.Margin = new Padding(0, 4, 8, 0);
-            recordsStatsTab.Name = "recordsStatsTab";
-            recordsStatsTab.Radius = 1;
-            recordsStatsTab.Size = new Size(117, 36);
-            recordsStatsTab.TabIndex = 1;
-            recordsStatsTab.Text = "进程统计";
-            recordsStatsTab.Click += recordsStatsTab_Click;
-            // 
-            // recordsDetailsTab
-            // 
-            recordsDetailsTab.IconSvg = "DatabaseOutlined";
-            recordsDetailsTab.Location = new Point(256, 8);
-            recordsDetailsTab.Margin = new Padding(0, 4, 8, 0);
-            recordsDetailsTab.Name = "recordsDetailsTab";
-            recordsDetailsTab.Radius = 1;
-            recordsDetailsTab.Size = new Size(117, 36);
-            recordsDetailsTab.TabIndex = 2;
-            recordsDetailsTab.Text = "变更明细";
-            recordsDetailsTab.Click += recordsDetailsTab_Click;
-            // 
-            // recordsCleanupTab
-            // 
-            recordsCleanupTab.IconSvg = "HistoryOutlined";
-            recordsCleanupTab.Location = new Point(381, 8);
-            recordsCleanupTab.Margin = new Padding(0, 4, 8, 0);
-            recordsCleanupTab.Name = "recordsCleanupTab";
-            recordsCleanupTab.Radius = 1;
-            recordsCleanupTab.Size = new Size(115, 36);
-            recordsCleanupTab.TabIndex = 3;
-            recordsCleanupTab.Text = "清理历史";
-            recordsCleanupTab.Click += recordsCleanupTab_Click;
-            // 
-            // recordsRefreshButton
-            // 
-            recordsRefreshButton.IconSvg = "ReloadOutlined";
-            recordsRefreshButton.Location = new Point(504, 8);
-            recordsRefreshButton.Margin = new Padding(0, 4, 8, 0);
-            recordsRefreshButton.Name = "recordsRefreshButton";
-            recordsRefreshButton.Radius = 1;
-            recordsRefreshButton.Size = new Size(84, 36);
-            recordsRefreshButton.TabIndex = 4;
-            recordsRefreshButton.Text = "刷新";
-            recordsRefreshButton.Click += recordsRefreshButton_Click;
-            // 
-            // recordsSurface
-            // 
-            recordsSurface.BackColor = Color.White;
-            recordsSurface.Controls.Add(cleanupRecordView);
-            recordsSurface.Controls.Add(recordViewHost);
-            recordsSurface.Dock = DockStyle.Bottom;
-            recordsSurface.Location = new Point(18, 77);
-            recordsSurface.Margin = new Padding(0);
-            recordsSurface.Name = "recordsSurface";
-            recordsSurface.Padding = new Padding(12);
-            recordsSurface.Size = new Size(1196, 597);
-            recordsSurface.TabIndex = 1;
-            // 
-            // cleanupRecordView
-            // 
-            cleanupRecordView.BackColor = Color.White;
-            cleanupRecordView.Controls.Add(cleanHistoryTable);
-            cleanupRecordView.Controls.Add(cleanHistoryEmptyLabel);
-            cleanupRecordView.Location = new Point(6, 6);
-            cleanupRecordView.Margin = new Padding(0);
-            cleanupRecordView.Name = "cleanupRecordView";
-            cleanupRecordView.Size = new Size(1172, 565);
-            cleanupRecordView.TabIndex = 3;
-            cleanupRecordView.Visible = false;
-            // 
-            // cleanHistoryTable
-            // 
-            cleanHistoryTable.AutoSizeColumnsMode = AntdUI.ColumnsMode.Fill;
-            cleanHistoryTable.Dock = DockStyle.Bottom;
-            cleanHistoryTable.EmptyHeader = true;
-            cleanHistoryTable.EmptyText = "暂无清理记录";
-            cleanHistoryTable.FixedHeader = false;
-            cleanHistoryTable.Gap = 12;
-            cleanHistoryTable.Location = new Point(0, 6);
-            cleanHistoryTable.Margin = new Padding(0);
-            cleanHistoryTable.Name = "cleanHistoryTable";
-            cleanHistoryTable.Radius = 6;
-            cleanHistoryTable.Size = new Size(1172, 559);
-            cleanHistoryTable.TabIndex = 0;
-            cleanHistoryTable.CellClick += cleanHistoryGrid_CellClick;
-            // 
-            // cleanHistoryEmptyLabel
-            // 
-            cleanHistoryEmptyLabel.BackColor = Color.White;
-            cleanHistoryEmptyLabel.Dock = DockStyle.Fill;
-            cleanHistoryEmptyLabel.ForeColor = Color.Gray;
-            cleanHistoryEmptyLabel.Location = new Point(0, 0);
-            cleanHistoryEmptyLabel.Name = "cleanHistoryEmptyLabel";
-            cleanHistoryEmptyLabel.Size = new Size(1172, 565);
-            cleanHistoryEmptyLabel.TabIndex = 1;
-            cleanHistoryEmptyLabel.Text = "暂无清理记录";
-            cleanHistoryEmptyLabel.TextAlign = ContentAlignment.MiddleCenter;
-            cleanHistoryEmptyLabel.Visible = false;
-            // 
-            // recordViewHost
-            // 
-            recordViewHost.BackColor = Color.White;
-            recordViewHost.Controls.Add(detailRecordsTable);
-            recordViewHost.Controls.Add(processStatsTable);
-            recordViewHost.Controls.Add(notificationRecordsTable);
-            recordViewHost.Dock = DockStyle.Fill;
-            recordViewHost.Location = new Point(12, 12);
-            recordViewHost.Margin = new Padding(0);
-            recordViewHost.Name = "recordViewHost";
-            recordViewHost.Size = new Size(1172, 573);
-            recordViewHost.TabIndex = 0;
-            // 
-            // detailRecordsTable
-            // 
-            detailRecordsTable.AutoSizeColumnsMode = AntdUI.ColumnsMode.Fill;
-            detailRecordsTable.Dock = DockStyle.Fill;
-            detailRecordsTable.EmptyText = "暂无变更记录";
-            detailRecordsTable.Gap = 12;
-            detailRecordsTable.Location = new Point(0, 0);
-            detailRecordsTable.Margin = new Padding(0);
-            detailRecordsTable.Name = "detailRecordsTable";
-            detailRecordsTable.Radius = 6;
-            detailRecordsTable.Size = new Size(1172, 573);
-            detailRecordsTable.TabIndex = 2;
-            detailRecordsTable.Visible = false;
-            // 
-            // processStatsTable
-            // 
-            processStatsTable.AutoSizeColumnsMode = AntdUI.ColumnsMode.Fill;
-            processStatsTable.Dock = DockStyle.Fill;
-            processStatsTable.EmptyText = "暂无统计记录";
-            processStatsTable.Gap = 12;
-            processStatsTable.Location = new Point(0, 0);
-            processStatsTable.Margin = new Padding(0);
-            processStatsTable.Name = "processStatsTable";
-            processStatsTable.Radius = 6;
-            processStatsTable.Size = new Size(1172, 573);
-            processStatsTable.TabIndex = 1;
-            processStatsTable.Visible = false;
-            // 
-            // notificationRecordsTable
-            // 
-            notificationRecordsTable.AutoSizeColumnsMode = AntdUI.ColumnsMode.Fill;
-            notificationRecordsTable.Dock = DockStyle.Fill;
-            notificationRecordsTable.EmptyText = "暂无提醒记录";
-            notificationRecordsTable.Gap = 12;
-            notificationRecordsTable.Location = new Point(0, 0);
-            notificationRecordsTable.Margin = new Padding(0);
-            notificationRecordsTable.Name = "notificationRecordsTable";
-            notificationRecordsTable.Radius = 6;
-            notificationRecordsTable.Size = new Size(1172, 573);
-            notificationRecordsTable.TabIndex = 0;
             // 
             // rulesPanel
             // 
@@ -2481,11 +2481,11 @@ namespace CdiskClean
             workspaceMain.ResumeLayout(false);
             workspacePageHeader.ResumeLayout(false);
             workspacePageContainer.ResumeLayout(false);
-            activityPanel.ResumeLayout(false);
-            activityToolbar.ResumeLayout(false);
-            panel2.ResumeLayout(false);
-            panel1.ResumeLayout(false);
-            activitySurface.ResumeLayout(false);
+            recordsPanel.ResumeLayout(false);
+            recordsToolbar.ResumeLayout(false);
+            recordsSurface.ResumeLayout(false);
+            cleanupRecordView.ResumeLayout(false);
+            recordViewHost.ResumeLayout(false);
             cleanupPanel.ResumeLayout(false);
             cleanupToolbar.ResumeLayout(false);
             cleanupToolbar.PerformLayout();
@@ -2503,6 +2503,11 @@ namespace CdiskClean
             cleanupFrequentPanel.ResumeLayout(false);
             cleanupMethodPanel.ResumeLayout(false);
             cleanupMethodPanel.PerformLayout();
+            activityPanel.ResumeLayout(false);
+            activityToolbar.ResumeLayout(false);
+            panel2.ResumeLayout(false);
+            panel1.ResumeLayout(false);
+            activitySurface.ResumeLayout(false);
             analyzerPanel.ResumeLayout(false);
             analyzerToolbar.ResumeLayout(false);
             analyzerToolbar.PerformLayout();
@@ -2510,11 +2515,6 @@ namespace CdiskClean
             analyzerTreeSurface.ResumeLayout(false);
             analyzerDetailsSurface.ResumeLayout(false);
             analyzerDetailsSurface.PerformLayout();
-            recordsPanel.ResumeLayout(false);
-            recordsToolbar.ResumeLayout(false);
-            recordsSurface.ResumeLayout(false);
-            cleanupRecordView.ResumeLayout(false);
-            recordViewHost.ResumeLayout(false);
             rulesPanel.ResumeLayout(false);
             rulesExeProcessView.ResumeLayout(false);
             rulesExeProcToolBar.ResumeLayout(false);
