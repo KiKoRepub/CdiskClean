@@ -2,7 +2,16 @@
 
 基于 .NET 8 (WinForms + AntdUI) 的 Windows 桌面应用。实时监控 C 盘（或其他磁盘）的文件变化并识别触发变化的进程（应用/服务/用户），同时提供磁盘空间分析、目录扫描与多方式文件清理能力，帮助更好地管理 C 盘空间。
 
-> **当前版本：version2 已完成**（P0/P1 功能全部落地，详见 `docs/version2-summary.md`）。监测配置闭环、目录权限分析、六类清理分类、工作台概览增强为本版本新增能力；来源反推、历史图表、智能分析与 AI 功能规划于 version3。
+## 🎉 版本发布
+
+**VERSION 2 已完成！** version1 与 version2 均已发布在 [GitHub Releases](https://github.com/KiKoRepub/CdiskClean/releases)：
+
+| 版本 | 说明 |
+| --- | --- |
+| version1 (v1.0.0-AntdUI) | AntdUI 控制台式界面重构 + 实时监控（FSW + ETW）+ 五种清理方式的基础版本 |
+| version2 (v2.0.0) | 当前版本：监测闭环（应用监测）、目录权限分析、六类清理分类、工作台概览增强，`BUG修复` 提交完成发布前修复 |
+
+version2 相比 version1 的完整变更清单见 [docs/version2-summary.md](docs/version2-summary.md)；来源反推、历史图表、智能分析与 AI 功能规划于 version3。
 
 ## 前排提醒
 	1. 本项目为个人学习/练手项目，非商业软件。请勿用于生产环境。
