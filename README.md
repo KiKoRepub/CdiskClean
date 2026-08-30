@@ -39,7 +39,17 @@ version2 相比 version1 的完整变更清单见 [version2-summary.md](version2
 │ 磁盘状态 | 监测状态 | 记录状态 | 时钟         │
 └──────────────────────────────────────────────┘
 ```
+---
 
+## 📸 界面预览
+
+| 工作台总览 | 实时活动监控 |
+| :---: | :---: |
+| ![工作台截图](screenShot/dashboard.png) | ![实时活动截图](screenShot/activity.png) |
+| **空间分析与大文件** | **智能清理中心** |
+| ![空间分析截图](screenShot/analysis.png) | ![清理中心截图](screenShot/cleanup.png) |
+
+---
 ## 功能特性
 
 ### 1. 工作台
