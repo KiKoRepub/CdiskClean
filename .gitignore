@@ -10,7 +10,7 @@ cacheRefer/
 icons/
 codex-prompt.txt
 claude-prompt.txt
-opencode-promt.txt
+opencode-prompt.txt
 # User-specific files
 *.rsuser
 *.suo
