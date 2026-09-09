@@ -11,9 +11,11 @@
     <Compile Include="..\..\Helpers\PathHelper.cs" Link="Helpers\PathHelper.cs" />
     <Compile Include="..\..\Helpers\RiskLevelHelper.cs" Link="Helpers\RiskLevelHelper.cs" />
     <Compile Include="..\..\Models\**\*.cs" Link="Models\%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="..\..\Services\CleanupClassifier.cs" Link="Services\CleanupClassifier.cs" />
-    <Compile Include="..\..\Services\IDatabaseService.cs" Link="Services\IDatabaseService.cs" />
-    <Compile Include="..\..\Services\database\SqliteDatabaseService.cs" Link="Services\database\SqliteDatabaseService.cs" />
+    <Compile Include="..\..\Services\Cleanup\CleanupClassifier.cs" Link="Services\Cleanup\CleanupClassifier.cs" />
+    <Compile Include="..\..\Services\database\*.cs" Link="Services\database\%(Filename)%(Extension)" />
+    <Compile Include="..\..\Services\Cleanup\CleanupScanner.cs" Link="Services\Cleanup\CleanupScanner.cs" />
+    <Compile Include="..\..\Services\Cleanup\CleanupFileOperations.cs" Link="Services\Cleanup\CleanupFileOperations.cs" />
+    <Compile Include="..\..\Helpers\FileRecycleHelper.cs" Link="Helpers\FileRecycleHelper.cs" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.10" />
   </ItemGroup>
 </Project>

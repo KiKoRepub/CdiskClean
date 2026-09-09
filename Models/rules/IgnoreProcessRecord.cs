@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,15 +18,6 @@ public class IgnoreProcessRecord
         Status = RecordStatusEnum.USING;
     }
 
-    public static string GetCreateSQL()
-    {
-        return @"CREATE TABLE IF NOT EXISTS IgnoreProcessRecord (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                ProcessName TEXT NOT NULL UNIQUE,
-                Status TEXT NOT NULL DEFAULT 'USING',
-                CreatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-            );";
-    }
 
     public static List<IgnoreProcessRecord> GetDefaultRecords()
     {

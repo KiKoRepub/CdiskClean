@@ -990,7 +990,6 @@ namespace CdiskClean
             cleanTreeView.AfterExpand += cleanTreeView_AfterExpand;
             cleanTreeView.CheckedChanged += cleanTreeView_CheckedChanged;
             cleanTreeView.NodeMouseClick += cleanTreeView_NodeMouseClick;
-            cleanTreeView.MouseWheel += cleanTreeView_MouseWheel;
             // 
             // cleanupCategoryPanel
             // 
@@ -1045,7 +1044,6 @@ namespace CdiskClean
             otherCheckBox.TextAlign = ContentAlignment.MiddleCenter;
             otherCheckBox.UseVisualStyleBackColor = true;
             otherCheckBox.CheckStateChanged += cleanupCategoryCheckBox_CheckStateChanged;
-            otherCheckBox.Click += categoryCheckBox_Click;
             // 
             // installersCheckBox
             // 
@@ -1061,7 +1059,6 @@ namespace CdiskClean
             installersCheckBox.TextAlign = ContentAlignment.MiddleCenter;
             installersCheckBox.UseVisualStyleBackColor = true;
             installersCheckBox.CheckStateChanged += cleanupCategoryCheckBox_CheckStateChanged;
-            installersCheckBox.Click += categoryCheckBox_Click;
             // 
             // CrashDumpsCheckBox
             // 
@@ -1077,7 +1074,6 @@ namespace CdiskClean
             CrashDumpsCheckBox.TextAlign = ContentAlignment.MiddleCenter;
             CrashDumpsCheckBox.UseVisualStyleBackColor = true;
             CrashDumpsCheckBox.CheckStateChanged += cleanupCategoryCheckBox_CheckStateChanged;
-            CrashDumpsCheckBox.Click += categoryCheckBox_Click;
             // 
             // logsCheckBox
             // 
@@ -1093,7 +1089,6 @@ namespace CdiskClean
             logsCheckBox.TextAlign = ContentAlignment.MiddleCenter;
             logsCheckBox.UseVisualStyleBackColor = true;
             logsCheckBox.CheckStateChanged += cleanupCategoryCheckBox_CheckStateChanged;
-            logsCheckBox.Click += categoryCheckBox_Click;
             // 
             // cacheCheckBox
             // 
@@ -1109,7 +1104,6 @@ namespace CdiskClean
             cacheCheckBox.TextAlign = ContentAlignment.MiddleCenter;
             cacheCheckBox.UseVisualStyleBackColor = true;
             cacheCheckBox.CheckStateChanged += cleanupCategoryCheckBox_CheckStateChanged;
-            cacheCheckBox.Click += categoryCheckBox_Click;
             // 
             // temporaryFileCheckBox
             // 
@@ -1125,7 +1119,6 @@ namespace CdiskClean
             temporaryFileCheckBox.TextAlign = ContentAlignment.MiddleCenter;
             temporaryFileCheckBox.UseVisualStyleBackColor = true;
             temporaryFileCheckBox.CheckStateChanged += cleanupCategoryCheckBox_CheckStateChanged;
-            temporaryFileCheckBox.Click += categoryCheckBox_Click;
             // 
             // cleanupActionSurface
             // 
@@ -1449,7 +1442,6 @@ namespace CdiskClean
             recordSearchBox.Size = new Size(282, 36);
             recordSearchBox.TabIndex = 2;
             recordSearchBox.TextChanged += recordSearchBox_TextChanged;
-            recordSearchBox.KeyDown += recordSearchBox_KeyDown;
             // 
             // panel1
             // 

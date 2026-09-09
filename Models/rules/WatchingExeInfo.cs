@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -48,20 +48,6 @@ namespace CdiskClean.Models.rules
             Path.GetFileNameWithoutExtension(processName?.Trim() ?? string.Empty);
 
 
-        public static string GetCreateSQL()
-        {
-            return @"CREATE TABLE IF NOT EXISTS WatchingExeInfo (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                ExeName TEXT NOT NULL,
-                FullPath TEXT NOT NULL UNIQUE,
-                SizeBytes INTEGER NULL,
-                RunningState TEXT NOT NULL DEFAULT '未知',
-                MonitoringState TEXT NOT NULL DEFAULT 'USING',
-                CreatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                UpdatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                LastActivityAt TEXT NULL
-            );";
-        }
 
         private static long? GetFileSizeSafe(string path)
         {

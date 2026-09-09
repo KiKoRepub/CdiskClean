@@ -1,4 +1,4 @@
-﻿using CdiskClean.Helpers;
+using CdiskClean.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,17 +30,6 @@ namespace CdiskClean.Models.rules
             Status = RecordStatusEnum.USING;
         }
 
-        public static string GetCreateSQL()
-        {
-            return @"CREATE TABLE IF NOT EXISTS WatchDirectories (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Path TEXT NOT NULL UNIQUE,
-                IncludeSubdirs INTEGER NOT NULL DEFAULT 1,
-                Status TEXT NOT NULL DEFAULT 'USING',
-                CreatedAt TEXT NOT NULL,
-                UpdatedAt TEXT NOT NULL
-            );";
-        }
 
         internal static IEnumerable<WatchingDirectory> GetDefaultDirectories()
         {

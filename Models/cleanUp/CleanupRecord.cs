@@ -30,19 +30,4 @@ public class CleanupRecord
 
     public string ResultText => Success ? "成功" : "失败";
 
-    public static string GetCreateSQL()
-    {
-        return @"CREATE TABLE IF NOT EXISTS CleanupRecords (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                CleanupTime TEXT NOT NULL,
-                FullPath TEXT NOT NULL,
-                FileName TEXT NOT NULL,
-                SizeBytes INTEGER,
-                Method TEXT NOT NULL,
-                Category TEXT NOT NULL DEFAULT '其他',
-                Success INTEGER NOT NULL,
-                Message TEXT,
-                CreatedAt TEXT NOT NULL
-            );";
-    }
 }

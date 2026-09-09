@@ -1,3 +1,4 @@
+using TreeItem = AntdUI.TreeItem;
 using CdiskClean.Helpers;
 using CdiskClean.Models;
 using System.Text;
@@ -56,7 +57,7 @@ public partial class Form1
         List<FileChangeRecord> records;
         try
         {
-            records = await Task.Run(() => _databaseService.GetChangeRecordsUnderPath(path, 50));
+            records = await Task.Run(() => _databaseService.History.GetChangeRecordsUnderPath(path, 50));
         }
         catch (Exception ex)
         {
@@ -141,4 +142,129 @@ public partial class Form1
     // ==================== 事件包装方法（设计器绑定） ====================
 
     private void analyzerUseForCleanupButton_Click(object? sender, EventArgs e) => UseAnalyzerPathForCleanup();
+
+    #region 文件夹分析
+    private void selectDirBtn_Click(object? sender, EventArgs e)
+    {
+        using var dialog = new System.Windows.Forms.FolderBrowserDialog
+        {
+            Description = "选择要分析的文件夹",
+            ShowNewFolderButton = false
+        };
+
+        if (dialog.ShowDialog() == DialogResult.OK)
+        {
+            selectedPathTextBox.Text = dialog.SelectedPath;
+        }
+    }
+
+    private async void scanBtn_Click(object? sender, EventArgs e)
+    {
+        var path = selectedPathTextBox.Text.Trim();
+        if (string.IsNullOrEmpty(path))
+        {
+            MessageBox.Show("请先选择要分析的目录。", "提示",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        if (!Directory.Exists(path))
+        {
+            MessageBox.Show("所选目录不存在，请重新选择。", "错误",
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        _analyzerScanCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _analyzerScanCts = cts;
+        var scanVersion = ++_analyzerScanVersion;
+
+        scanBtn.Enabled = false;
+        selectDirBtn.Enabled = false;
+        stopBtn.Enabled = true;
+        folderTreeView.Items.Clear();
+        scanProgressBar.Style = ProgressBarStyle.Marquee;
+
+        try
+        {
+            stopBtn.Tag = cts;
+
+            var result = await _folderAnalyzer.ScanFolderAsync(path, cts.Token);
+            cts.Token.ThrowIfCancellationRequested();
+            var permission = await Task.Run(() => _folderPermissionAnalyzer.Analyze(path), cts.Token);
+            cts.Token.ThrowIfCancellationRequested();
+            if (scanVersion != _analyzerScanVersion) return;
+            result.AccessStatus = permission.CanRead
+                ? result.AccessStatus
+                : FolderAccessStatus.Denied;
+            result.ErrorMessage ??= permission.ErrorMessage;
+            result.LastScannedAt = DateTime.Now;
+
+            PopulateTreeView(result);
+            UpdateAnalyzerPermission(permission);
+        }
+        catch (OperationCanceledException)
+        {
+            scanProgressBar.Style = ProgressBarStyle.Blocks;
+            if (scanVersion == _analyzerScanVersion)
+                analyzerAccessValue.Text = "访问状态：扫描已取消";
+        }
+        catch (Exception ex)
+        {
+            BeginInvoke(() =>
+                MessageBox.Show($"扫描失败: {ex.Message}", "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error));
+        }
+        finally
+        {
+            if (ReferenceEquals(_analyzerScanCts, cts))
+            {
+                scanProgressBar.Style = ProgressBarStyle.Blocks;
+                scanBtn.Enabled = true;
+                selectDirBtn.Enabled = true;
+                stopBtn.Enabled = false;
+                _analyzerScanCts = null;
+                stopBtn.Tag = null;
+            }
+            cts.Dispose();
+        }
+    }
+
+    private void stopBtn_Click(object? sender, EventArgs e)
+    {
+        // 扫描协程持有的 CancellationTokenSource 与 FolderSizeAnalyzer 内部为同一链接 token，取消一次即可
+        if (stopBtn.Tag is CancellationTokenSource cts)
+        {
+            cts.Cancel();
+        }
+    }
+
+    private void PopulateTreeView(FolderSizeInfo info)
+    {
+        folderTreeView.Items.Clear();
+        var rootItem = CreateTreeItem(info);
+        folderTreeView.Items.Add(rootItem);
+        rootItem.Expand = true;
+    }
+
+    private static TreeItem CreateTreeItem(FolderSizeInfo info)
+    {
+        var accessSuffix = info.InaccessibleCount > 0 ? $"，不可访问 {info.InaccessibleCount} 项" : string.Empty;
+        var item = new TreeItem
+        {
+            Text = info.Name,
+            SubTitle = $"{FormatHelper.FormatBytes(info.SizeBytes)}, {info.FileCount} 个文件{accessSuffix}",
+            Tag = info
+        };
+
+        foreach (var sub in info.SubFolders.OrderByDescending(s => s.SizeBytes))
+        {
+            item.Sub.Add(CreateTreeItem(sub));
+        }
+
+        return item;
+    }
+
+    #endregion
 }

@@ -1,12 +1,13 @@
+using CdiskClean.Services.database;
 using CdiskClean.Models;
 
 namespace CdiskClean.Services;
 
 public sealed class DashboardQueryService
 {
-    private readonly IDatabaseService _databaseService;
+    private readonly HistoryStore _databaseService;
 
-    public DashboardQueryService(IDatabaseService databaseService)
+    public DashboardQueryService(HistoryStore databaseService)
     {
         _databaseService = databaseService;
     }

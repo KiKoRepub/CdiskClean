@@ -342,4 +342,38 @@ public partial class Form1
         public string Directory { get; init; } = string.Empty;
     }
     #endregion 
+
+    #region 磁盘概览
+
+    private void RefreshDiskInfo()
+    {
+        try
+        {
+            var info = _diskSpaceService.GetDriveInfo("C:");
+            UpdateDiskUI(info);
+        }
+        catch (Exception ex)
+        {
+            // 定时刷新失败仅记录日志，避免每 30 秒弹窗骚扰
+            Debug.WriteLine($"获取磁盘信息失败: {ex.Message}");
+        }
+    }
+
+    private void UpdateDiskUI(DriveInfoModel info)
+    {
+        if (InvokeRequired)
+        {
+            BeginInvoke(() => UpdateDiskUI(info));
+            return;
+        }
+
+        UpdateWorkspaceDiskStatus(info);
+    }
+
+    private void diskRefreshTimer_Tick(object? sender, EventArgs e)
+    {
+        RefreshDiskInfo();
+    }
+
+    #endregion
 }

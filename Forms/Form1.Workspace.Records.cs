@@ -35,8 +35,8 @@ public partial class Form1
         List<ProcessNotificationRecord> notifications;
         try
         {
-            var dbTask = Task.Run(() => _databaseService.GetChangeRecords(1000));
-            var notifTask = Task.Run(() => _databaseService.GetProcessNotifications(500));
+            var dbTask = Task.Run(() => _databaseService.History.GetChangeRecords(1000));
+            var notifTask = Task.Run(() => _databaseService.History.GetProcessNotifications(500));
             await Task.WhenAll(dbTask, notifTask);
             dbRecords = dbTask.Result;
             notifications = notifTask.Result;
@@ -86,4 +86,15 @@ public partial class Form1
     private void recordsDetailsTab_Click(object? sender, EventArgs e) => ShowRecordView("details");
     private void recordsCleanupTab_Click(object? sender, EventArgs e) => ShowRecordView("cleanup");
     private void recordsRefreshButton_Click(object? sender, EventArgs e) => RefreshRecordsCenter();
+
+    private static string GetChangeRecordKey(FileChangeRecord record) =>
+        $"{record.Timestamp.Ticks}|{record.ChangeType}|{record.FullPath}";
+
+    private static string EscapeCsv(string? value)
+    {
+        const char quote = (char)34;
+        return quote + (value ?? string.Empty).Replace(
+            quote.ToString(),
+            new string(quote, 2)) + quote;
+    }
 }

@@ -39,7 +39,6 @@ public partial class Form1
             LayoutCleanupMethodPanel(panel);
     }
 
-
     #region 磁盘清理
     // ==================== 磁盘清理 ====================
 
@@ -51,8 +50,6 @@ public partial class Form1
     private IReadOnlyDictionary<string, CleanupCandidate> _cleanCandidatesByPath =
         new Dictionary<string, CleanupCandidate>(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<CleanupCategory, System.Windows.Forms.CheckBox> cleanupCategoryChecks = new();
-    private FlowLayoutPanel? _cleanupCategoryPanel;
-    private ToolTip? _cleanupCategoryToolTip;
 
     /// <summary>树节点数量上限，超过则仅显示目录节点（文件通过勾选目录整体清理）</summary>
     private const int MaxCleanTreeNodes = 50000;
@@ -85,11 +82,10 @@ public partial class Form1
 
         foreach (CheckBox checkBox in categoryCheckBoxPanel.Controls)
         {
-            cleanupCategoryChecks[((CleanupCategory)Enum.Parse(typeof(CleanupCategory), checkBox.Tag.ToString()))] = checkBox;
+            if (Enum.TryParse<CleanupCategory>(checkBox.Tag?.ToString(), out var category))
+                cleanupCategoryChecks[category] = checkBox;
         }
     }
-
-
 
     private void SetupFrequentListView()
     {
@@ -121,7 +117,7 @@ public partial class Form1
         List<FileChangeRecord> dbRecords;
         try
         {
-            dbRecords = await Task.Run(() => _databaseService.GetChangeRecords(5000));
+            dbRecords = await Task.Run(() => _databaseService.History.GetChangeRecords(5000));
         }
         catch (Exception ex)
         {
@@ -247,7 +243,7 @@ public partial class Form1
 
         try
         {
-            var entries = await _cleanupService.ScanDirectoryAsync(path, cts.Token);
+            var entries = await CleanupScanner.ScanDirectoryAsync(path, cts.Token);
             if (cts.IsCancellationRequested) return;
 
             ApplyCleanupCandidates(_cleanupService.Classify(entries));
@@ -520,7 +516,6 @@ public partial class Form1
     // ==================== 清理树交互（p017 task2） ====================
 
     /// <summary>节点信息气泡（单击节点显示创建时间），懒创建</summary>
-    private NodeInfoPopover? _nodeInfoPopover;
 
     /// <summary>
     /// 单击节点文本：在节点位置弹出创建时间信息框。
@@ -546,14 +541,6 @@ public partial class Form1
 
         Popover.open(cleanTreeView, entry.Name, toShow, TAlign.Top);
 
-
-
-    }
-
-    /// <summary>滚动清理树时收起信息框，避免气泡位置与节点错位</summary>
-    private void cleanTreeView_MouseWheel(object? sender, MouseEventArgs e)
-    {
-        _nodeInfoPopover?.Hide();
     }
 
     /// <summary>
@@ -794,7 +781,7 @@ public partial class Form1
         cleanButton.Text = "取消清理";
         cleanScanBtn.Enabled = false;
         cleanTreeView.Enabled = false;
-        if (_cleanupCategoryPanel != null) _cleanupCategoryPanel.Enabled = false;
+        categoryCheckBoxPanel.Enabled = false;
         foreach (var (radio, _) in _cleanupMethodRadios) radio.Enabled = false;
         cleanTargetTextBox.Enabled = false;
         cleanTargetSelectBtn.Enabled = false;
@@ -851,7 +838,7 @@ public partial class Form1
             cleanButton.Text = "清理选中文件";
             cleanScanBtn.Enabled = true;
             cleanTreeView.Enabled = true;
-            if (_cleanupCategoryPanel != null) _cleanupCategoryPanel.Enabled = true;
+            categoryCheckBoxPanel.Enabled = true;
             foreach (var (radio, _) in _cleanupMethodRadios) radio.Enabled = true;
             UpdateTargetBoxState();
             cleanScanProgressBar.Style = ProgressBarStyle.Blocks;
@@ -891,7 +878,7 @@ public partial class Form1
 
     private void RefreshCleanHistory()
     {
-        var records = _databaseService.GetCleanupRecords(200);
+        var records = _databaseService.History.GetCleanupRecords(200);
         cleanHistoryTable.DataSource = records;
         cleanHistoryEmptyLabel.Visible = records.Count == 0;
 
@@ -918,11 +905,6 @@ public partial class Form1
                 checkBox.CheckState = CheckState.Unchecked;
                 checkBox.Text = $"{category.GetDisplayName()} {items.Count}";
                 checkBox.Enabled = items.Count > 0;
-                var riskText = items.Any(item => item.RiskLevel == RiskLevel.High)
-                    ? "包含高风险项，整类选择前会再次确认。"
-                    : "整类选择会同步清理树三态。";
-                _cleanupCategoryToolTip?.SetToolTip(checkBox,
-                    $"{items.Count} 项 / {FormatHelper.FormatBytes(items.Sum(item => item.Entry.SizeBytes))}\n{riskText}");
             }
         }
         finally
@@ -1095,4 +1077,46 @@ public partial class Form1
         }
     }
     #endregion
+
+    private void cleanupCategoryCheckBox_CheckStateChanged(object? sender, EventArgs e)
+    {
+        if (_categoryUpdating || sender is not System.Windows.Forms.CheckBox { Tag: CleanupCategory category } checkBox)
+            return;
+        if (checkBox.CheckState == CheckState.Indeterminate) return;
+
+        var shouldCheck = checkBox.Checked;
+        if (shouldCheck && _cleanCandidates.Any(candidate =>
+                candidate.Category == category && candidate.RiskLevel == RiskLevel.High) &&
+            MessageBox.Show(
+                $"“{category.GetDisplayName()}”中包含高风险项，可能影响系统、应用修复或卸载。\n\n仍要选择整个分类吗？",
+                "高风险分类确认",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning) != DialogResult.Yes)
+        {
+            _categoryUpdating = true;
+            checkBox.CheckState = CheckState.Unchecked;
+            _categoryUpdating = false;
+            return;
+        }
+
+        _treeUpdating = true;
+        try
+        {
+            foreach (var root in cleanTreeView.Items)
+            {
+                SetCleanupCategoryState(root, category, shouldCheck);
+                RecalculateCleanupCheckState(root);
+            }
+        }
+        finally
+        {
+            _treeUpdating = false;
+        }
+        UpdateCleanupSelectionSummary();
+    }
+
+    private void ApplyCleanupCategoryFilter(object sender, EventArgs e)
+    {
+        ApplyCleanupCategoryFilter();
+    }
 }

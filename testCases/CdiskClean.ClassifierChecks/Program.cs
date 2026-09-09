@@ -30,8 +30,9 @@ if (duplicates.Count != 1)
     throw new InvalidOperationException("分类器必须按路径去重。 ");
 
 CheckCleanupCategoryMigration();
+await CheckCleanupScannerAsync();
 
-Console.WriteLine("CleanupClassifier and database migration checks passed.");
+Console.WriteLine("Classifier, database, scanner and protected-path checks passed.");
 
 void AssertCategory(string path, CleanupCategory expected)
 {
@@ -72,7 +73,27 @@ static void CheckCleanupCategoryMigration()
 
         var database = new SqliteDatabaseService(databasePath);
         database.Initialize();
-        database.SaveCleanupRecord(new CleanupRecord
+        database.Initialize();
+        const string watchedPath = @"D:\Data\100%_cache";
+        database.Rules.SaveWatchDirectory(new CdiskClean.Models.rules.WatchingDirectory(watchedPath, true));
+        database.Rules.SaveWatchDirectory(new CdiskClean.Models.rules.WatchingDirectory(watchedPath, false));
+        if (database.Rules.GetWatchDirectories().Single().IncludeSubdirs)
+            throw new InvalidOperationException("Directory update failed.");
+        database.Rules.DeleteWatchDirectory(watchedPath);
+        if (database.Rules.GetWatchDirectories().Count != 0)
+            throw new InvalidOperationException("Directory delete failed.");
+        foreach (var file in new[] { watchedPath + @"\one.tmp", @"D:\Data\100XXcache\other.tmp" })
+            database.History.SaveChangeRecord(new CdiskClean.Models.FileChangeRecord
+            {
+                Timestamp = DateTime.Now,
+                FullPath = file,
+                FileName = Path.GetFileName(file),
+                Directory = Path.GetDirectoryName(file)!
+            });
+        if (database.History.GetChangeRecords().Count != 2 ||
+            database.History.GetChangeRecordsUnderPath(watchedPath).Single().FullPath != watchedPath + @"\one.tmp")
+            throw new InvalidOperationException("Path query escaping failed.");
+        database.History.SaveCleanupRecord(new CleanupRecord
         {
             CleanupTime = DateTime.Now,
             FullPath = @"D:\Data\Temp\old.tmp",
@@ -83,7 +104,7 @@ static void CheckCleanupCategoryMigration()
             Success = true
         });
 
-        var record = database.GetCleanupRecords(1).Single();
+        var record = database.History.GetCleanupRecords(1).Single();
         if (record.Category != CleanupCategory.TemporaryFiles.GetDisplayName())
             throw new InvalidOperationException("旧数据库未正确迁移清理分类列。 ");
     }
@@ -95,5 +116,42 @@ static void CheckCleanupCategoryMigration()
             var filePath = databasePath + suffix;
             if (File.Exists(filePath)) File.Delete(filePath);
         }
+    }
+}
+
+static async Task CheckCleanupScannerAsync()
+{
+    var root = Path.Combine(AppContext.BaseDirectory, $"scanner-check-{Guid.NewGuid():N}");
+    Directory.CreateDirectory(Path.Combine(root, "child"));
+    try
+    {
+        await File.WriteAllBytesAsync(Path.Combine(root, "one.tmp"), new byte[3]);
+        await File.WriteAllBytesAsync(Path.Combine(root, "child", "two.tmp"), new byte[5]);
+        var entries = await CleanupScanner.ScanDirectoryAsync(root);
+        if (entries.Count != 4 || entries[0].FullPath != root || entries[0].SizeBytes != 8 ||
+            entries.Single(entry => entry.Name == "child").SizeBytes != 5)
+            throw new InvalidOperationException("Scanner must preserve parent-first order and aggregate sizes.");
+        var file = entries.Single(entry => entry.Name == "one.tmp");
+        foreach (var method in Enum.GetValues<CleanupMethod>())
+        {
+            if (CleanupFileOperations.Execute(file, method, null, out var error, out var freed) ||
+                string.IsNullOrEmpty(error) || freed != 0 || !File.Exists(file.FullPath))
+                throw new InvalidOperationException("Cleanup must refuse paths inside the application directory.");
+        }
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+        try
+        {
+            await CleanupScanner.ScanDirectoryAsync(root, cts.Token);
+            throw new InvalidOperationException("A cancelled scan must not run.");
+        }
+        catch (OperationCanceledException) { }
+    }
+    finally
+    {
+        var fullRoot = Path.GetFullPath(root);
+        if (!fullRoot.StartsWith(Path.GetFullPath(AppContext.BaseDirectory), StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Test cleanup path escaped the output directory.");
+        if (Directory.Exists(fullRoot)) Directory.Delete(fullRoot, true);
     }
 }

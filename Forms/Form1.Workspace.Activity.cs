@@ -6,12 +6,9 @@ using System.ComponentModel;
 
 namespace CdiskClean;
 
-/// <summary>工作区「实时活动」页：布局已在设计器维护，本文件留空备用</summary>
+/// <summary>工作区「实时活动」页：监控启停、记录过滤、导出和通知处理</summary>
 public partial class Form1
 {
-
-
-
 
     private void BindActivityCenter(BindingList<FileChangeRecord> records)
     {
@@ -28,7 +25,6 @@ public partial class Form1
             return;
         }
 
-
         activityRecordTable.Columns = new AntdUI.ColumnCollection
             {
                 MakeColumn("Timestamp", "时间", "20%", AntdUI.ColumnAlign.Center),
@@ -43,7 +39,6 @@ public partial class Form1
         activityRecordTable.Refresh();
         //MessageBox.Show("体现");
     }
-
 
     #region 实时监测
     // ==================== 实时监测 ====================
@@ -67,8 +62,12 @@ public partial class Form1
                 _monitorService.EnableDefaultMode();
             }
 
-            _monitorService.StartMonitor(string.Empty);
-            if (!_monitorService.IsRunning) return;
+            if (!_monitorService.Start(string.Empty))
+            {
+                MessageBox.Show("ETW 监控会话启动失败，请确认程序以管理员权限运行。", "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             _notificationService.Start();
             notifyIcon1.Text = "C盘管理工具\r\n监测中";
         }
@@ -204,53 +203,10 @@ public partial class Form1
             activityRecordTable.Refresh();
         }
         return;
-        /*            var filterIndex = typeFilterCombo.SelectedIndex;
-                    var searchText = recordSearchBox.Text.Trim();
-                    var hasSearch = !string.IsNullOrWhiteSpace(searchText);
-                    if (filterIndex <= 0 && !hasSearch)
-                    {
-                        // 已绑定 _records 时无需重新赋值，避免网格滚动/选择位置被重置
-                        if (!_gridBoundToRecords)
-                        {
-                            changesDataGrid.DataSource = _records;
-                            _gridBoundToRecords = true;
-                        }
-                        return;
-                    }
 
-                    var targetType = filterIndex switch
-                    {
-                        1 => ChangeType.Created,
-                        2 => ChangeType.Changed,
-                        3 => ChangeType.Deleted,
-                        4 => ChangeType.Renamed,
-                        _ => (ChangeType?)null
-                    };
-
-                    IEnumerable<FileChangeRecord> filtered = _records;
-                    if (targetType.HasValue)
-                        filtered = filtered.Where(r => r.ChangeType == targetType.Value);
-                    if (hasSearch)
-                    {
-                        filtered = filtered.Where(r =>
-                            r.FileName.Contains(searchText!, StringComparison.OrdinalIgnoreCase) ||
-                            r.FullPath.Contains(searchText!, StringComparison.OrdinalIgnoreCase) ||
-                            (r.SourceProcess?.Contains(searchText!, StringComparison.OrdinalIgnoreCase) ?? false));
-                    }
-
-                    changesDataGrid.DataSource = new BindingList<FileChangeRecord>(
-                        filtered.ToList());
-                    _gridBoundToRecords = false;*/
     }
 
-    /*        private void changesDataGrid_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
-            {
-                if (e.ColumnIndex == TypeColumn.Index && e.Value is ChangeType changeType)
-                {
-                    e.Value = EnumHelper.FormatChangeType(changeType);
-                    e.FormattingApplied = true;
-                }
-            }*/
+
 
     private void OnFileChanged(FileChangeRecord record)
     {
@@ -258,7 +214,7 @@ public partial class Form1
         if (record.SourceProcess != null)
         {
             _notificationService.RecordChange(record);
-            try { _databaseService.UpdateWatchingApplicationActivity(record.SourceProcess, record.Timestamp); }
+            try { _databaseService.Rules.UpdateWatchingApplicationActivity(record.SourceProcess, record.Timestamp); }
             catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"更新应用监测活动失败: {ex.Message}"); }
         }
 
@@ -316,7 +272,7 @@ public partial class Form1
     {
         try
         {
-            _databaseService.SaveProcessNotification(record);
+            _databaseService.History.SaveProcessNotification(record);
         }
         catch (Exception ex)
         {
@@ -342,6 +298,5 @@ public partial class Form1
         workspaceRecordStatus.ForeColor = UiTheme.TextSecondary;
     }
     #endregion
-
 
 }

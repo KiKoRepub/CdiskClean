@@ -1,3 +1,4 @@
+using CdiskClean.Services.database;
 using System.Collections.Concurrent;
 using CdiskClean.Models;
 using CdiskClean.Models.rules;
@@ -9,7 +10,7 @@ public class DiskMonitorService : IDisposable
     private readonly List<FileSystemWatcher> _watchers = new();
     private readonly EtwMonitorService _etwService;
     private readonly CleanupService? _cleanupService;
-    private readonly IDatabaseService _databaseService;
+    private readonly HistoryStore _databaseService;
 
     private readonly object _lock = new();
     private readonly object _ignoreProcessLock = new();
@@ -40,7 +41,7 @@ public class DiskMonitorService : IDisposable
 
     public bool IsRunning { get; private set; }
 
-    public DiskMonitorService(EtwMonitorService etwService, CleanupService? cleanupService = null, IDatabaseService? databaseService = null)
+    public DiskMonitorService(EtwMonitorService etwService, HistoryStore databaseService, CleanupService? cleanupService = null)
     {
         _etwService = etwService;
         _cleanupService = cleanupService;
@@ -73,16 +74,11 @@ public class DiskMonitorService : IDisposable
             .Select(d => d.Path).ToArray());
     }
 
-    public void Start(string processName)
+    public bool Start(string processName)
     {
-        if (IsRunning) return;
+        if (IsRunning) return true;
 
-        if (!_etwService.Start())
-        {
-            MessageBox.Show("ETW 监控会话启动失败，请确认程序以管理员权限运行。", "错误",
-                MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
-        }
+        if (!_etwService.Start()) return false;
 
         switch (_currentMode)
         {
@@ -106,6 +102,7 @@ public class DiskMonitorService : IDisposable
 
 
         IsRunning = true;
+        return true;
     }
 
 
@@ -584,11 +581,6 @@ public class DiskMonitorService : IDisposable
         }
     }
 
-    internal void StartMonitor(string processName)
-    {
-        Start(processName);
-    
-    }
     #endregion
 }
 

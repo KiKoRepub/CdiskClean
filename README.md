@@ -164,3 +164,23 @@ CdiskClean/
 - 被其他进程独占打开的文件无法移动/删除，程序会多次重试（约 14 秒）并提示关闭占用程序
 - 默认仅监控 C 盘常见目录（桌面、文档、下载、临时目录等），可在设置中添加任意目录
 - 点击右上角「×」仅隐藏到托盘，退出程序请使用托盘菜单「退出」
+
+## 代码职责与目录
+
+- `Forms/Form1.cs`：主窗体的服务组装、初始化和退出。各页面事件放在对应的 `Form1.Workspace.*.cs`，托盘事件放在 `Form1.Tray.cs`；布局仍由设计器维护。
+- `Services/Cleanup/`：`CleanupScanner` 扫描候选项，`CleanupClassifier` 分类，`CleanupService` 协调批次和记录，`CleanupFileOperations` 执行操作并维护安全校验、重试和回滚。
+- `Services/Monitoring/`：文件监控、ETW 归因和通知聚合；启动结果返回窗体，由窗体显示提示。
+- `Services/Analysis/`：磁盘空间、目录大小和权限分析。
+- `Services/database/`：数据库连接与迁移、监控规则和历史记录。建表 SQL 集中在 `DatabaseSchema`，模型不再负责数据库结构。
+- `Models/`：数据及业务枚举；`Helpers/`：通用格式、路径、主题和系统调用辅助方法。
+
+服务按目录分组，保留 `CdiskClean.Services` 命名空间，数据库使用 `CdiskClean.Services.database`。调用方直接使用具体类；新增功能放入对应职责，不增加接口中间层。
+
+验证命令：
+
+```powershell
+dotnet build CdiskClean.csproj --no-restore -p:UseAppHost=false
+dotnet run --project testCases/CdiskClean.ClassifierChecks/CdiskClean.ClassifierChecks.csproj
+```
+
+检查覆盖分类、旧数据库迁移及规则读写、路径查询、扫描大小汇总及取消，以及受保护路径拒绝清理。
