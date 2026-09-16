@@ -21,11 +21,11 @@ namespace CdiskClean
             if (TryRunUiPreview(args))
                 return;
 #endif
-            if (!IsElevated())
-            {
-                MessageBox.Show("此程序需要管理员权限才能正常运行。", "权限不足", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
+            //if (!IsElevated())
+            //{
+            //    MessageBox.Show("此程序需要管理员权限才能正常运行。", "权限不足", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            //    return;
+            //}
             Application.Run(new Form1());
         }
 
