@@ -1,10 +1,11 @@
-using CdiskClean.Helpers;
+﻿using CdiskClean.Helpers;
 using CdiskClean.Models.cleanUp;
 using CdiskClean.Services;
 using CdiskClean.Services.database;
 using Microsoft.Data.Sqlite;
 
 var classifier = new CleanupClassifier();
+await AgentChecks.RunAsync();
 
 AssertCategory(@"D:\Data\Temp\work.tmp", CleanupCategory.TemporaryFiles);
 AssertCategory(@"D:\Data\Cache\asset.bin", CleanupCategory.Cache);

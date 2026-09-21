@@ -1,4 +1,4 @@
-using CdiskClean.Helpers;
+﻿using CdiskClean.Helpers;
 using CdiskClean.Models;
 using CdiskClean.Models.rules;
 using CdiskClean.Services.database;
@@ -33,6 +33,7 @@ namespace CdiskClean
         public Form1()
         {
             InitializeComponent();
+            InitializeAgentPage();
             InitializeAnalyzerDetails();
 
             // 记录批量刷新定时器：合并 150ms 内到达的变更记录，避免高频事件逐条刷新网格

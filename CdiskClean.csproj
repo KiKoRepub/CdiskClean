@@ -61,6 +61,7 @@
     <Folder Include="docs\antdUI\" />
     <Folder Include="docs\extra\" />
     <Folder Include="docs\opencode\" />
+    <Folder Include="excalidraw\" />
     <Folder Include="testCases\" />
   </ItemGroup>
 

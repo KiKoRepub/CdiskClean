@@ -1,4 +1,4 @@
-using AntdUI;
+﻿using AntdUI;
 using CdiskClean.Helpers;
 using CdiskClean.Models;
 using System.ComponentModel;
@@ -45,6 +45,8 @@ public partial class Form1
         analyzerPanel.Visible = false;
         cleanupPanel.Visible = false;
         recordsPanel.Visible = false;
+        agentPanel.Visible = false;
+        if (id != "ai") _agentRequestCts?.Cancel();
 
         // 显示目标页面面板
         var targetPanel = id switch
@@ -55,6 +57,7 @@ public partial class Form1
             AnalyzerPageId => analyzerPanel,
             CleanupPageId => cleanupPanel,
             RecordsPageId => recordsPanel,
+            "ai" => agentPanel,
             _ => dashboardPanel
         };
         targetPanel.Visible = true;
@@ -69,6 +72,7 @@ public partial class Form1
             AnalyzerPageId => ("空间分析", "扫描目录占用并将结果直接带入清理流程"),
             CleanupPageId => ("清理中心", "选择文件、确认清理方式并执行安全清理"),
             RecordsPageId => ("记录中心", "统一查看提醒、进程统计、变更明细和清理历史"),
+            "ai" => ("AI 服务", "配置 AI 网关、模型与凭据，并手动测试连接"),
             _ => ("CdiskClean", string.Empty)
         };
         workspacePageTitle.Text = title;
